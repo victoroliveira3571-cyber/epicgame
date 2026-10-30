@@ -5,7 +5,7 @@ extends UIWindow
 
 func _init() -> void:
 	win_title = "Resumo da expedição"
-	win_size = Vector2(380, 280)
+	win_size = Vector2(380, 250)
 
 
 func build() -> void:

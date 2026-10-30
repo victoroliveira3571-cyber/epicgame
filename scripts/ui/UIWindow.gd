@@ -11,6 +11,7 @@ var win_size: Vector2 = Vector2(520, 300)
 var panel: Panel
 var body: Control            # área útil abaixo do título
 var close_on_escape: bool = true
+var close_button: Button
 var _rebuilding: bool = false
 
 
@@ -30,6 +31,7 @@ func _ready() -> void:
 	title.position = Vector2(12, 7)
 	panel.add_child(title)
 	var close := UI.button("X", Callable(), 14)
+	close_button = close
 	close.position = Vector2(win_size.x - 24, 5)
 	close.pressed.connect(func() -> void:
 		Audio.sfx("ui_close", -3.0)

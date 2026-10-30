@@ -12,6 +12,7 @@ func _init() -> void:
 
 
 func build() -> void:
+	close_button.visible = false
 	var intro := UI.label("Quem vai explorar a masmorra? A escolha é definitiva.", UI.C_DIM)
 	add_to_body(intro, Vector2(2, 0))
 	var ids := Data.CLASSES.keys()

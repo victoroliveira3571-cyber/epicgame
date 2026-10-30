@@ -64,6 +64,7 @@ var _toasts: VBoxContainer
 var _confirm_box: Control
 var _hint: Label
 var _last_buffs_sig: String = ""
+var _face_class: String = ""
 
 
 func _ready() -> void:
@@ -183,7 +184,8 @@ func _refresh_card() -> void:
 	if _card == null or not GameState.has_chosen_class():
 		return
 	var cls: Dictionary = Data.CLASSES[GameState.player_class]
-	if _card_face.texture == null:
+	if _face_class != GameState.player_class:
+		_face_class = GameState.player_class
 		_card_face.texture = Pix.atlas("chars/%s.png" % cls["sheet"], Rect2(0, 0, 16, 16))
 		_card_face.custom_minimum_size = Vector2(32, 32)
 		_card_face.size = Vector2(32, 32)
