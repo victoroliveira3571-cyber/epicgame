@@ -104,6 +104,9 @@ func _build_settings() -> void:
 	start_row.add_child(UI.button("Iniciar foco (%d min)" % focus_min, func() -> void:
 		HUD.pomodoro_start(focus_min, break_min), 150))
 	start_row.add_child(UI.button("Histórico", func() -> void: HUD.open_window("historico"), 70))
+	left.add_child(UI.spacer(4))
+	left.add_child(UI.label("Som", UI.C_ORANGE_L))
+	left.add_child(_sound_controls(true))
 	# prévia viva do cenário
 	var preview := Control.new()
 	preview.position = Vector2(284, 0)
@@ -191,6 +194,11 @@ func _build_running() -> void:
 	tv.add_child(_time_label)
 	_bar = UI.Bar.new(Vector2(96, 4), UI.C_ORANGE)
 	tv.add_child(_bar)
+	# som (canto superior direito)
+	var snd := UI.card(Color(0.06, 0.05, 0.07, 0.72), Color(UI.C_ORANGE, 0.8))
+	body.add_child(snd)
+	snd.add_child(_sound_controls(false))
+	snd.position = Vector2(600 - 10 - snd.get_combined_minimum_size().x, 10)
 	# botões (canto inferior direito)
 	var btns := UI.hbox(4)
 	btns.position = Vector2(236, 278)
@@ -202,6 +210,39 @@ func _build_running() -> void:
 		HUD.confirm("Cancelar o foco? Você perde a recompensa.", func() -> void: HUD.pomodoro_cancel()), 56))
 	btns.add_child(UI.button("Histórico", func() -> void: HUD.open_window("historico"), 56))
 	btns.add_child(UI.button("Voltar ao jogo", func() -> void: HUD.close_window(), 80))
+
+
+## Música liga/desliga + volume e o tique-taque do relógio. `wide` = layout da tela de configuração.
+func _sound_controls(wide: bool) -> Control:
+	var v := UI.vbox(3)
+	var row := UI.hbox(4)
+	v.add_child(row)
+	var music: Button
+	music = UI.button(_music_text(), func() -> void:
+		GameState.set_music_on(not GameState.music_on)
+		music.text = _music_text(), 84)
+	row.add_child(music)
+	var vol := UI.slider(GameState.music_volume, func(x: float) -> void: GameState.set_music_volume(x), 90 if wide else 60)
+	vol.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	vol.tooltip_text = "Volume da música"
+	row.add_child(vol)
+	var clock: Button
+	clock = UI.button(_clock_text(), func() -> void:
+		GameState.set_clock_on(not GameState.clock_on)
+		clock.text = _clock_text(), 84)
+	if wide:
+		row.add_child(clock)
+	else:
+		v.add_child(clock)
+	return v
+
+
+func _music_text() -> String:
+	return "Música: sim" if GameState.music_on else "Música: não"
+
+
+func _clock_text() -> String:
+	return "Relógio: sim" if GameState.clock_on else "Relógio: não"
 
 
 func _next_scene() -> void:

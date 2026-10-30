@@ -64,6 +64,8 @@ func _apply_volume() -> void:
 
 func _music_db() -> float:
 	var v := GameState.music_volume
+	if not GameState.music_on:
+		return -80.0
 	return MUSIC_DB + (linear_to_db(v) if v > 0.001 else -80.0)
 
 
@@ -135,6 +137,7 @@ func sfx(name: String, volume_db: float = 0.0, pitch_var: float = 0.06) -> void:
 
 ## Tique-taque do relógio (sessão de foco do Pomodoro).
 func set_clock(on: bool) -> void:
+	on = on and GameState.clock_on
 	if _clock == null:
 		if not on:
 			return

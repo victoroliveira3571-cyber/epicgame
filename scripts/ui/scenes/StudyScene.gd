@@ -7,7 +7,7 @@ extends Control
 const W := 1200.0
 const H := 600.0
 const SCENES := {
-	"estudo": {"name": "Torre de estudo", "desc": "Noite de chuva, vela acesa e pergaminhos."},
+	"estudo": {"name": "Torre de estudo", "desc": "Vela acesa e pergaminhos; à noite, chuva na janela."},
 	"cafeteria": {"name": "Cafeteria medieval", "desc": "Taverna aconchegante com lareira e caneca quente."},
 	"natureza": {"name": "Na natureza", "desc": "Sob a árvore, perto do lago, numa manhã de sol."},
 	"livraria": {"name": "Livraria", "desc": "Estantes até o teto e luz dourada da tarde."},

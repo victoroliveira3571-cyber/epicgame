@@ -29,7 +29,14 @@ func build() -> void:
 	mute = UI.button("Som: ligado" if not GameState.audio_muted else "Som: desligado", func() -> void:
 		GameState.set_audio_muted(not GameState.audio_muted)
 		mute.text = "Som: ligado" if not GameState.audio_muted else "Som: desligado", 100)
-	v.add_child(mute)
+	var music: Button
+	music = UI.button("Música: ligada" if GameState.music_on else "Música: desligada", func() -> void:
+		GameState.set_music_on(not GameState.music_on)
+		music.text = "Música: ligada" if GameState.music_on else "Música: desligada", 100)
+	var toggles := UI.hbox(6)
+	toggles.add_child(mute)
+	toggles.add_child(music)
+	v.add_child(toggles)
 	v.add_child(UI.hline())
 	v.add_child(UI.label("Controles", UI.C_ORANGE_L))
 	var keys := [
@@ -60,16 +67,6 @@ func _slider(title: String, value: float, on_change: Callable) -> Control:
 	var l := UI.label(title, UI.C_TEXT)
 	l.custom_minimum_size.x = 100
 	h.add_child(l)
-	var s := HSlider.new()
-	s.min_value = 0.0
-	s.max_value = 1.0
-	s.step = 0.05
-	s.value = value
-	s.custom_minimum_size = Vector2(200, 12)
-	s.focus_mode = Control.FOCUS_NONE
-	s.add_theme_stylebox_override("slider", UI.flat(UI.C_PANEL2, UI.C_LINE, 1, Vector4(0, 2, 0, 2)))
-	s.add_theme_stylebox_override("grabber_area", UI.flat(UI.C_ORANGE, Color.TRANSPARENT, 0, Vector4(0, 2, 0, 2)))
-	s.add_theme_stylebox_override("grabber_area_highlight", UI.flat(UI.C_ORANGE_L, Color.TRANSPARENT, 0, Vector4(0, 2, 0, 2)))
-	s.value_changed.connect(func(x: float) -> void: on_change.call(x))
+	var s := UI.slider(value, on_change, 200)
 	h.add_child(s)
 	return h

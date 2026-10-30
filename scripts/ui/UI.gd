@@ -184,6 +184,22 @@ static func window_panel(size: Vector2) -> Panel:
 
 
 ## Caixa interna (cartão) com fundo levemente mais claro.
+## Barra deslizante 0..1 no tema do jogo (volume etc.).
+static func slider(value: float, on_change: Callable, width: float = 200.0) -> HSlider:
+	var s := HSlider.new()
+	s.min_value = 0.0
+	s.max_value = 1.0
+	s.step = 0.05
+	s.value = value
+	s.custom_minimum_size = Vector2(width, 12)
+	s.focus_mode = Control.FOCUS_NONE
+	s.add_theme_stylebox_override("slider", flat(C_PANEL2, C_LINE, 1, Vector4(0, 2, 0, 2)))
+	s.add_theme_stylebox_override("grabber_area", flat(C_ORANGE, Color.TRANSPARENT, 0, Vector4(0, 2, 0, 2)))
+	s.add_theme_stylebox_override("grabber_area_highlight", flat(C_ORANGE_L, Color.TRANSPARENT, 0, Vector4(0, 2, 0, 2)))
+	s.value_changed.connect(func(x: float) -> void: on_change.call(x))
+	return s
+
+
 static func card(color: Color = C_PANEL, border: Color = C_LINE) -> PanelContainer:
 	var pc := PanelContainer.new()
 	pc.add_theme_stylebox_override("panel", flat(color, border, 1, Vector4(5, 4, 5, 4)))

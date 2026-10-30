@@ -50,6 +50,8 @@ var habits: Array = []
 var audio_muted: bool = false
 var audio_volume: float = 1.0
 var music_volume: float = 0.7
+var music_on: bool = true    # liga/desliga só a música (Pomodoro e pausa)
+var clock_on: bool = true    # tique-taque do relógio durante o foco
 var tutorial_done: Dictionary = {}
 var pomo_cfg: Dictionary = {"focus": 25, "break": 5, "scene": "cafeteria"}   # escolhas da janela do Pomodoro
 
@@ -854,6 +856,18 @@ func set_music_volume(volume: float) -> void:
 	stats_changed.emit()
 
 
+func set_music_on(on: bool) -> void:
+	music_on = on
+	_queue_save()
+	stats_changed.emit()
+
+
+func set_clock_on(on: bool) -> void:
+	clock_on = on
+	_queue_save()
+	stats_changed.emit()
+
+
 # ============================================================ Salvar e carregar
 func _queue_save() -> void:
 	if not _save_queued:
@@ -875,7 +889,7 @@ func save_now() -> void:
 		"inventory": inventory, "equipped": equipped, "upgrades": upgrades, "furniture": furniture, "furniture_layout": furniture_layout, "pomo_log": pomo_log,
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
-		"music_volume": music_volume, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
+		"music_volume": music_volume, "music_on": music_on, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
 	}
 	# grava num arquivo temporário e troca: uma queda de energia não corrompe o save
 	var tmp_path := save_path + ".tmp"
@@ -957,6 +971,8 @@ func load_game() -> void:
 		counters = _dict_of(d.get("counters", {}))
 		daily = _dict_of(d.get("daily", {}))
 		music_volume = float(d.get("music_volume", 0.7))
+		music_on = bool(d.get("music_on", true))
+		clock_on = bool(d.get("clock_on", true))
 		tutorial_done = _dict_of(d.get("tutorial_done", {}))
 		var pc := _dict_of(d.get("pomo_cfg", {}))
 		for k in pc:
