@@ -513,6 +513,7 @@ const FURNITURE_ORDER := ["cama", "mesa", "estante", "planta", "tapete", "lareir
 const ENERGY_MAX := 10
 const ENERGY_DAILY_MIN := 3
 const ENERGY_PER_FOCUS := 2
+const FOCUS_MIN_SESSION := 10   # foco finalizado antes da hora conta como sessão (missões) a partir daqui (min)
 const ENERGY_PER_HABIT := 1
 const ENERGY_PER_RUN := 1
 

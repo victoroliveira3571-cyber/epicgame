@@ -724,25 +724,32 @@ func _grant_reward(reward: Dictionary) -> void:
 
 # ==================================================================== Pomodoro
 ## Registra um foco concluído no histórico (dias, semanas, meses e anos são calculados a partir daqui).
-func log_pomodoro(minutes: int, scene: String = "") -> void:
-	pomo_log.append({"d": _today(), "t": int(Time.get_unix_time_from_system()), "m": minutes, "s": scene})
+func log_pomodoro(minutes: int, scene: String = "", early: bool = false) -> void:
+	var e := {"d": _today(), "t": int(Time.get_unix_time_from_system()), "m": minutes, "s": scene}
+	if early:
+		e["e"] = 1   # finalizado antes do fim (conta os minutos estudados)
+	pomo_log.append(e)
 	save_now()
 
 
 ## Chamado ao concluir uma sessão de foco. Fome zerada = recompensa pela metade.
-func complete_focus_session(xp_reward: int, gold_reward: int, minutes: int = 0) -> Dictionary:
+## `energy` < 0 = energia padrão; `count` = conta como sessão para missões e diárias.
+func complete_focus_session(xp_reward: int, gold_reward: int, minutes: int = 0, energy: int = -1, count: bool = true) -> Dictionary:
 	var mult := 0.5 if hunger <= 0 else 1.0
 	var xp_gain := int(round(float(xp_reward) * mult * (1.0 + stat("focus_xp_pct"))))
 	var gold_gain := int(round(float(gold_reward) * mult))
 	var cost := maxi(1, int(round(5.0 * stat("hunger_mult"))))
 	hunger = maxi(hunger - cost, 0)
 	mark_dirty()
-	bump("focus_sessions")
+	if count:
+		bump("focus_sessions")
 	add_gold(gold_gain)
 	var real_xp := add_xp(xp_gain)
-	add_energy(Data.ENERGY_PER_FOCUS)
+	var en := Data.ENERGY_PER_FOCUS if energy < 0 else energy
+	if en > 0:
+		add_energy(en)
 	var credits := add_study_credits(minutes)
-	return {"xp": real_xp, "gold": gold_gain, "energy": Data.ENERGY_PER_FOCUS, "credits": credits}
+	return {"xp": real_xp, "gold": gold_gain, "energy": en, "credits": credits}
 
 
 # ===================================================================== Aparência (guarda-roupa)

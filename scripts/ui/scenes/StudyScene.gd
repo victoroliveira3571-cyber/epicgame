@@ -19,20 +19,31 @@ const HS := 1.6          # escala do herói nas cenas
 const ART_DIR := "res://assets/custom/pomodoro/"
 const ART_SCALE := 3.0
 const ART_OFFSET_Y := -12.0
-# Onde o herói fica em cada cena (quadril, escala HS) e se senta em cadeira ou no chão.
-const HERO_SPOT := {
-	"livraria": [Vector2(480, 432), "chair"], "cafeteria": [Vector2(480, 447), "chair"],
-	"natureza": [Vector2(490, 520), "ground"], "estudo": [Vector2(450, 441), "chair"],
+# Onde o herói fica (quadril em pixels de arte, igual a HIP em tools/gen_pomodoro_bg.py), se senta
+# na cadeira ou no chão, e onde ficam a caneca e o livro quando estão na mesa (base, em arte).
+const LAYOUT := {
+	"livraria": {"hip": Vector2(145, 148), "sit": "chair", "mug": Vector2(174, 140), "book": Vector2(190, 140)},
+	"cafeteria": {"hip": Vector2(145, 153), "sit": "chair", "mug": Vector2(174, 145), "book": Vector2(190, 145)},
+	"estudo": {"hip": Vector2(145, 151), "sit": "chair", "mug": Vector2(174, 143), "book": Vector2(190, 143)},
+	"natureza": {"hip": Vector2(165, 177), "sit": "ground", "mug": Vector2(196, 182), "book": Vector2(213, 183)},
 }
 # Animações sobre o fundo: [sprite, x_arte, y_arte (canto superior esquerdo), fase]
 const FX_SPOTS := {
-	"cafeteria": [["lareira", 323, 125, 0.0], ["vela", 281, 115, 0.3],
+	"cafeteria": [["lareira", 323, 125, 0.0], ["vela", 267, 115, 0.3],
 		["vela_pequena", 182, 30, 0.1], ["vela_pequena", 191, 31, 0.5], ["vela_pequena", 200, 32, 0.9],
-		["vela_pequena", 209, 31, 0.2], ["vela_pequena", 218, 30, 0.6], ["vapor", 232, 117, 0.0]],
-	"livraria": [["vapor", 229, 112, 0.0]],
-	"estudo": [["vela", 331, 115, 0.0], ["vapor", 288, 116, 0.4]],
-	"natureza": [["vapor", 260, 150, 0.0], ["agua", 170, 136, 0.0], ["agua", 250, 141, 0.4], ["agua", 330, 137, 0.7]],
+		["vela_pequena", 209, 31, 0.2], ["vela_pequena", 218, 30, 0.6]],
+	"livraria": [],
+	"estudo": [["vela", 277, 115, 0.0]],
+	"natureza": [["agua", 170, 136, 0.0], ["agua", 250, 141, 0.4], ["agua", 330, 137, 0.7]],
 }
+# Pose do herói LPC (pixels do quadro 64x64): mão no colo, ombro do braço que estica e boca.
+const POSE := {
+	"chair": {"lap": Vector2(41, 45), "shoulder": Vector2(33, 37), "mouth": Vector2(44, 34)},
+	"ground": {"lap": Vector2(36, 51), "shoulder": Vector2(29, 41), "mouth": Vector2(40, 40)},
+}
+const SWAP_TIME := 2.4       # pôr um objeto na mesa e pegar o outro
+const SIP_TIME := 1.6        # levar a caneca à boca e voltar
+const FLIP_TIME := 0.6       # virar a página
 
 var scene_id: String = "cafeteria"
 var class_id: String = "cavaleiro"
@@ -40,6 +51,14 @@ var state: String = "focus"       # focus | break | paused | idle
 var look: Dictionary = {}         # visual LPC do herói (GameState.look); vazio = padrão
 var use_lpc: bool = true          # herói LPC em camadas (false = herói antigo por classe)
 var t: float = 0.0
+var sounds: bool = true            # dispara os sons das ações (Audio.pomo_event)
+# objetos: um na mão, o outro na mesa. Animação atual: "" | swap | sip | flip
+var held: String = "book"
+var anim: String = ""
+var anim_t: float = 0.0
+var _next_action: float = 0.0
+var _mug_until: float = 0.0        # no foco, volta ao livro depois deste instante
+var _fired: Dictionary = {}
 static var _art_cache: Dictionary = {}
 
 
@@ -51,8 +70,67 @@ func _init() -> void:
 
 
 func _process(delta: float) -> void:
-	t += delta * (0.25 if state == "paused" else 1.0)
+	var dt := delta * (0.25 if state == "paused" else 1.0)
+	t += dt
+	_update_actions(dt)
 	queue_redraw()
+
+
+## Começa já segurando o objeto certo (sem animação), p. ex. ao abrir a janela.
+func reset_hold() -> void:
+	held = "mug" if state == "break" else "book"
+	anim = ""
+	_next_action = t + randf_range(8.0, 14.0)
+
+
+## Rotina do herói: no foco lê e, de tempos em tempos, troca o livro pela caneca, bebe e
+## volta ao livro; na pausa fica com a caneca e bebe de vez em quando.
+func _update_actions(dt: float) -> void:
+	if anim != "":
+		anim_t += dt
+		var dur: float = {"swap": SWAP_TIME, "sip": SIP_TIME, "flip": FLIP_TIME}[anim]
+		_anim_events()
+		if anim_t >= dur:
+			if anim == "swap":
+				held = "mug" if held == "book" else "book"
+			anim = ""
+			_next_action = t + (randf_range(2.5, 4.0) if held == "mug" else randf_range(18.0, 30.0))
+		return
+	if state == "paused" or t < _next_action:
+		return
+	var want := "mug" if state == "break" or t < _mug_until else "book"
+	if held != want:
+		_start("swap")
+	elif held == "mug":
+		_start("sip")
+	elif randf() < 0.3:
+		_mug_until = t + SWAP_TIME + randf_range(9.0, 14.0)   # hora de um gole
+		_start("swap")
+	else:
+		_start("flip")
+
+
+func _start(a: String) -> void:
+	anim = a
+	anim_t = 0.0
+	_fired.clear()
+
+
+## Sons sincronizados com a animação (só uma vez por marco).
+func _anim_events() -> void:
+	var marks: Array = []
+	match anim:
+		"swap":
+			marks = [[0.75, "xicara" if held == "mug" else "livro"], [1.5, "xicara" if held == "book" else "livro"]]
+		"sip":
+			marks = [[0.7, "gole"]]
+		"flip":
+			marks = [[0.1, "pagina"]]
+	for m in marks:
+		if anim_t >= m[0] and not _fired.has(m[1] + str(m[0])):
+			_fired[m[1] + str(m[0])] = true
+			if sounds:
+				Audio.pomo_event(m[1])
 
 
 func pose() -> String:
@@ -130,16 +208,16 @@ func _draw_art() -> void:
 	for spot in FX_SPOTS.get(scene_id, []):
 		fx(spot[0], art_pos(spot[1], spot[2]), spot[3])
 	_ambient_fx(id)
-	var spot_h: Array = HERO_SPOT.get(scene_id, [Vector2(500, 440), "chair"])
-	var hero_pos: Vector2 = spot_h[0]
-	var sit: String = spot_h[1]
+	var lay: Dictionary = LAYOUT.get(scene_id, LAYOUT["cafeteria"])
+	var hero_pos: Vector2 = art_pos(lay["hip"].x, lay["hip"].y)
+	var sit: String = lay["sit"]
 	var p := pose()
 	if sit == "ground" and p == "write":
 		p = "read"
 	var lpc_hero := use_lpc and Lpc.available()
 	var pixel_hero := lpc_hero or _hero_art(p, sit) != null
 	if lpc_hero:
-		_draw_lpc_hero(hero_pos, p, sit)
+		_draw_lpc_hero(lay)
 	elif pixel_hero:
 		_draw_hero_art(hero_pos, p, sit)
 	else:
@@ -158,52 +236,152 @@ func _draw_art() -> void:
 				_pen(hand)
 
 
-## Herói LPC em camadas (Lpc.gd), de lado, com o quadril em `hip`. Pisca de vez em quando e
-## segura o livro (foco) ou a caneca (pausa) no colo; os objetos são pixel art na mesma escala.
-func _draw_lpc_hero(hip: Vector2, p: String, sit: String) -> void:
-	var kind := "ground" if sit == "ground" else "chair"
+## Herói LPC em camadas (Lpc.gd), de lado. O objeto que não está na mão fica na mesa; nas
+## trocas e nos goles o braço de trás estica até a mesa ou até a boca (pixel art na escala 3).
+func _draw_lpc_hero(lay: Dictionary) -> void:
+	var kind: String = "ground" if lay["sit"] == "ground" else "chair"
 	var frame := Lpc.F_GROUND if kind == "ground" else Lpc.F_CHAIR
 	var blink := fmod(t + 1.3, 4.7) < 0.14
-	var top := (hip - Lpc.anchor(kind) * ART_SCALE).round()
-	Lpc.draw(self, top, ART_SCALE, frame, Lpc.layers(look, blink))
-	# mãos no colo (coordenadas do quadro 64x64)
-	var hand := Vector2(38, 44) if kind == "chair" else Vector2(33, 50)
-	if p == "sip":
-		_px_mug(top, hand + Vector2(0, -6))
-	else:
-		_px_book(top, hand + Vector2(-3, -6))
+	var top_art: Vector2 = (lay["hip"] - Lpc.anchor(kind)).round()
+	var pose: Dictionary = POSE[kind]
+	var lap: Vector2 = top_art + pose["lap"]
+	var shoulder: Vector2 = top_art + pose["shoulder"]
+	var mouth: Vector2 = top_art + pose["mouth"]
+	# onde está a mão de trás e o que ela carrega
+	var hand := lap
+	var carry := held                 # objeto que acompanha a mão
+	var on_table := "mug" if held == "book" else "book"
+	var reaching := false
+	if anim == "swap":
+		var a := held
+		var b := on_table
+		var k := anim_t / SWAP_TIME
+		reaching = true
+		if k < 0.32:                  # leva o objeto da mão até a mesa (num arco)
+			hand = _arc(lap, lay[a], k / 0.32, 5.0)
+			carry = a
+			on_table = b
+		elif k < 0.62:                # solta e vai até o outro
+			hand = _arc(lay[a], lay[b], (k - 0.32) / 0.3, 3.0)
+			carry = ""
+			on_table = a + "+" + b
+		else:                         # traz o outro para o colo
+			hand = _arc(lay[b], lap, (k - 0.62) / 0.38, 5.0)
+			carry = b
+			on_table = a
+	elif anim == "sip":
+		var k := anim_t / SIP_TIME
+		reaching = true
+		hand = lap.lerp(mouth, _ease(clampf(k / 0.35, 0.0, 1.0))) if k < 0.6 else mouth.lerp(lap, _ease((k - 0.6) / 0.4))
+	# objetos na mesa (atrás do herói e do braço)
+	for it in on_table.split("+"):
+		if it == "mug":
+			_px_mug(lay["mug"], false)
+		elif it == "book":
+			_px_closed_book(lay["book"])
+	if reaching:
+		_draw_arm(shoulder, hand)
+	Lpc.draw(self, art_pos(top_art.x, top_art.y), ART_SCALE, frame, Lpc.layers(look, blink))
+	# objeto na mão por cima do corpo
+	if carry == "mug":
+		_px_mug(hand, anim == "sip")
+	elif carry == "book":
+		if reaching:
+			_px_closed_book(hand)
+		else:
+			_px_book(hand)
 
 
-## Retângulo em "pixels de arte" relativos ao canto do quadro do herói.
-func _px(top: Vector2, x: float, y: float, w: float, h: float, c: Color) -> void:
-	draw_rect(Rect2(top + Vector2(x, y) * ART_SCALE, Vector2(w, h) * ART_SCALE), c)
+## Caminho da mão de `a` até `b` subindo `lift` pixels no meio (levanta o objeto).
+static func _arc(a: Vector2, b: Vector2, k: float, lift: float) -> Vector2:
+	var e := _ease(k)
+	return (a.lerp(b, e) - Vector2(0, sin(e * PI) * lift)).round()
 
 
-func _px_book(top: Vector2, at: Vector2) -> void:
-	var x := at.x
-	var y := at.y
-	_px(top, x - 1, y + 1, 13, 6, Color("2b1e24"))           # contorno
-	_px(top, x, y + 2, 11, 4, Color("2f5d62"))               # capa
-	_px(top, x, y, 5, 4, Color("fff3d4"))                    # página esquerda
-	_px(top, x + 6, y, 5, 4, Color("f3e3bd"))                # página direita
-	_px(top, x + 5, y, 1, 5, Color("8a6a4a"))                # lombada
+static func _ease(x: float) -> float:
+	x = clampf(x, 0.0, 1.0)
+	return x * x * (3.0 - 2.0 * x)
+
+
+## Retângulo em pixels de arte (coordenadas absolutas da arte 400x208).
+func _pa(x: float, y: float, w: float, h: float, c: Color) -> void:
+	draw_rect(Rect2(art_pos(floorf(x), floorf(y)), Vector2(w, h) * ART_SCALE), c)
+
+
+## Braço que estica (ombro -> mão), em pixel art: manga na parte de cima, pele no antebraço.
+func _draw_arm(shoulder: Vector2, hand: Vector2) -> void:
+	var sleeve := Color(_sleeve_color())
+	var skin := Color("eab08a")
+	var out := Color("2b1e24")
+	var mid := shoulder.lerp(hand, 0.5) + Vector2(0, 2)    # cotovelo levemente caído
+	for pass_i in 2:
+		for seg in [[shoulder, mid, sleeve], [mid, hand, skin]]:
+			var a: Vector2 = seg[0]
+			var b: Vector2 = seg[1]
+			var n := int(ceil(a.distance_to(b))) + 1
+			for i in n + 1:
+				var q := a.lerp(b, float(i) / float(n))
+				if pass_i == 0:
+					_pa(q.x - 1, q.y - 1, 4, 4, out)
+				else:
+					_pa(q.x, q.y, 2, 2, seg[2])
+	_pa(hand.x - 1, hand.y - 1, 3, 3, skin)
+
+
+func _sleeve_color() -> String:
+	var lk := Lpc.resolve(look)
+	var torso := str((lk.get("equip", {}) as Dictionary).get("torso", ""))
+	return Lpc.item_color(lk, torso) if torso != "" else "eab08a"
+
+
+## Livro aberto na mão (base centrada em `at`). Vira a página na animação "flip".
+func _px_book(at: Vector2) -> void:
+	var x := at.x - 6
+	var y := at.y - 6
+	_pa(x - 1, y + 1, 13, 6, Color("2b1e24"))           # contorno
+	_pa(x, y + 2, 11, 4, Color("2f5d62"))               # capa
+	_pa(x, y, 5, 4, Color("fff3d4"))                    # página esquerda
+	_pa(x + 6, y, 5, 4, Color("f3e3bd"))                # página direita
+	_pa(x + 5, y, 1, 5, Color("8a6a4a"))                # lombada
 	for k in 2:
-		_px(top, x + 1, y + 1 + k * 2, 3, 1, Color("b9a888"))
-		_px(top, x + 7, y + 1 + k * 2, 3, 1, Color("b9a888"))
-	if fmod(t, 9.0) > 8.4:                                    # vira a página
-		_px(top, x + 6, y - 2, 3, 5, Color("fff8e6"))
+		_pa(x + 1, y + 1 + k * 2, 3, 1, Color("b9a888"))
+		_pa(x + 7, y + 1 + k * 2, 3, 1, Color("b9a888"))
+	if anim == "flip":                                   # a folha passa da direita para a esquerda
+		var k := anim_t / FLIP_TIME
+		var fx := x + 6.0 - roundf(k * 6.0)
+		_pa(fx, y - 2 + absf(k - 0.5) * 3.0, 3, 5, Color("fff8e6"))
 
 
-func _px_mug(top: Vector2, at: Vector2) -> void:
-	_px(top, at.x - 1, at.y - 1, 7, 8, Color("2b1e24"))
-	_px(top, at.x, at.y, 5, 6, Color("c58a3a"))
-	_px(top, at.x, at.y, 5, 1, Color("6b3a20"))
-	_px(top, at.x + 5, at.y + 1, 2, 3, Color("2b1e24"))
-	_px(top, at.x + 5, at.y + 2, 1, 1, Color("c58a3a"))
+## Livro fechado deitado (na mesa ou sendo carregado), base centrada em `at`.
+func _px_closed_book(at: Vector2) -> void:
+	var x := at.x - 6
+	var y := at.y - 4
+	_pa(x - 1, y - 1, 14, 6, Color("2b1e24"))
+	_pa(x, y, 12, 4, Color("2f5d62"))
+	_pa(x, y + 2, 12, 1, Color("fff3d4"))
+	_pa(x + 1, y + 3, 11, 1, Color("e6d9b4"))
+	_pa(x + 2, y, 8, 1, Color("4a8a8f"))
+	_pa(x + 9, y, 1, 2, Color("c7923e"))                # fitinha
+
+
+## Caneca com a base centrada em `at`; `drinking` inclina e esconde o vapor.
+func _px_mug(at: Vector2, drinking: bool) -> void:
+	var x := at.x - 3
+	var y := at.y - 7
+	if drinking:
+		y += 1
+	_pa(x - 1, y - 1, 7, 8, Color("2b1e24"))
+	_pa(x, y, 5, 6, Color("c58a3a"))
+	_pa(x + 1, y, 3, 1, Color("e2b06a"))
+	_pa(x, y, 5, 1, Color("6b3a20"))
+	_pa(x + 5, y + 1, 2, 3, Color("2b1e24"))
+	_pa(x + 5, y + 2, 1, 1, Color("c58a3a"))
+	if drinking:
+		return
 	var ph := fmod(t * 0.8, 1.0)
 	var steam := Color(1, 1, 1, 0.55 * (1.0 - ph))
-	_px(top, at.x + 1 + round(sin(t * 3.0)), at.y - 3 - ph * 5.0, 1, 2, steam)
-	_px(top, at.x + 3 + round(sin(t * 3.0 + 1.5)), at.y - 4 - ph * 4.0, 1, 2, steam)
+	_pa(x + 1 + roundf(sin(t * 3.0)), y - 3 - ph * 5.0, 1, 2, steam)
+	_pa(x + 3 + roundf(sin(t * 3.0 + 1.5)), y - 4 - ph * 4.0, 1, 2, steam)
 
 
 ## Herói em pixel art (tools/gen_pomodoro_hero.py): folha de 6 quadros por classe/pose/assento.

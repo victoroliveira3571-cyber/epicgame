@@ -34,6 +34,15 @@ var _clock: AudioStreamPlayer
 var _ambience: AudioStreamPlayer
 var _ambience_name: String = ""
 
+# Pomodoro: playlist do foco e camadas de ambiente (PomoSound)
+const AMB_DB := -12.0
+var _scene_music: String = ""         # música pedida pelo lugar atual
+var _pomo_genre: String = ""          # playlist tocando ("" = nenhuma)
+var _pomo_scene: String = ""
+var _playlist: Array = []
+var _pl_index: int = 0
+var _amb_players: Dictionary = {}     # id -> AudioStreamPlayer
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -44,6 +53,8 @@ func _ready() -> void:
 		_pool.append(_make_player())
 	_apply_volume()
 	GameState.stats_changed.connect(_apply_volume)
+	_music_a.finished.connect(_on_music_finished.bind(_music_a))
+	_music_b.finished.connect(_on_music_finished.bind(_music_b))
 
 
 func _make_player() -> AudioStreamPlayer:
@@ -70,20 +81,41 @@ func _music_db() -> float:
 
 
 func _load_stream(path: String, looping: bool = false) -> AudioStream:
-	if _streams.has(path):
-		return _streams[path]
+	var key := path + ("#loop" if looping else "")
+	if _streams.has(key):
+		return _streams[key]
 	var s: AudioStream = null
 	if ResourceLoader.exists(path):
 		s = load(path)
+		# a mesma faixa pode tocar em loop (cidade) e sem loop (playlist): cópias separadas
+		var other := path + ("" if looping else "#loop")
+		if _streams.has(other) and _streams[other] == s:
+			s = s.duplicate()
 		if s is AudioStreamOggVorbis or s is AudioStreamMP3:
 			s.loop = looping
+		elif s is AudioStreamWAV:
+			if looping:
+				s.loop_mode = AudioStreamWAV.LOOP_FORWARD
+				s.loop_begin = 0
+				s.loop_end = int(s.get_length() * s.mix_rate)
+			else:
+				s.loop_mode = AudioStreamWAV.LOOP_DISABLED
 	else:
 		push_warning("[Audio] não encontrado: " + path)
-	_streams[path] = s
+	_streams[key] = s
 	return s
 
 
+## Música do lugar (cidade, casa, masmorra...). Durante o Pomodoro a playlist do foco tem
+## prioridade; quando o foco acaba, volta a música pedida aqui.
 func play_music(name: String, fade: float = 1.0) -> void:
+	_scene_music = name
+	if _pomo_genre != "":
+		return
+	_play_named(name, fade)
+
+
+func _play_named(name: String, fade: float = 1.0) -> void:
 	if name == _current_music:
 		return
 	_current_music = name
@@ -100,6 +132,10 @@ func play_music(name: String, fade: float = 1.0) -> void:
 	var stream := _load_stream(path, true)
 	if stream == null:
 		return
+	_crossfade_to(stream, fade)
+
+
+func _crossfade_to(stream: AudioStream, fade: float) -> void:
 	var incoming := _music_b if _active_music == _music_a else _music_a
 	var outgoing := _active_music
 	incoming.stream = stream
@@ -191,3 +227,102 @@ func _play_on_pool(stream: AudioStream, volume_db: float, pitch_var: float) -> v
 ## Sons de interface (cliques) usados pelos botões do tema.
 func ui_click() -> void:
 	sfx("ui_click", -6.0, 0.03)
+
+
+# ================================================================== Pomodoro
+## Reavalia playlist e ambiente (chame quando o estado do Pomodoro, o cenário, o lugar ou as
+## escolhas de som mudarem). Fora da masmorra, foco e pausa tocam a playlist do cenário.
+func pomo_update(fade: float = 1.5) -> void:
+	var active := HUD.pomo_state != "idle" and HUD.scene_kind != "dungeon"
+	var scene := str(GameState.pomo_cfg.get("scene", "cafeteria"))
+	var genre := PomoSound.scene_genre(scene) if active else ""
+	if genre == "jogo" or (genre != "" and PomoSound.tracks(genre).is_empty()):
+		genre = ""
+	if genre != _pomo_genre:
+		_pomo_genre = genre
+		if genre == "":
+			_current_music = ""
+			_play_named(_scene_music, fade)
+		else:
+			_playlist = PomoSound.tracks(genre).duplicate()
+			_playlist.shuffle()
+			_pl_index = 0
+			_play_track(fade)
+	_update_ambience(scene if active else "")
+
+
+func _play_track(fade: float) -> void:
+	if _playlist.is_empty():
+		return
+	var path: String = _playlist[_pl_index % _playlist.size()]
+	var stream := _load_stream(path, false)
+	if stream == null:
+		return
+	_current_music = "pl:" + path
+	_crossfade_to(stream, fade)
+
+
+func _on_music_finished(p: AudioStreamPlayer) -> void:
+	if p == _active_music and _pomo_genre != "":
+		pomo_next(0.3)
+
+
+## Próxima faixa da playlist do foco.
+func pomo_next(fade: float = 1.0) -> void:
+	if _pomo_genre == "" or _playlist.is_empty():
+		return
+	_pl_index = (_pl_index + 1) % _playlist.size()
+	_play_track(fade)
+
+
+func pomo_track_title() -> String:
+	if _pomo_genre == "" or _playlist.is_empty():
+		return ""
+	return PomoSound.track_title(_playlist[_pl_index % _playlist.size()])
+
+
+func pomo_genre_playing() -> String:
+	return _pomo_genre
+
+
+func _update_ambience(scene: String) -> void:
+	var want := {}
+	if scene != "":
+		for l in PomoSound.scene_layers(scene):
+			if l["on"] and l["id"] != "acoes" and float(l["v"]) > 0.001:
+				want[l["id"]] = AMB_DB + linear_to_db(float(l["v"]))
+	_pomo_scene = scene
+	for id in _amb_players.keys():
+		if not want.has(id):
+			var old: AudioStreamPlayer = _amb_players[id]
+			_amb_players.erase(id)
+			var tw := create_tween()
+			tw.tween_property(old, "volume_db", -60.0, 0.8)
+			tw.tween_callback(old.queue_free)
+	for id in want:
+		if _amb_players.has(id):
+			var cur: AudioStreamPlayer = _amb_players[id]
+			cur.volume_db = want[id]
+			continue
+		var stream := _load_stream(PomoSound.ambient_path(id), true)
+		if stream == null:
+			continue
+		var p := _make_player()
+		p.stream = stream
+		p.volume_db = -60.0
+		p.play(randf() * maxf(stream.get_length() - 1.0, 0.0))
+		_amb_players[id] = p
+		create_tween().tween_property(p, "volume_db", want[id], 1.2)
+
+
+## Som curto de uma ação do herói na cena (xícara, gole, página), no volume de "Ações do herói".
+func pomo_event(name: String) -> void:
+	if _pomo_scene == "":
+		return
+	var l := PomoSound.layer(_pomo_scene, "acoes")
+	if l.is_empty() or not l["on"] or float(l["v"]) <= 0.001:
+		return
+	var path := PomoSound.event_path(name)
+	var stream := _load_stream(path) if path != "" else null
+	if stream != null:
+		_play_on_pool(stream, -4.0 + linear_to_db(float(l["v"])), 0.05)

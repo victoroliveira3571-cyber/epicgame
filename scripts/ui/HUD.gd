@@ -19,6 +19,8 @@ const WINDOWS := {
 	"resumo": "res://scripts/ui/windows/SummaryWindow.gd",
 	"pomodoro": "res://scripts/ui/windows/PomodoroWindow.gd",
 	"historico": "res://scripts/ui/windows/PomodoroHistoryWindow.gd",
+	"guarda_roupa": "res://scripts/ui/windows/WardrobeWindow.gd",
+	"creditos": "res://scripts/ui/windows/CreditsWindow.gd",
 }
 
 var root: Control
@@ -106,6 +108,7 @@ func _ready() -> void:
 func on_scene_ready(which: String) -> void:
 	scene_kind = which
 	set_scene_kind(which)
+	Audio.pomo_update()
 	set_hint("")
 	hide_boss()
 	_prompt.text = ""
@@ -375,7 +378,8 @@ func _build_pomodoro() -> void:
 	_pomo_btn = UI.button("Iniciar", pomodoro_toggle, 62)
 	_pomo_btn.position = Vector2(80, 23)
 	_pomo_panel.add_child(_pomo_btn)
-	_pomo_reset = UI.button("x", pomodoro_cancel, 22)
+	_pomo_reset = UI.button("x", pomodoro_stop_prompt, 22)
+	_pomo_reset.tooltip_text = "Parar: finalizar contando o tempo estudado"
 	_pomo_reset.position = Vector2(118, 7)
 	_pomo_panel.add_child(_pomo_reset)
 
@@ -391,6 +395,7 @@ func pomodoro_start(focus_min: int, break_min: int) -> void:
 	pomo_left = pomo_total
 	Audio.jingle("pomo_start", -6.0)
 	show_toast("Foco iniciado: %d minutos" % pomo_minutes, UI.C_GOOD)
+	Audio.pomo_update()
 	_refresh_pomodoro()
 
 
@@ -403,17 +408,64 @@ func pomodoro_toggle() -> void:
 			pomo_state = "paused"
 		"paused":
 			pomo_state = _pomo_prev_state
+	Audio.pomo_update()
 	_refresh_pomodoro()
 
 
 func pomodoro_cancel() -> void:
 	if pomo_state == "idle":
 		return
-	if pomo_state == "focus" or (pomo_state == "paused" and _pomo_prev_state == "focus"):
-		show_toast("Foco cancelado: sem recompensa.", UI.C_DIM)
+	if is_focus_running():
+		show_toast("Foco descartado: sem recompensa.", UI.C_DIM)
 	pomo_state = "idle"
 	pomo_left = 0.0
+	Audio.pomo_update()
 	_refresh_pomodoro()
+
+
+## Foco rodando ou pausado no meio de um foco (não na pausa).
+func is_focus_running() -> bool:
+	return pomo_state == "focus" or (pomo_state == "paused" and _pomo_prev_state == "focus")
+
+
+## Minutos de foco já estudados nesta sessão (o tempo pausado não conta).
+func pomo_studied_minutes() -> int:
+	if not is_focus_running():
+		return 0
+	return int(floor(maxf(pomo_total - pomo_left, 0.0) / 60.0))
+
+
+## Termina o foco antes da hora e conta o tempo já estudado. Na pausa, encerra a pausa.
+func pomodoro_finish() -> void:
+	if pomo_state == "idle":
+		return
+	if not is_focus_running():
+		_end_break("Pausa encerrada.")
+		return
+	var minutes := pomo_studied_minutes()
+	if minutes < 1:
+		pomo_state = "idle"
+		pomo_left = 0.0
+		show_toast("Menos de 1 minuto estudado: nada para contar.", UI.C_DIM)
+		Audio.pomo_update()
+		_refresh_pomodoro()
+		return
+	_reward_focus(minutes, true)
+
+
+## Pergunta se finaliza contando o tempo ou descarta (botão "x" do HUD e janela do Pomodoro).
+func pomodoro_stop_prompt() -> void:
+	if pomo_state == "idle":
+		return
+	if not is_focus_running():
+		pomodoro_finish()
+		return
+	var m := pomo_studied_minutes()
+	if m < 1:
+		confirm("Parar o foco? Ainda não passou 1 minuto, então nada será contado.", func() -> void: pomodoro_cancel())
+		return
+	confirm("Finalizar agora e contar os %d min estudados? (XP, ouro, créditos e histórico proporcionais)" % m,
+		func() -> void: pomodoro_finish())
 
 
 func _tick_pomodoro(delta: float) -> void:
@@ -426,24 +478,36 @@ func _tick_pomodoro(delta: float) -> void:
 
 func _pomodoro_done() -> void:
 	if pomo_state == "focus":
-		var xp := int(round(pomo_minutes * 4.0))
-		var gold := int(round(pomo_minutes * 2.0))
-		var r := GameState.complete_focus_session(xp, gold, pomo_minutes)
-		GameState.log_pomodoro(pomo_minutes, str(GameState.pomo_cfg.get("scene", "")))
-		Audio.jingle("pomo_done", -3.0)
-		show_toast("Foco concluído! +%d XP  +%d ouro  +%d energia  +%d créditos" % [r["xp"], r["gold"], r["energy"], r["credits"]], UI.C_GOLD)
-		pomo_state = "break"
-		pomo_total = float(int(GameState.pomo_cfg.get("break", 5))) * 60.0
-		pomo_left = pomo_total
-		if scene_kind == "town" or scene_kind == "interior":
-			Audio.play_music("pausa")
+		_reward_focus(pomo_minutes, false)
 	else:
-		Audio.sfx("ui_ok")
-		show_toast("Pausa terminada. Hora de focar!", UI.C_XP)
-		pomo_state = "idle"
-		pomo_left = 0.0
-		if scene_kind == "town" or scene_kind == "interior":
-			Audio.play_music("town")
+		_end_break("Pausa terminada. Hora de focar!")
+
+
+## Dá a recompensa de `minutes` de foco (XP 4/min, ouro 2/min, créditos 1/min, energia proporcional
+## a 25 min) e começa a pausa. `early` = o Victor finalizou antes do fim.
+func _reward_focus(minutes: int, early: bool) -> void:
+	var xp := int(round(minutes * 4.0))
+	var gold := int(round(minutes * 2.0))
+	var energy := Data.ENERGY_PER_FOCUS if not early else mini(Data.ENERGY_PER_FOCUS, int(floor(float(minutes) * Data.ENERGY_PER_FOCUS / 25.0)))
+	var r := GameState.complete_focus_session(xp, gold, minutes, energy, (not early) or minutes >= Data.FOCUS_MIN_SESSION)
+	GameState.log_pomodoro(minutes, str(GameState.pomo_cfg.get("scene", "")), early)
+	Audio.jingle("pomo_done", -3.0)
+	var head := "Foco finalizado (%d min)!" % minutes if early else "Foco concluído!"
+	show_toast("%s +%d XP  +%d ouro  +%d energia  +%d créditos" % [head, r["xp"], r["gold"], r["energy"], r["credits"]], UI.C_GOLD)
+	pomo_state = "break"
+	pomo_total = float(int(GameState.pomo_cfg.get("break", 5))) * 60.0
+	pomo_left = pomo_total
+	Audio.pomo_update()
+	_refresh_pomodoro()
+
+
+func _end_break(msg: String) -> void:
+	Audio.sfx("ui_ok")
+	show_toast(msg, UI.C_XP)
+	pomo_state = "idle"
+	pomo_left = 0.0
+	Audio.pomo_update()
+	_refresh_pomodoro()
 
 
 func _refresh_pomodoro() -> void:

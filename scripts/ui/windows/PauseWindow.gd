@@ -19,20 +19,24 @@ func build() -> void:
 			HUD.confirm("Abandonar a expedição e voltar para a cidade? Você mantém o que coletou.", func() -> void:
 				HUD.close_window()
 				Game.finish_run(false)), 100))
+	top.add_child(UI.button("Créditos", func() -> void: HUD.open_window("creditos"), 60))
 	top.add_child(UI.button("Salvar e sair", func() -> void:
 		GameState.save_now()
 		get_tree().quit(), 90))
 	v.add_child(UI.hline())
 	v.add_child(_slider("Volume geral", GameState.audio_volume, func(x: float) -> void: GameState.set_audio_volume(x)))
 	v.add_child(_slider("Volume da música", GameState.music_volume, func(x: float) -> void: GameState.set_music_volume(x)))
-	var mute: Button
-	mute = UI.button("Som: ligado" if not GameState.audio_muted else "Som: desligado", func() -> void:
+	# o botão é criado antes do clique ser ligado: a função precisa enxergar o botão já pronto
+	var mute := UI.button("Som: ligado" if not GameState.audio_muted else "Som: desligado", Callable(), 100)
+	mute.pressed.connect(func() -> void:
+		Audio.ui_click()
 		GameState.set_audio_muted(not GameState.audio_muted)
-		mute.text = "Som: ligado" if not GameState.audio_muted else "Som: desligado", 100)
-	var music: Button
-	music = UI.button("Música: ligada" if GameState.music_on else "Música: desligada", func() -> void:
+		mute.text = "Som: ligado" if not GameState.audio_muted else "Som: desligado")
+	var music := UI.button("Música: ligada" if GameState.music_on else "Música: desligada", Callable(), 100)
+	music.pressed.connect(func() -> void:
+		Audio.ui_click()
 		GameState.set_music_on(not GameState.music_on)
-		music.text = "Música: ligada" if GameState.music_on else "Música: desligada", 100)
+		music.text = "Música: ligada" if GameState.music_on else "Música: desligada")
 	var toggles := UI.hbox(6)
 	toggles.add_child(mute)
 	toggles.add_child(music)

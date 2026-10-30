@@ -17,6 +17,9 @@ func build() -> void:
 	rest.disabled = GameState.hp >= GameState.get_max_hp()
 	rest.position = Vector2(350, -2)
 	body.add_child(rest)
+	var wardrobe := UI.button("Guarda-roupa", func() -> void: HUD.open_window("guarda_roupa"), 80)
+	wardrobe.position = Vector2(262, -2)
+	body.add_child(wardrobe)
 	var col := scroll_column(Vector2(0, 20), Vector2(520, 252))
 	for id in Data.FURNITURE_ORDER:
 		var f: Dictionary = Data.FURNITURE[id]

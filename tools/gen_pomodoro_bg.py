@@ -6,7 +6,9 @@ Cada cena tem duas camadas em game/assets/custom/pomodoro/:
 
 Tamanho 400x208 (múltiplos de 16 na largura e altura). O StudyScene desenha em escala 3
 (1200x624) e sobe 12 px, então: x_cena = 3*x_arte e y_cena = 3*y_arte - 12.
-As posições de mesa, cadeira etc. batem com onde o herói vetorial é desenhado.
+Mesa, cadeira e herói formam um grupo centralizado em x ~ 200 (StudyScene.LAYOUT usa as mesmas
+coordenadas: quadril do herói em HIP[cena]). Caneca e livro NÃO são pintados: o StudyScene
+desenha os dois (um na mão, o outro na mesa) para o herói poder trocar.
 
 Uso (da pasta game/):  python3 tools/gen_pomodoro_bg.py
 """
@@ -19,6 +21,8 @@ OUTDIR = "assets/custom/pomodoro/"
 PROPS = "assets/ninja/props/"
 BOOK_PAL = [C("8c2f39"), C("2f5d62"), C("c7923e"), C("3d3a6b"), C("5b7a3a"), C("a8543a"), C("6b3a5a"), C("d6c08a")]
 WOOD = [C("94603a"), C("b9814e"), C("6f4529"), C("4a2d1a")]   # tampo, brilho, frente, sombra
+# quadril do herói (x, y) em pixels de arte; cadeira em x-23, tampo da mesa de x+12 em diante
+HIP = {"livraria": (145, 148), "cafeteria": (145, 153), "estudo": (145, 151), "natureza": (165, 177)}
 
 
 def prop(name):
@@ -152,6 +156,20 @@ def lamp(im, x, base_y, shade):
     poly(im, [(x + 2, base_y - 30), (x + 14, base_y - 28), (x + 18, base_y - 21), (x + 5, base_y - 21)], shade, OUT)
 
 
+def wall_clock(im, x, y):
+    """Relógio de pêndulo na parede, com o centro do mostrador em (x, y)."""
+    box(im, x - 9, y - 11, x + 9, y + 30, C("5a3a22"), C("7a4e2c"), C("3a2414"))
+    ellipse(im, x - 7, y - 7, x + 7, y + 7, OUT)
+    ellipse(im, x - 6, y - 6, x + 6, y + 6, C("f4ead0"))
+    for (dx, dy) in ((0, -5), (5, 0), (0, 5), (-5, 0)):
+        px(im, x + dx, y + dy, C("5a3a22"))
+    vline(im, x, y - 4, y, OUT)
+    hline(im, x, x + 3, y, OUT)
+    rect(im, x - 5, y + 10, x + 5, y + 27, C("2a1a10"))
+    vline(im, x, y + 10, y + 22, C("c9a24a"))
+    ellipse(im, x - 3, y + 21, x + 3, y + 26, C("c9a24a"), OUT)
+
+
 def glow_patch(im, cx, cy, r, color, strength=0.35):
     """Clarão em 3 anéis chapados (faixas de luz, sem degradê suave)."""
     p = im.load()
@@ -221,10 +239,10 @@ def livraria():
     bookcase(bg, 293, 6, 399, 161, 5, 53)
     floor_planks(bg, 160, [C("6b4630"), C("5a3a26"), C("3d2618")], C("2e1c12"))
     light_poly(bg, [(156, 110), (246, 110), (330, 190), (186, 190)], C("ffe2a0"), 0.22)
-    # escada encostada
+    # escada encostada na estante da esquerda
     for k in range(130):
         y = 26 + k
-        x = 100 + k * 24 // 130
+        x = 64 + k * 24 // 130
         px(bg, x, y, C("a8743f"))
         px(bg, x + 1, y, OUT)
         px(bg, x + 10, y, C("a8743f"))
@@ -236,16 +254,15 @@ def livraria():
     box(bg, 195, 12, 205, 27, C("c58a3a"), C("e0a85a"), C("8a5a2a"))
     rect(bg, 197, 15, 203, 24, C("ffe8a0"))
     glow_patch(bg, 200, 22, 30, C("ffd27a"), 0.22)
-    # cadeira, mesa e coisas na mesa
-    chair_back(bg, 137, 153)
-    desk(bg, fg, 172, 348, 140, 190)
-    # sem livro aberto na mesa: o herói lê o livro que segura (evita livro duplicado)
+    # cadeira, mesa e coisas na mesa (caneca e livro: StudyScene)
+    hx, hy = HIP["livraria"]
+    chair_back(bg, hx - 23, hy + 5)
+    desk(bg, fg, hx + 12, hx + 146, hy - 8, 190)
     for k, c in enumerate([C("8c2f39"), C("2f5d62"), C("c7923e"), C("3d3a6b")]):
-        box(bg, 258 + k, 133 - k * 6, 290 - k, 139 - k * 6, c, mix(c, C("ffffff"), 0.25), mix(c, C("000000"), 0.3))
-    mug(bg, 234, 140)
-    lamp(bg, 312, 140, C("7a9a52"))
-    glow_patch(bg, 318, 124, 22, C("ffe4a0"), 0.2)
-    cat(bg, 333, 140, C("d98f4a"), C("8a4a20"))
+        box(bg, 205 + k, 133 - k * 6, 235 - k, 139 - k * 6, c, mix(c, C("ffffff"), 0.25), mix(c, C("000000"), 0.3))
+    lamp(bg, 250, 140, C("7a9a52"))
+    glow_patch(bg, 256, 124, 22, C("ffe4a0"), 0.2)
+    cat(bg, 280, 140, C("d98f4a"), C("8a4a20"))
     return bg, fg
 
 
@@ -335,18 +352,16 @@ def cafeteria():
         hline(bg, bx - 10, bx + 10, 147, C("3a2418"))
         hline(bg, bx - 10, bx + 10, 168, C("3a2418"))
         vline(bg, bx - 6, 142, 174, C("8a5a34"))
-    # banco e mesa
-    box(bg, 140, 152, 197, 157, C("6a4228"), C("8a5a36"), C("3a2414"))
-    box(bg, 145, 157, 150, 188, C("4a2d1a"))
-    box(bg, 186, 157, 191, 188, C("4a2d1a"))
-    desk(bg, fg, 180, 296, 145, 198, [C("8a5a36"), C("b07a4a"), C("5a361f"), C("3a2414")])
-    poly(bg, [(187, 146), (222, 146), (226, 141), (191, 141)], C("f4e8c8"), OUT)
-    box(bg, 249, 140, 273, 146, C("e6d5b0"), C("fff2d8"), C("b8a888"))
-    ellipse(bg, 252, 133, 270, 144, OUT)
-    ellipse(bg, 253, 134, 269, 143, C("c58a4a"))
-    hline(bg, 256, 266, 136, C("e0a868"))
-    candle(bg, 284, 145, 16)
-    mug(bg, 237, 145)
+    # banco e mesa (caneca e livro: StudyScene)
+    hx, hy = HIP["cafeteria"]
+    box(bg, hx - 22, hy - 1, hx + 18, hy + 4, C("6a4228"), C("8a5a36"), C("3a2414"))
+    box(bg, hx - 17, hy + 4, hx - 12, 188, C("4a2d1a"))
+    desk(bg, fg, hx + 12, hx + 138, hy - 8, 198, [C("8a5a36"), C("b07a4a"), C("5a361f"), C("3a2414")])
+    box(bg, 234, 140, 258, 146, C("e6d5b0"), C("fff2d8"), C("b8a888"))
+    ellipse(bg, 237, 133, 255, 144, OUT)
+    ellipse(bg, 238, 134, 254, 143, C("c58a4a"))
+    hline(bg, 241, 251, 136, C("e0a868"))
+    candle(bg, 270, 145, 16)
     # caldeirão na frente do fogo (camada da frente)
     vline(fg, 312, 70, 116, C("2a2a2a"))
     hline(fg, 312, 330, 116, C("2a2a2a"))
@@ -430,19 +445,16 @@ def natureza():
     for k in range(8):
         sx = 110 + k * 22
         ellipse(bg, sx, 186 + (k % 3) * 5, sx + 10, 189 + (k % 3) * 5, C("a4dc78"))
-    # manta, cesto e chá
+    # manta e cesto (caneca e livro: StudyScene)
     poly(bg, [(147, 173), (260, 173), (277, 191), (133, 191)], C("c4453d"), OUT)
     for k in range(9):
         x = 151 + k * 14
         poly(bg, [(x, 174), (x + 5, 174), (x + 3 - k // 3, 190), (x - 2 - k // 3, 190)], C("e8e0d0"))
     for y in (179, 185):
         hline(bg, 140, 270, y, C("e8e0d0"))
-    box(bg, 233, 168, 257, 181, C("b9854a"), C("d8a868"), C("7a5230"))
+    box(bg, 232, 168, 256, 181, C("b9854a"), C("d8a868"), C("7a5230"))
     for k in range(25):
-        px(bg, 233 + k, 168 - int(8 * (1 - ((k - 12) / 12.0) ** 2)), C("7a5230"))
-    box(bg, 260, 174, 270, 184, C("f4f0e4"), C("ffffff"), C("c8c0b0"))
-    px(bg, 271, 177, OUT)
-    px(bg, 272, 178, OUT)
+        px(bg, 232 + k, 168 - int(8 * (1 - ((k - 12) / 12.0) ** 2)), C("7a5230"))
     return bg, fg
 
 
@@ -463,26 +475,26 @@ def estudo(noite):
         vline(bg, x, 120, 159, OUT)
         vline(bg, x + 1, 120, 159, wains[1])
     # janela
-    wx0, wy0, wx1, wy1 = 110, 27, 237, 127
+    wx0, wy0, wx1, wy1 = 137, 27, 264, 127
     if noite:
         vgrad(bg, wx0, wy0, wx1, wy1, [C("0d1230"), C("1a2350"), C("2b3668")])
         stars(bg, wx0 + 2, wy0 + 2, wx1 - 2, wy0 + 60, 50, 3, [C("ffffe8"), C("c8d8ff"), C("fff2b0")])
-        glow_patch(bg, 200, 50, 26, C("c8d8ff"), 0.4)
-        ellipse(bg, 189, 39, 211, 61, C("f0f4ff"))
-        ellipse(bg, 195, 35, 217, 57, C("141a3c"))
+        glow_patch(bg, 227, 50, 26, C("c8d8ff"), 0.4)
+        ellipse(bg, 216, 39, 238, 61, C("f0f4ff"))
+        ellipse(bg, 222, 35, 244, 57, C("141a3c"))
         for i in range(4):
-            cloud(bg, 116 + i * 30, 78 + (i % 2) * 14, 18, C("3a4478"), C("2a3264"))
+            cloud(bg, 143 + i * 30, 78 + (i % 2) * 14, 18, C("3a4478"), C("2a3264"))
     else:
         vgrad(bg, wx0, wy0, wx1, wy1, [C("6ab8ec"), C("8fd0f2"), C("cfeaf2")])
-        cloud(bg, 122, 50, 26, C("ffffff"), C("dfe8f0"))
-        cloud(bg, 178, 40, 20, C("ffffff"), C("dfe8f0"))
-        poly(bg, [(wx0, 110), (140, 96), (170, 106), (205, 92), (wx1, 104), (wx1, wy1), (wx0, wy1)], C("7fbf5a"))
-        box(bg, 210, 76, 222, 104, C("b8a890"), C("d8c8b0"), C("8a7a64"))
-        poly(bg, [(208, 76), (216, 64), (224, 76)], C("a8543a"), OUT)
-        rect(bg, 215, 84, 217, 88, OUT)
+        cloud(bg, 149, 50, 26, C("ffffff"), C("dfe8f0"))
+        cloud(bg, 205, 40, 20, C("ffffff"), C("dfe8f0"))
+        poly(bg, [(wx0, 110), (167, 96), (197, 106), (232, 92), (wx1, 104), (wx1, wy1), (wx0, wy1)], C("7fbf5a"))
+        box(bg, 237, 76, 249, 104, C("b8a890"), C("d8c8b0"), C("8a7a64"))
+        poly(bg, [(235, 76), (243, 64), (251, 76)], C("a8543a"), OUT)
+        rect(bg, 242, 84, 244, 88, OUT)
     for (a, b, c, d) in ((wx0 - 4, wy0 - 4, wx1 + 4, wy0 - 1), (wx0 - 4, wy1 + 1, wx1 + 4, wy1 + 4),
                          (wx0 - 4, wy0 - 4, wx0 - 1, wy1 + 4), (wx1 + 1, wy0 - 4, wx1 + 4, wy1 + 4),
-                         (172, wy0, 175, wy1), (wx0, 74, wx1, 77)):
+                         ((wx0 + wx1) // 2 - 1, wy0, (wx0 + wx1) // 2 + 2, wy1), (wx0, 74, wx1, 77)):
         rect(bg, a, b, c, d, C("4a3022"))
     box(bg, wx0 - 8, wy1 + 3, wx1 + 8, wy1 + 8, C("5a3a28"), C("7a4e32"), C("3a2418"))
     # estante com globo e poções
@@ -495,33 +507,33 @@ def estudo(noite):
             bx = x0 + 34 + k * 14
             box(im, bx, y0 + 8, bx + 9, y1, c, mix(c, C("ffffff"), 0.35), mix(c, C("000000"), 0.3))
             rect(im, bx + 3, y0 + 5, bx + 6, y0 + 8, C("c8b090"))
-    bookcase(bg, 283, 24, 383, 161, 4, 77, {1: globe})
-    owl(bg, 362, 13)
+    bookcase(bg, 296, 24, 392, 161, 4, 77, {1: globe})
+    owl(bg, 374, 13)
     floor_planks(bg, 160, [C("3a2a3a"), C("2c202c"), C("1c141c")] if noite else [C("7a5236"), C("6a462e"), C("4a2e1e")], C("140e14") if noite else C("3a2414"))
     if noite:
-        light_poly(bg, [(110, 128), (237, 128), (300, 190), (60, 190)], C("8aa0ff"), 0.12)
+        light_poly(bg, [(137, 128), (264, 128), (327, 190), (87, 190)], C("8aa0ff"), 0.12)
     else:
-        light_poly(bg, [(110, 128), (237, 128), (300, 190), (60, 190)], C("fff0c0"), 0.22)
-    # tapete
-    ellipse(bg, 78, 168, 268, 190, OUT)
-    ellipse(bg, 79, 169, 267, 189, C("5a2a4a"))
-    ellipse(bg, 92, 172, 254, 186, C("7a3a5a"))
-    ellipse(bg, 110, 175, 236, 183, C("5a2a4a"))
-    # plantas penduradas
-    hanging_plant(bg, 30, 40, 26)
-    hanging_plant(bg, 70, 52, 20)
-    # cadeira, mesa e objetos
-    chair_back(bg, 127, 151)
-    desk(bg, fg, 162, 350, 143, 192, [C("7a4e30"), C("a06c44"), C("55341f"), C("33200f")])
-    poly(bg, [(173, 145), (213, 145), (217, 139), (178, 139)], C("efe3c2"), OUT)
+        light_poly(bg, [(137, 128), (264, 128), (327, 190), (87, 190)], C("fff0c0"), 0.22)
+    # tapete centralizado
+    ellipse(bg, 105, 168, 295, 190, OUT)
+    ellipse(bg, 106, 169, 294, 189, C("5a2a4a"))
+    ellipse(bg, 119, 172, 281, 186, C("7a3a5a"))
+    ellipse(bg, 137, 175, 263, 183, C("5a2a4a"))
+    # plantas penduradas e relógio de parede (o tique-taque do Pomodoro)
+    hanging_plant(bg, 26, 40, 26)
+    hanging_plant(bg, 62, 52, 20)
+    wall_clock(bg, 104, 58)
+    # cadeira, mesa e objetos (caneca e livro: StudyScene)
+    hx, hy = HIP["estudo"]
+    chair_back(bg, hx - 23, hy)
+    desk(bg, fg, hx + 12, hx + 146, hy - 8, 192, [C("7a4e30"), C("a06c44"), C("55341f"), C("33200f")])
     for k in range(3):
-        box(bg, 233 + k * 2, 138 - k * 4, 270 + k * 2, 143 - k * 4, C("efe3c2"), C("fffaf0"), C("c8b898"))
-    mug(bg, 293, 144)
-    box(bg, 314, 136, 320, 143, C("1a1a2a"))
-    line(bg, (318, 136), (325, 122), C("f5f0e6"))
-    candle(bg, 334, 143, 14)
+        box(bg, 222 + k * 2, 138 - k * 4, 254 + k * 2, 143 - k * 4, C("efe3c2"), C("fffaf0"), C("c8b898"))
+    box(bg, 262, 136, 268, 143, C("1a1a2a"))
+    line(bg, (266, 136), (273, 122), C("f5f0e6"))
+    candle(bg, 280, 143, 14)
     if noite:
-        glow_patch(bg, 334, 126, 40, C("ffb860"), 0.3)
+        glow_patch(bg, 280, 126, 40, C("ffb860"), 0.3)
     return bg, fg
 
 
