@@ -8,10 +8,12 @@ signal run_finished(summary: Dictionary)
 
 const TOWN_SCENE := "res://scenes/Main.tscn"
 const DUNGEON_SCENE := "res://scenes/Dungeon.tscn"
+const INTERIOR_SCENE := "res://scenes/Interior.tscn"
 
 var current_floor: int = 0
 var run: Dictionary = {}
-var town_spawn: String = "start"
+var town_spawn: String = "start"      # "start" | "gate" | "door:<id do interior>"
+var interior_id: String = ""
 var transitioning: bool = false
 var input_locked: bool = false    # janelas abertas / diálogo / transição
 var last_run_summary: Dictionary = {}
@@ -29,7 +31,7 @@ func _ready() -> void:
 	_fade_rect = ColorRect.new()
 	_fade_rect.color = Color(0.04, 0.03, 0.06, 1.0)
 	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fade_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_fade_rect.modulate.a = 0.0
 	_fade_layer.add_child(_fade_rect)
 
@@ -99,6 +101,18 @@ func go_to_town(spawn: String = "start") -> void:
 	town_spawn = spawn
 	GameState.in_dungeon = false
 	change_scene(TOWN_SCENE)
+
+
+# ============================================================ Interiores
+func enter_interior(id: String) -> void:
+	interior_id = id
+	town_spawn = "door:" + id
+	GameState.in_dungeon = false
+	change_scene(INTERIOR_SCENE, 0.25)
+
+
+func leave_interior() -> void:
+	go_to_town("door:" + interior_id)
 
 
 # ============================================================ Masmorra

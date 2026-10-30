@@ -245,7 +245,7 @@ func _attack() -> void:
 	swing_time = 0.16
 	_anim_lock = 0.16
 	attacked.emit()
-	Audio.sfx("swing3" if heavy else ("swing1" if combo % 2 == 1 else "swing2"), -4.0)
+	Audio.sfx("swing_combo" if heavy and not Data.CLASSES[GameState.player_class]["ranged"] else ("swing3" if heavy else ("swing1" if combo % 2 == 1 else "swing2")), -4.0)
 	if Data.CLASSES[GameState.player_class]["ranged"]:
 		_shoot(heavy)
 	else:
@@ -396,7 +396,7 @@ func _cast_skill() -> void:
 	var center := global_position + Vector2(0, -6)
 	match skill_id:
 		"giro":
-			Audio.sfx("swing3")
+			Audio.sfx("swing_combo", -2.0)
 			Fx.fx(world, "circular", center, 1.7, 0.0, Color(1, 0.95, 0.8))
 			Fx.ring(world, center, 30.0, Color(1, 0.9, 0.6), 0.25)
 			_area_damage(center, 30.0, 1.8, 140.0)

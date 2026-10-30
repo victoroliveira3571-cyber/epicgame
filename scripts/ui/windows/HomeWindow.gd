@@ -22,7 +22,7 @@ func build() -> void:
 		var f: Dictionary = Data.FURNITURE[id]
 		var owned := GameState.owns_furniture(id)
 		var price := int(f["price"])
-		var icon := Pix.tex("props/%s.png" % f["icon"])
+		var icon := Interior.prop_tex(f["icon"])
 		col.add_child(list_row(icon, f["name"], UI.C_GOOD if owned else UI.C_TEXT, f["desc"],
 			"" if owned else UI.fmt_int(price), UI.C_GOLD if GameState.gold >= price else UI.C_BAD,
 			"Comprado" if owned else "Comprar", func() -> void:

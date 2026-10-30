@@ -73,7 +73,7 @@ func build() -> void:
 		tv.add_child(UI.label(t["desc"], UI.C_DIM))
 		var plus := UI.button("+", func() -> void:
 			if GameState.spend_talent(tid):
-				Audio.sfx("powerup", -4.0), 18)
+				Audio.sfx("star", -4.0), 18)
 		plus.disabled = GameState.talent_points <= 0
 		h.add_child(plus)
 	var rs := UI.hbox(6)

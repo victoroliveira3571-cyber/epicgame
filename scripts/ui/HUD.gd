@@ -17,9 +17,9 @@ const WINDOWS := {
 	"pausa": "res://scripts/ui/windows/PauseWindow.gd",
 	"classe": "res://scripts/ui/windows/ClassWindow.gd",
 	"resumo": "res://scripts/ui/windows/SummaryWindow.gd",
+	"pomodoro": "res://scripts/ui/windows/PomodoroWindow.gd",
+	"historico": "res://scripts/ui/windows/PomodoroHistoryWindow.gd",
 }
-const POMODORO_PRESETS := [15, 25, 45]
-const BREAK_MINUTES := 5
 
 var root: Control
 var scene_kind: String = ""       # "town" | "dungeon" | ""
@@ -28,7 +28,7 @@ var window_id: String = ""
 
 # Pomodoro (continua rodando entre cenas e com janelas abertas)
 var pomo_state: String = "idle"   # idle | focus | break | paused
-var pomo_minutes: int = 25
+var pomo_minutes: int = 25     # duração do foco em uso (ou escolhida na janela)
 var pomo_total: float = 0.0
 var pomo_left: float = 0.0
 var _pomo_prev_state: String = "focus"
@@ -106,6 +106,7 @@ func _ready() -> void:
 func on_scene_ready(which: String) -> void:
 	scene_kind = which
 	set_scene_kind(which)
+	set_hint("")
 	hide_boss()
 	_prompt.text = ""
 	if window != null:
@@ -117,6 +118,15 @@ func on_scene_ready(which: String) -> void:
 		elif not Game.last_run_summary.is_empty() and not Game.last_run_summary.get("shown", false):
 			Game.last_run_summary["shown"] = true
 			open_window("resumo")
+
+
+const DEFAULT_HINT := "I Inventário  C Personagem  T Hábitos  G Missões  P Pomodoro  Esc Pausa"
+
+
+## Texto pequeno no canto de baixo; vazio volta ao padrão.
+func set_hint(text: String) -> void:
+	if _hint != null:
+		_hint.text = text if text != "" else DEFAULT_HINT
 
 
 func set_scene_kind(which: String) -> void:
@@ -359,7 +369,7 @@ func _build_pomodoro() -> void:
 	_pomo_bar = UI.Bar.new(Vector2(142, 3), UI.C_GOOD)
 	_pomo_bar.position = Vector2(8, 41)
 	_pomo_panel.add_child(_pomo_bar)
-	_pomo_mode = UI.button("25m", _cycle_preset, 34)
+	_pomo_mode = UI.button("Cena", func() -> void: open_window("pomodoro"), 34)
 	_pomo_mode.position = Vector2(80, 7)
 	_pomo_panel.add_child(_pomo_mode)
 	_pomo_btn = UI.button("Iniciar", pomodoro_toggle, 62)
@@ -370,22 +380,24 @@ func _build_pomodoro() -> void:
 	_pomo_panel.add_child(_pomo_reset)
 
 
-func _cycle_preset() -> void:
-	if pomo_state != "idle":
-		return
-	var i := POMODORO_PRESETS.find(pomo_minutes)
-	pomo_minutes = POMODORO_PRESETS[(i + 1) % POMODORO_PRESETS.size()]
+## Começa o foco com as durações escolhidas (minutos) e guarda a escolha.
+func pomodoro_start(focus_min: int, break_min: int) -> void:
+	pomo_minutes = clampi(focus_min, 1, 180)
+	GameState.pomo_cfg["focus"] = pomo_minutes
+	GameState.pomo_cfg["break"] = clampi(break_min, 1, 60)
+	GameState.save_game()
+	pomo_state = "focus"
+	pomo_total = pomo_minutes * 60.0
+	pomo_left = pomo_total
+	Audio.jingle("pomo_start", -6.0)
+	show_toast("Foco iniciado: %d minutos" % pomo_minutes, UI.C_GOOD)
 	_refresh_pomodoro()
 
 
 func pomodoro_toggle() -> void:
 	match pomo_state:
 		"idle":
-			pomo_state = "focus"
-			pomo_total = pomo_minutes * 60.0
-			pomo_left = pomo_total
-			Audio.sfx("ui_ok", -3.0)
-			show_toast("Foco iniciado: %d minutos" % pomo_minutes, UI.C_GOOD)
+			open_window("pomodoro")
 		"focus", "break":
 			_pomo_prev_state = pomo_state
 			pomo_state = "paused"
@@ -417,26 +429,31 @@ func _pomodoro_done() -> void:
 		var xp := int(round(pomo_minutes * 4.0))
 		var gold := int(round(pomo_minutes * 2.0))
 		var r := GameState.complete_focus_session(xp, gold)
-		Audio.jingle("success2")
+		GameState.log_pomodoro(pomo_minutes, str(GameState.pomo_cfg.get("scene", "")))
+		Audio.jingle("pomo_done", -3.0)
 		show_toast("Foco concluído! +%d XP  +%d ouro  +%d energia" % [r["xp"], r["gold"], r["energy"]], UI.C_GOLD)
 		pomo_state = "break"
-		pomo_total = BREAK_MINUTES * 60.0
+		pomo_total = float(int(GameState.pomo_cfg.get("break", 5))) * 60.0
 		pomo_left = pomo_total
+		if scene_kind == "town" or scene_kind == "interior":
+			Audio.play_music("pausa")
 	else:
 		Audio.sfx("ui_ok")
 		show_toast("Pausa terminada. Hora de focar!", UI.C_XP)
 		pomo_state = "idle"
 		pomo_left = 0.0
+		if scene_kind == "town" or scene_kind == "interior":
+			Audio.play_music("town")
 
 
 func _refresh_pomodoro() -> void:
 	if _pomo_time == null:
 		return
 	Audio.set_clock(pomo_state == "focus")
+	if pomo_state == "idle":
+		pomo_minutes = int(GameState.pomo_cfg.get("focus", 25))
 	var shown_left := pomo_left if pomo_state != "idle" else pomo_minutes * 60.0
 	_pomo_time.text = UI.fmt_time(shown_left)
-	_pomo_mode.text = "%dm" % pomo_minutes
-	_pomo_mode.disabled = pomo_state != "idle"
 	match pomo_state:
 		"idle":
 			_pomo_status.text = "POMODORO"
@@ -599,6 +616,7 @@ func show_toast(text: String, color: Color = Color.WHITE) -> void:
 
 func _on_level_up(new_level: int) -> void:
 	Audio.jingle("levelup")
+	Audio.sfx("star", -6.0)
 	show_toast("Nível %d! Você ganhou pontos de talento (C)." % new_level, UI.C_GOLD)
 
 
@@ -683,12 +701,12 @@ func confirm(text: String, on_yes: Callable) -> void:
 	if _confirm_box != null and is_instance_valid(_confirm_box):
 		_confirm_box.queue_free()
 	_confirm_box = Control.new()
-	_confirm_box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_confirm_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_confirm_box.process_mode = Node.PROCESS_MODE_ALWAYS
 	root.add_child(_confirm_box)
 	var veil := ColorRect.new()
 	veil.color = Color(0, 0, 0, 0.5)
-	veil.set_anchors_preset(Control.PRESET_FULL_RECT)
+	veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_confirm_box.add_child(veil)
 	var panel := UI.window_panel(Vector2(240, 80))
 	panel.position = ((UI.SIZE - Vector2(240, 80)) / 2.0).round()
@@ -746,5 +764,5 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			toggle_window(shortcuts[action])
 			return
-	if ev.keycode == KEY_P and not is_window_open():
-		pomodoro_toggle()
+	if ev.keycode == KEY_P:
+		toggle_window("pomodoro")

@@ -118,7 +118,7 @@ class Shrine extends Interactable:
 		GameState.add_buff(pick, 240.0)
 		GameState.heal(int(GameState.get_max_hp() * 0.25))
 		var b: Dictionary = Data.BUFFS[pick]
-		Audio.sfx("magic2")
+		Audio.sfx("shrine_ring", -6.0)
 		Audio.sfx("heal", -4.0)
 		var world := get_parent()
 		Fx.fx(world, "aura", global_position + Vector2(0, -10), 1.8, 0.0, Color(0.6, 0.85, 1.0))

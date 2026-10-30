@@ -15,6 +15,7 @@ var world: Node2D
 var player: Player
 var canvas_mod: CanvasModulate
 var buildings: Dictionary = {}
+var door_spawns: Dictionary = {}   # id do interior -> onde o jogador reaparece ao sair
 var dirt := PackedByteArray()
 var water := PackedByteArray()
 var reserved := PackedByteArray()
@@ -24,15 +25,15 @@ var daylight_timer: float = 0.0
 var forced_hour: float = -1.0
 
 const BUILDING_DEFS := [
-	{"id": "casa", "name": "Casa", "prop": "b_casa_laranja", "tile": Vector2i(14, 25), "door_dx": -8.0, "level": 1,
+	{"id": "casa", "name": "Casa", "prop": "b_casa_laranja", "tile": Vector2i(14, 25), "door_dx": -8.0,
 		"npc": "OldWoman", "npc_dx": 36.0, "lines": ["Descanse, você merece.", "Em casa tudo fica melhor.", "Uma casa bonita rende bons hábitos."]},
-	{"id": "restaurante", "name": "Restaurante", "prop": "b_padaria", "tile": Vector2i(23, 25), "door_dx": 0.0, "level": 1,
+	{"id": "restaurante", "name": "Restaurante", "prop": "b_padaria", "tile": Vector2i(23, 25), "door_dx": 0.0,
 		"npc": "Woman", "npc_dx": -30.0, "lines": ["Fome? Tenho pratos quentes!", "Comer bem rende mais foco.", "Hoje tem macarrão!"]},
-	{"id": "loja", "name": "Loja de Armas", "prop": "b_casa_empena", "tile": Vector2i(42, 25), "door_dx": 0.0, "level": 2,
+	{"id": "loja", "name": "Loja de Armas", "prop": "b_casa_empena", "tile": Vector2i(42, 25), "door_dx": 0.0,
 		"npc": "Villager4", "npc_dx": 30.0, "lines": ["Armas novas chegaram!", "Equipamento bom salva vidas.", "Só vendo o que presta."]},
-	{"id": "forja", "name": "Ferreiro", "prop": "b_forja", "tile": Vector2i(51, 25), "door_dx": 0.0, "level": 4,
+	{"id": "forja", "name": "Ferreiro", "prop": "b_forja", "tile": Vector2i(51, 25), "door_dx": 0.0,
 		"npc": "Caveman", "npc_dx": -30.0, "lines": ["Traga barras e ouro.", "Aprimoro qualquer arma.", "Ferro quente, trabalho bom."]},
-	{"id": "guilda", "name": "Guilda dos Aventureiros", "prop": "h_salao_madeira", "tile": Vector2i(32, 17), "door_dx": 0.0, "level": 1,
+	{"id": "guilda", "name": "Guilda dos Aventureiros", "prop": "h_salao_madeira", "tile": Vector2i(32, 17), "door_dx": 0.0,
 		"npc": "OldMan3", "npc_dx": 44.0, "lines": ["Bem-vindo, aventureiro!", "A masmorra espera por você.", "Quem foca, conquista."]},
 ]
 const HOUSE_DEFS := [
@@ -171,17 +172,21 @@ func _build_buildings() -> void:
 	for d in BUILDING_DEFS:
 		var t: Vector2i = d["tile"]
 		var pos := Vector2(t.x * T + 8, t.y * T)
-		var b := Building.create(world, d["id"], d["name"], d["prop"], pos, d["door_dx"], d["level"])
+		var interior: String = d["id"] if d["id"] in ["casa", "restaurante", "guilda"] else ""
+		var b := Building.create(world, d["id"], d["name"], d["prop"], pos, d["door_dx"], interior)
 		buildings[d["id"]] = b
+		if interior != "":
+			door_spawns[interior] = pos + Vector2(d["door_dx"], 24)
 		var npc := NPC.create(world, d["npc"], pos + Vector2(d["npc_dx"], 10), "static")
 		npc.lines = d["lines"]
-	for d in HOUSE_DEFS:
+	for i in HOUSE_DEFS.size():
+		var d: Dictionary = HOUSE_DEFS[i]
 		var t: Vector2i = d["tile"]
 		var pos := Vector2(t.x * T + 8, t.y * T)
-		var prop := Pix.tex("props/%s.png" % d["prop"])
-		var b := Building.create(world, "casa_npc", "", d["prop"], pos, 0.0, 1)
-		b.door.enabled = false
+		var key := "casa_npc_%d" % i
+		var b := Building.create(world, "casa_npc", Interior.house_title(i), d["prop"], pos, 0.0, key)
 		b.label.visible = false
+		door_spawns[key] = pos + Vector2(0, 24)
 
 
 func _build_gate() -> void:
@@ -386,6 +391,8 @@ func _spawn_player() -> void:
 	var spawn := Vector2(SPINE_X * T + 8, 29 * T)
 	if Game.town_spawn == "gate":
 		spawn = Vector2(SPINE_X * T + 8, (GATE_Y - 3) * T)
+	elif Game.town_spawn.begins_with("door:"):
+		spawn = door_spawns.get(Game.town_spawn.substr(5), spawn)
 	player = Player.spawn(world, spawn)
 	player.set_camera_limits(Rect2(0, 0, W * T, H * T))
 

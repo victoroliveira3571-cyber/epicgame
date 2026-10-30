@@ -8,4 +8,4 @@ func run(dev: Node) -> void:
 			missing += ch
 	print("[smoke_font] glifos ausentes: ", missing)
 	await dev.wait(0.5)
-	await dev.shot("/private/tmp/claude-501/-Users-victor-Desktop-EPICGAME/e3184624-fc7c-45f0-b2d1-ae52c5b12071/scratchpad/shot_smoke.png")
+	await dev.shot("/Users/victor/Desktop/EPICGAME/game/_shots/shot_smoke.png")

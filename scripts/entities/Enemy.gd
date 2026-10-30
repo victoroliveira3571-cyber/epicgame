@@ -306,7 +306,7 @@ func _try_aggro(dist: float, pp: Vector2) -> bool:
 	if _has_los or dist < 40.0:
 		state = State.CHASE
 		_alert()
-		Audio.sfx("alert", -12.0, 0.1)
+		Audio.sfx("growl" if (behavior == "melee" or behavior == "charger") and randf() < 0.5 else "alert", -10.0 if behavior == "melee" else -12.0, 0.1)
 		_wake_nearby()
 		return true
 	return false

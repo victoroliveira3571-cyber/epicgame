@@ -6,7 +6,7 @@ GODOT="/Applications/Godot.app/Contents/MacOS/Godot"
 cd "$(dirname "$0")/.."
 "$GODOT" --path . "$@" &
 PID=$!
-( sleep "$LIMIT"; kill -9 $PID 2>/dev/null ) &
+( sleep "$LIMIT"; kill -9 $PID 2>/dev/null ) >/dev/null 2>&1 &
 WATCH=$!
 wait $PID 2>/dev/null
 CODE=$?

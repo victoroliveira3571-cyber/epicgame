@@ -6,7 +6,7 @@ extends Node2D
 
 var building_id: String = ""
 var display_name: String = ""
-var required_level: int = 1
+var interior_id: String = ""      # se não vazio, a porta leva a este interior (senão abre a janela)
 var prop_name: String = ""
 var door_dx: float = 0.0
 
@@ -22,26 +22,24 @@ class DoorTrigger extends Interactable:
 	var building: Building
 
 	func get_prompt() -> String:
-		if not building.is_unlocked():
-			return "Desbloqueia no nível %d" % building.required_level
 		return "[E] " + building.display_name
-
-	func can_interact(_player: Node) -> bool:
-		return building.is_unlocked()
 
 	func interact(_player: Node) -> void:
 		Audio.sfx("ui_open", -4.0)
-		HUD.open_window(building.building_id)
+		if building.interior_id != "":
+			Game.enter_interior(building.interior_id)
+		else:
+			HUD.open_window(building.building_id)
 
 
-static func create(parent: Node, id: String, title: String, prop: String, pos: Vector2, door_offset: float, level: int) -> Building:
+static func create(parent: Node, id: String, title: String, prop: String, pos: Vector2, door_offset: float, interior: String = "") -> Building:
 	var b := Building.new()
 	b.building_id = id
 	b.display_name = title
 	b.prop_name = prop
 	b.position = pos
 	b.door_dx = door_offset
-	b.required_level = level
+	b.interior_id = interior
 	parent.add_child(b)
 	return b
 
@@ -81,24 +79,8 @@ func _ready() -> void:
 	door.interact_range = 22.0
 	add_child(door)
 	light = Fx.make_light(self, Vector2(door_dx, -8), Color(1.0, 0.78, 0.45), 0.55, 0.0)
-	GameState.stats_changed.connect(_refresh)
-	_refresh()
-
-
-func is_unlocked() -> bool:
-	return GameState.level >= required_level
-
-
-func _refresh() -> void:
-	if is_unlocked():
-		sprite.modulate = Color.WHITE
-		label.text = display_name
-		label.add_theme_color_override("font_color", Color("fff1c9"))
-	else:
-		sprite.modulate = Color(0.5, 0.5, 0.58)
-		label.text = "%s (nv. %d)" % [display_name, required_level]
-		label.add_theme_color_override("font_color", Color("b5a9a0"))
+	label.text = display_name
 
 
 func set_night(amount: float) -> void:
-	light.energy = amount * 0.9 if is_unlocked() else 0.0
+	light.energy = amount * 0.9

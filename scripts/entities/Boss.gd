@@ -85,6 +85,7 @@ func _activate() -> void:
 	active = true
 	activated.emit(self)
 	Audio.sfx("voice3", -2.0)
+	Audio.jingle("boss_intro", -4.0)
 	Fx.shake_camera(get_player().camera, 3.0, 0.4)
 	HUD.show_boss(display_name, hp / max_hp)
 	Audio.play_music("boss")
@@ -278,6 +279,7 @@ func take_hit(amount: float, kb: Vector2, crit: bool, from: Vector2 = Vector2.ZE
 		Fx.float_text(get_parent(), "Enfurecido!", global_position + Vector2(0, -frame_h - 6), Color("ff6a5a"), 2, 22.0, 1.2)
 		Fx.ring(get_parent(), global_position + Vector2(0, -6), 60.0, Color(1, 0.3, 0.2), 0.5, 2.0)
 		Audio.sfx("voice3", -2.0)
+		Audio.sfx("rune_break", -4.0)
 		Fx.shake_camera(get_player().camera, 4.0, 0.4)
 
 
@@ -287,7 +289,7 @@ func _die() -> void:
 		if is_instance_valid(m) and (m as Enemy).state != State.DEAD:
 			(m as Enemy).take_hit(99999.0, Vector2.ZERO, false)
 	var w := get_parent()
-	Audio.jingle("boss_clear")
+	Audio.jingle("victory_flute", -2.0)
 	for i in 5:
 		var off := Vector2(randf_range(-18, 18), randf_range(-frame_h, 0))
 		Fx.fx(w, "explosion", global_position + off, 1.3)

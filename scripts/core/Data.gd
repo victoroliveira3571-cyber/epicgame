@@ -219,7 +219,7 @@ func _build_items() -> void:
 			var row: Array = rows[t]
 			var item := {
 				"id": row[0], "name": row[1], "kind": "equip", "slot": "weapon", "tier": t, "family": family,
-				"icon": "weapons/%s_icon" % row[2], "hand": "weapons/%s_hand" % row[2],
+				"icon": "weapons/%s_icon" % row[2], "hand": ("weapons/%s" if family == "bow" else "weapons/%s_hand") % row[2],
 				"tint": TIER_TINTS[t] if t >= 2 and row[2] in ["Bow", "Bow2", "MagicWand", "Sword2"] else Color.WHITE,
 				"atk": float(WEAPON_ATK[t]), "crit": float(WEAPON_CRIT[family] * (t + 1)) * 0.6,
 				"price": int(TIER_PRICE[t] * SLOT_PRICE_MULT["weapon"]),

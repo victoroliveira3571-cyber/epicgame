@@ -37,6 +37,8 @@ var inventory: Dictionary = {}        # item_id -> quantidade
 var equipped: Dictionary = {}         # slot -> item_id
 var upgrades: Dictionary = {}         # item_id -> nível de aprimoramento
 var furniture: Array = []             # ids de móveis comprados
+var furniture_layout: Dictionary = {} # id do móvel -> [x, y] na casa (px)
+var pomo_log: Array = []              # histórico de focos concluídos: {d: "AAAA-MM-DD", t: unix, m: minutos, s: cenário}
 
 # --- contadores (nunca resetam; missões leem daqui)
 var counters: Dictionary = {}
@@ -49,6 +51,7 @@ var audio_muted: bool = false
 var audio_volume: float = 1.0
 var music_volume: float = 0.7
 var tutorial_done: Dictionary = {}
+var pomo_cfg: Dictionary = {"focus": 25, "break": 5, "scene": "cafeteria"}   # escolhas da janela do Pomodoro
 
 # --- temporários (não salvos)
 var buffs: Dictionary = {}            # buff_id -> segundos restantes
@@ -564,6 +567,7 @@ func _tick_regen_and_hunger(delta: float) -> void:
 				if hunger == 0:
 					mark_dirty()
 					toast.emit("Você está com fome! Coma algo (F).", Color("ffb23e"))
+					Audio.sfx("cough", -4.0)
 				stats_changed.emit()
 
 
@@ -713,6 +717,12 @@ func _grant_reward(reward: Dictionary) -> void:
 
 
 # ==================================================================== Pomodoro
+## Registra um foco concluído no histórico (dias, semanas, meses e anos são calculados a partir daqui).
+func log_pomodoro(minutes: int, scene: String = "") -> void:
+	pomo_log.append({"d": _today(), "t": int(Time.get_unix_time_from_system()), "m": minutes, "s": scene})
+	save_now()
+
+
 ## Chamado ao concluir uma sessão de foco. Fome zerada = recompensa pela metade.
 func complete_focus_session(xp_reward: int, gold_reward: int) -> Dictionary:
 	var mult := 0.5 if hunger <= 0 else 1.0
@@ -731,6 +741,18 @@ func complete_focus_session(xp_reward: int, gold_reward: int) -> Dictionary:
 # ===================================================================== Mobília
 func owns_furniture(furniture_id: String) -> bool:
 	return furniture.has(furniture_id)
+
+
+func set_furniture_pos(furniture_id: String, pos: Vector2) -> void:
+	furniture_layout[furniture_id] = [int(pos.x), int(pos.y)]
+	_queue_save()
+
+
+func furniture_pos(furniture_id: String) -> Variant:
+	var v: Variant = furniture_layout.get(furniture_id)
+	if typeof(v) == TYPE_ARRAY and (v as Array).size() == 2:
+		return Vector2(float(v[0]), float(v[1]))
+	return null
 
 
 func buy_furniture(furniture_id: String) -> bool:
@@ -850,18 +872,50 @@ func save_now() -> void:
 		"level": level, "xp": xp, "xp_to_next": xp_to_next, "gold": gold, "hunger": hunger, "hp": hp,
 		"player_class": player_class, "talent_points": talent_points, "talents": talents,
 		"energy": energy, "energy_day": energy_day, "best_floor": best_floor, "playtime": playtime,
-		"inventory": inventory, "equipped": equipped, "upgrades": upgrades, "furniture": furniture,
+		"inventory": inventory, "equipped": equipped, "upgrades": upgrades, "furniture": furniture, "furniture_layout": furniture_layout, "pomo_log": pomo_log,
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
-		"music_volume": music_volume, "tutorial_done": tutorial_done,
+		"music_volume": music_volume, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
 	}
-	var file := FileAccess.open(save_path, FileAccess.WRITE)
+	# grava num arquivo temporário e troca: uma queda de energia não corrompe o save
+	var tmp_path := save_path + ".tmp"
+	var file := FileAccess.open(tmp_path, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(data, "\t"))
 		file.close()
+		var dir := DirAccess.open(save_path.get_base_dir())
+		if dir != null:
+			dir.rename(tmp_path.get_file(), save_path.get_file())
+		_daily_backup(data)
+
+
+## Uma cópia por dia em user://backups (guarda as 30 mais recentes).
+func _daily_backup(data: Dictionary) -> void:
+	if save_path.get_file() != "savegame.json":
+		return  # saves de teste não geram backup
+	var dir_path := save_path.get_base_dir() + "/backups"
+	DirAccess.make_dir_recursive_absolute(dir_path)
+	var target := "%s/savegame_%s.json" % [dir_path, _today()]
+	var f := FileAccess.open(target, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(data, "\t"))
+		f.close()
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	var names: Array = []
+	for n in dir.get_files():
+		if n.begins_with("savegame_") and n.ends_with(".json"):
+			names.append(n)
+	names.sort()
+	while names.size() > 30:
+		dir.remove(names.pop_front())
 
 
 func load_game() -> void:
+	# se o jogo caiu bem no meio da troca de arquivos, o temporário completo vale
+	if not FileAccess.file_exists(save_path) and FileAccess.file_exists(save_path + ".tmp"):
+		DirAccess.rename_absolute(save_path + ".tmp", save_path)
 	if not FileAccess.file_exists(save_path):
 		_reset_defaults()
 		return
@@ -898,10 +952,15 @@ func load_game() -> void:
 		playtime = float(d.get("playtime", 0.0))
 		upgrades = _dict_of(d.get("upgrades", {}))
 		furniture = d.get("furniture", []) if typeof(d.get("furniture", [])) == TYPE_ARRAY else []
+		furniture_layout = _dict_of(d.get("furniture_layout", {}))
+		pomo_log = d.get("pomo_log", []) if typeof(d.get("pomo_log", [])) == TYPE_ARRAY else []
 		counters = _dict_of(d.get("counters", {}))
 		daily = _dict_of(d.get("daily", {}))
 		music_volume = float(d.get("music_volume", 0.7))
 		tutorial_done = _dict_of(d.get("tutorial_done", {}))
+		var pc := _dict_of(d.get("pomo_cfg", {}))
+		for k in pc:
+			pomo_cfg[k] = pc[k]
 	else:
 		_migrate_v1(d)
 	for slot in Data.EQUIP_SLOTS:
@@ -963,6 +1022,8 @@ func debug_reset() -> void:
 	equipped = {}
 	upgrades = {}
 	furniture = []
+	furniture_layout = {}
+	pomo_log = []
 	counters = {}
 	claimed_missions = []
 	daily = {}

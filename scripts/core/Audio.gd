@@ -24,12 +24,15 @@ const CLOCK_DB := -16.0
 
 ## Nomes lógicos que apontam para faixas medievais (escolhe uma ao acaso quando há várias).
 const MUSIC_ALIASES := {
-	"town": ["medieval_1", "medieval_2", "medieval_3"],
+	"town": ["medieval_1", "medieval_2", "medieval_3", "happy_whistler"],
+	"pausa": ["happy_whistler"],
 	"town_night": ["medieval_ambient"],
 	"title": ["medieval_3"],
 }
 
 var _clock: AudioStreamPlayer
+var _ambience: AudioStreamPlayer
+var _ambience_name: String = ""
 
 
 func _ready() -> void:
@@ -64,14 +67,14 @@ func _music_db() -> float:
 	return MUSIC_DB + (linear_to_db(v) if v > 0.001 else -80.0)
 
 
-func _load_stream(path: String) -> AudioStream:
+func _load_stream(path: String, looping: bool = false) -> AudioStream:
 	if _streams.has(path):
 		return _streams[path]
 	var s: AudioStream = null
 	if ResourceLoader.exists(path):
 		s = load(path)
 		if s is AudioStreamOggVorbis or s is AudioStreamMP3:
-			s.loop = true
+			s.loop = looping
 	else:
 		push_warning("[Audio] não encontrado: " + path)
 	_streams[path] = s
@@ -92,7 +95,7 @@ func play_music(name: String, fade: float = 1.0) -> void:
 	var path := MUSIC_DIR + track + ".mp3"
 	if not ResourceLoader.exists(path):
 		path = MUSIC_DIR + track + ".ogg"
-	var stream := _load_stream(path)
+	var stream := _load_stream(path, true)
 	if stream == null:
 		return
 	var incoming := _music_b if _active_music == _music_a else _music_a
@@ -124,7 +127,7 @@ func sfx(name: String, volume_db: float = 0.0, pitch_var: float = 0.06) -> void:
 	if _last_played.has(name) and now - int(_last_played[name]) < 35:
 		return
 	_last_played[name] = now
-	var stream := _load_stream(SFX_DIR + name + ".wav")
+	var stream := _load_stream(_find(SFX_DIR, name))
 	if stream == null:
 		return
 	_play_on_pool(stream, volume_db, pitch_var)
@@ -136,7 +139,7 @@ func set_clock(on: bool) -> void:
 		if not on:
 			return
 		_clock = _make_player()
-		_clock.stream = _load_stream(SFX_DIR + "clock_tick.mp3")
+		_clock.stream = _load_stream(SFX_DIR + "clock_tick.mp3", true)
 		_clock.volume_db = CLOCK_DB
 	if _clock.stream == null:
 		return
@@ -147,9 +150,30 @@ func set_clock(on: bool) -> void:
 
 
 func jingle(name: String, volume_db: float = -2.0) -> void:
-	var stream := _load_stream(JINGLE_DIR + name + ".wav")
+	var stream := _load_stream(_find(JINGLE_DIR, name))
 	if stream != null:
 		_play_on_pool(stream, volume_db, 0.0)
+
+
+## Som de fundo contínuo (ex.: natureza na cena do Pomodoro). "" para.
+func set_ambience(name: String, volume_db: float = -14.0) -> void:
+	if name == _ambience_name:
+		return
+	_ambience_name = name
+	if _ambience == null:
+		_ambience = _make_player()
+	if name == "":
+		_ambience.stop()
+		return
+	_ambience.stream = _load_stream(MUSIC_DIR + name + ".mp3", true)
+	_ambience.volume_db = volume_db
+	_ambience.play()
+
+
+## Prefere o .mp3 (sons que o Victor adicionou) e cai no .wav original.
+func _find(dir: String, name: String) -> String:
+	var mp3 := dir + name + ".mp3"
+	return mp3 if ResourceLoader.exists(mp3) else dir + name + ".wav"
 
 
 func _play_on_pool(stream: AudioStream, volume_db: float, pitch_var: float) -> void:

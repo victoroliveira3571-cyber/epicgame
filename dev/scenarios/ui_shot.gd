@@ -1,7 +1,7 @@
 extends Node
 
 ## Abre janelas da interface e tira prints. Uso: --scenario=ui_shot -- --wins=inventario,personagem
-const OUT := "/private/tmp/claude-501/-Users-victor-Desktop-EPICGAME/fb73ee53-e2fb-41d8-854a-a4ec864f0bcc/scratchpad/"
+const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
 
 func run(dev: Node) -> void:
 	var wins: PackedStringArray = ["inventario", "personagem"]

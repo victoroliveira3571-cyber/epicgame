@@ -385,5 +385,6 @@ func _on_player_died() -> void:
 	if _ending:
 		return
 	_ending = true
+	Audio.jingle("defeat", -4.0)
 	await get_tree().create_timer(2.2).timeout
 	Game.finish_run(true)

@@ -176,7 +176,7 @@ static func window_panel(size: Vector2) -> Panel:
 	p.size = size
 	p.add_theme_stylebox_override("panel", flat(C_BG, Color.TRANSPARENT, 0))
 	var frame := Panel.new()
-	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	frame.add_theme_stylebox_override("panel", box_tex("nine_path_panel", 5, Vector4(0, 0, 0, 0), false))
 	p.add_child(frame)

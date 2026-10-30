@@ -1,0 +1,16 @@
+extends Node
+const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+func run(dev: Node) -> void:
+	GameState.debug_reset()
+	GameState.choose_class("cavaleiro")
+	get_tree().reload_current_scene()
+	await dev.wait(1.0)
+	var player: Player = get_tree().get_first_node_in_group("player")
+	player.global_position = Vector2(300, 620)
+	player.camera.reset_smoothing()
+	await dev.wait(0.6)
+	await dev.shot(OUT + "houses_west.png")
+	player.global_position = Vector2(760, 620)
+	player.camera.reset_smoothing()
+	await dev.wait(0.6)
+	await dev.shot(OUT + "houses_east.png")

@@ -97,7 +97,7 @@ func _collect(player: Player) -> void:
 		"gold":
 			var gained := GameState.add_gold(amount, true)
 			Game.run_add("gold", gained)
-			Audio.sfx("coin", -8.0, 0.12)
+			Audio.sfx("coin_big" if amount >= 25 else "coin", -8.0, 0.12)
 			Fx.float_text(world, "+%d" % gained, global_position + Vector2(0, -10), Color("ffd84a"))
 		"heart":
 			var heal_amount := maxi(8, int(GameState.get_max_hp() * 0.15))

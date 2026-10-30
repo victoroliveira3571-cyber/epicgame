@@ -83,6 +83,6 @@ func _buy(id: String) -> void:
 
 func _sell_one(id: String) -> void:
 	if GameState.sell_item(id):
-		Audio.sfx("coin2")
+		Audio.sfx("coin_big", -4.0)
 	else:
 		Audio.sfx("ui_error")

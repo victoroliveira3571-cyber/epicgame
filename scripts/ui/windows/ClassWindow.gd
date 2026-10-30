@@ -13,6 +13,7 @@ func _init() -> void:
 
 func build() -> void:
 	close_button.visible = false
+	_add_landscape()
 	var intro := UI.label("Quem vai explorar a masmorra? A escolha é definitiva.", UI.C_DIM)
 	add_to_body(intro, Vector2(2, 0))
 	var ids := Data.CLASSES.keys()
@@ -51,6 +52,27 @@ func build() -> void:
 func _choose(id: String) -> void:
 	_picked = id
 	HUD.confirm("Jogar como %s? Não dá para trocar depois." % Data.CLASSES[id]["name"], func() -> void:
+		Audio.sfx("magic_select", -2.0)
 		GameState.choose_class(id)
 		HUD.close_window()
 		Game.go_to_town("start"))
+
+
+## Paisagem em pixel art atrás da janela (campo de dia, mar ao entardecer, montanhas à noite).
+func _add_landscape() -> void:
+	if has_node("Paisagem"):
+		return
+	var hour := int(Time.get_time_dict_from_system()["hour"])
+	var name := "campo_dia" if hour >= 7 and hour < 17 else ("mar_entardecer" if hour >= 17 and hour < 20 else "montanhas_noite")
+	var path := "res://assets/custom/paisagem/%s.png" % name
+	if not ResourceLoader.exists(path):
+		return
+	var tr := TextureRect.new()
+	tr.name = "Paisagem"
+	tr.texture = load(path)
+	tr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(tr)
+	move_child(tr, 0)

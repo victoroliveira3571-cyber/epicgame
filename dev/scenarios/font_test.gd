@@ -1,6 +1,6 @@
 extends Node
 
-const OUT := "/private/tmp/claude-501/-Users-victor-Desktop-EPICGAME/e3184624-fc7c-45f0-b2d1-ae52c5b12071/scratchpad/"
+const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
 
 func run(dev: Node) -> void:
 	var cl := CanvasLayer.new()
