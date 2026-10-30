@@ -37,12 +37,12 @@ func _setup_stats() -> void:
 	body_radius = float(boss_data["radius"])
 	var cycle := maxi(0, (floor_n / 5 - 1) / Data.BOSS_ORDER.size())
 	var mult := 1.0 + 0.35 * float(cycle)
-	max_hp = float(boss_data["hp"]) * mult
+	max_hp = float(boss_data["hp"]) * Data.BOSS_HP_MULT * mult
 	hp = max_hp
-	contact_dmg = float(boss_data["dmg"]) * mult
+	contact_dmg = float(boss_data["dmg"]) * Data.BOSS_DMG_MULT * mult
 	move_speed = float(boss_data["speed"])
-	xp_reward = int(round(float(boss_data["xp"]) * mult))
-	gold_range = boss_data["gold"].duplicate()
+	xp_reward = int(round(float(boss_data["xp"]) * Data.BOSS_XP_MULT * mult))
+	gold_range = [int(round(float(boss_data["gold"][0]) * Data.BOSS_GOLD_MULT)), int(round(float(boss_data["gold"][1]) * Data.BOSS_GOLD_MULT))]
 	aggro_radius = 170.0
 	leash_radius = 400.0
 	base_scale = 1.0

@@ -414,8 +414,8 @@ func _tick_pomodoro(delta: float) -> void:
 
 func _pomodoro_done() -> void:
 	if pomo_state == "focus":
-		var xp := int(round(pomo_minutes * 2.4))
-		var gold := int(round(pomo_minutes * 1.2))
+		var xp := int(round(pomo_minutes * 4.0))
+		var gold := int(round(pomo_minutes * 2.0))
 		var r := GameState.complete_focus_session(xp, gold)
 		Audio.jingle("success2")
 		show_toast("Foco concluído! +%d XP  +%d ouro  +%d energia" % [r["xp"], r["gold"], r["energy"]], UI.C_GOLD)

@@ -76,11 +76,12 @@ func _setup_stats() -> void:
 	behavior = data["behavior"]
 	body_radius = float(data.get("radius", 5.0))
 	base_scale = float(data.get("scale", 1.0))
-	max_hp = float(data["hp"]) * Data.floor_scale_hp(floor_n)
-	contact_dmg = float(data["dmg"]) * Data.floor_scale_dmg(floor_n)
+	max_hp = Data.ENEMY_BASE["hp"] * Data.monster_rel(def_id, "hp") * Data.floor_scale_hp(floor_n)
+	contact_dmg = Data.ENEMY_BASE["dmg"] * Data.monster_rel(def_id, "dmg") * Data.floor_scale_dmg(floor_n)
 	move_speed = float(data["speed"])
-	xp_reward = int(round(float(data["xp"]) * Data.floor_scale_reward(floor_n)))
-	gold_range = data["gold"].duplicate()
+	xp_reward = maxi(1, int(round(Data.ENEMY_BASE["xp"] * Data.monster_rel(def_id, "xp") * Data.floor_scale_reward(floor_n))))
+	var gold_k: float = Data.ENEMY_BASE["gold"] / ((float(data["gold"][0]) + float(data["gold"][1])) / 2.0) * Data.monster_rel(def_id, "gold")
+	gold_range = [maxi(1, int(round(float(data["gold"][0]) * gold_k))), maxi(1, int(round(float(data["gold"][1]) * gold_k)))]
 	if is_elite:
 		max_hp *= 2.3
 		contact_dmg *= 1.3

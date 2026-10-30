@@ -412,8 +412,19 @@ func boss_for_floor(floor_n: int) -> String:
 	return BOSS_ORDER[((floor_n / 5) - 1) % BOSS_ORDER.size()]
 
 
+# Equilíbrio: a força dos monstros depende do ANDAR, não do bioma. Cada monstro vale
+# (valor dele / média do seu bioma) x base x curva do andar. Assim monstros diferentes
+# continuam variados, mas não há saltos de dificuldade ao trocar de bioma.
+# Valores calibrados com a simulação de progressão (nível ~ andar, ver PROGRESSO.md).
+const ENEMY_BASE := {"hp": 36.0, "dmg": 5.0, "xp": 5.5, "gold": 4.0}
+const BOSS_HP_MULT := 4.0
+const BOSS_DMG_MULT := 0.85
+const BOSS_XP_MULT := 3.0
+const BOSS_GOLD_MULT := 0.4
+
+
 func floor_scale_hp(floor_n: int) -> float:
-	return 1.0 + 0.22 * float(floor_n - 1)
+	return 1.0 + 0.24 * float(floor_n - 1)
 
 
 func floor_scale_dmg(floor_n: int) -> float:
@@ -421,7 +432,29 @@ func floor_scale_dmg(floor_n: int) -> float:
 
 
 func floor_scale_reward(floor_n: int) -> float:
-	return 1.0 + 0.12 * float(floor_n - 1)
+	return pow(float(maxi(floor_n, 1)), 1.05)
+
+
+## Valor relativo de um monstro dentro do bioma dele (1.0 = média). stat: hp | dmg | xp | gold.
+func monster_rel(monster_id: String, stat: String) -> float:
+	var biome_list: Array = []
+	for b in BIOMES:
+		if monster_id in b["enemies"]:
+			biome_list = b["enemies"]
+			break
+	if biome_list.is_empty():
+		return 1.0
+	var total := 0.0
+	for id in biome_list:
+		total += _monster_stat_value(id, stat)
+	return _monster_stat_value(monster_id, stat) / (total / float(biome_list.size()))
+
+
+func _monster_stat_value(monster_id: String, stat: String) -> float:
+	var m: Dictionary = MONSTERS[monster_id]
+	if stat == "gold":
+		return (float(m["gold"][0]) + float(m["gold"][1])) / 2.0
+	return float(m[stat])
 
 
 # --------------------------------------------------------------------- Missões
