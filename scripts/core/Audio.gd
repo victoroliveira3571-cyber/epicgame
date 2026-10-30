@@ -20,6 +20,16 @@ var _fade_tween: Tween
 var _last_played: Dictionary = {}  # evita o mesmo som disparar dezenas de vezes no mesmo frame
 
 const MUSIC_DB := -9.0
+const CLOCK_DB := -16.0
+
+## Nomes lógicos que apontam para faixas medievais (escolhe uma ao acaso quando há várias).
+const MUSIC_ALIASES := {
+	"town": ["medieval_1", "medieval_2", "medieval_3"],
+	"town_night": ["medieval_ambient"],
+	"title": ["medieval_3"],
+}
+
+var _clock: AudioStreamPlayer
 
 
 func _ready() -> void:
@@ -60,7 +70,7 @@ func _load_stream(path: String) -> AudioStream:
 	var s: AudioStream = null
 	if ResourceLoader.exists(path):
 		s = load(path)
-		if s is AudioStreamOggVorbis:
+		if s is AudioStreamOggVorbis or s is AudioStreamMP3:
 			s.loop = true
 	else:
 		push_warning("[Audio] não encontrado: " + path)
@@ -75,7 +85,14 @@ func play_music(name: String, fade: float = 1.0) -> void:
 	if name == "":
 		stop_music(fade)
 		return
-	var stream := _load_stream(MUSIC_DIR + name + ".ogg")
+	var track := name
+	if MUSIC_ALIASES.has(name):
+		var options: Array = MUSIC_ALIASES[name]
+		track = options[randi() % options.size()]
+	var path := MUSIC_DIR + track + ".mp3"
+	if not ResourceLoader.exists(path):
+		path = MUSIC_DIR + track + ".ogg"
+	var stream := _load_stream(path)
 	if stream == null:
 		return
 	var incoming := _music_b if _active_music == _music_a else _music_a
@@ -111,6 +128,22 @@ func sfx(name: String, volume_db: float = 0.0, pitch_var: float = 0.06) -> void:
 	if stream == null:
 		return
 	_play_on_pool(stream, volume_db, pitch_var)
+
+
+## Tique-taque do relógio (sessão de foco do Pomodoro).
+func set_clock(on: bool) -> void:
+	if _clock == null:
+		if not on:
+			return
+		_clock = _make_player()
+		_clock.stream = _load_stream(SFX_DIR + "clock_tick.mp3")
+		_clock.volume_db = CLOCK_DB
+	if _clock.stream == null:
+		return
+	if on and not _clock.playing:
+		_clock.play()
+	elif not on and _clock.playing:
+		_clock.stop()
 
 
 func jingle(name: String, volume_db: float = -2.0) -> void:
