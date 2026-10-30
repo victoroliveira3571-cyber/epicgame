@@ -26,3 +26,23 @@ func open_window(id: String) -> void:
 
 func on_scene_ready(_which: String) -> void:
 	pass
+
+
+func floor_banner(_title: String, _subtitle: String) -> void:
+	pass
+
+
+func show_boss(_boss_name: String, _ratio: float) -> void:
+	pass
+
+
+func update_boss(_ratio: float) -> void:
+	pass
+
+
+func hide_boss() -> void:
+	pass
+
+
+func confirm(_text: String, on_yes: Callable) -> void:
+	on_yes.call()
