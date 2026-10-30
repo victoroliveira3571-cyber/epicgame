@@ -10,9 +10,11 @@ const SCENES := {
 	"estudo": {"name": "Torre de estudo", "desc": "Vela acesa e pergaminhos; à noite, chuva na janela."},
 	"cafeteria": {"name": "Cafeteria medieval", "desc": "Taverna aconchegante com lareira e caneca quente."},
 	"natureza": {"name": "Na natureza", "desc": "Sob a árvore, perto do lago, numa manhã de sol."},
-	"livraria": {"name": "Livraria", "desc": "Estantes até o teto e luz dourada da tarde."},
+	"livraria": {"name": "Biblioteca", "desc": "Estantes até o teto e luz dourada da tarde."},
+	"casa": {"name": "Minha casa", "desc": "Seu quarto: cama arrumada, estante e o pôr do sol na janela."},
+	"taverna": {"name": "Taverna", "desc": "Noite animada, lanternas acesas e garrafas atrás do balcão."},
 }
-const ORDER := ["estudo", "cafeteria", "natureza", "livraria"]
+const ORDER := ["casa", "estudo", "livraria", "cafeteria", "taverna", "natureza"]
 const HS := 1.6          # escala do herói nas cenas
 
 # Pixel art (tools/gen_pomodoro_bg.py e gen_pomodoro_fx.py): fundo 400x208 em escala 3, subido 12 px.
@@ -26,6 +28,8 @@ const LAYOUT := {
 	"cafeteria": {"hip": Vector2(145, 153), "sit": "chair", "mug": Vector2(174, 145), "book": Vector2(190, 145)},
 	"estudo": {"hip": Vector2(145, 151), "sit": "chair", "mug": Vector2(174, 143), "book": Vector2(190, 143)},
 	"natureza": {"hip": Vector2(165, 177), "sit": "ground", "mug": Vector2(196, 182), "book": Vector2(213, 183)},
+	"casa": {"hip": Vector2(145, 150), "sit": "chair", "mug": Vector2(174, 142), "book": Vector2(190, 142)},
+	"taverna": {"hip": Vector2(145, 153), "sit": "chair", "mug": Vector2(174, 145), "book": Vector2(190, 145)},
 }
 # Animações sobre o fundo: [sprite, x_arte, y_arte (canto superior esquerdo), fase]
 const FX_SPOTS := {
@@ -35,6 +39,8 @@ const FX_SPOTS := {
 	"livraria": [],
 	"estudo": [["vela", 277, 115, 0.0]],
 	"natureza": [["agua", 170, 136, 0.0], ["agua", 250, 141, 0.4], ["agua", 330, 137, 0.7]],
+	"casa": [],
+	"taverna": [["vela", 269, 117, 0.2]],
 }
 # Pose do herói LPC (pixels do quadro 64x64): mão no colo, ombro do braço que estica e boca.
 const POSE := {

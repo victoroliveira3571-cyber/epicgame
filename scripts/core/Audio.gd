@@ -140,6 +140,7 @@ func _crossfade_to(stream: AudioStream, fade: float) -> void:
 	var outgoing := _active_music
 	incoming.stream = stream
 	incoming.volume_db = -60.0
+	incoming.stream_paused = false
 	incoming.play()
 	_active_music = incoming
 	if _fade_tween != null and _fade_tween.is_valid():
@@ -249,6 +250,12 @@ func pomo_update(fade: float = 1.5) -> void:
 			_pl_index = 0
 			_play_track(fade)
 	_update_ambience(scene if active else "")
+	# timer pausado = música e ambiente pausados no mesmo ponto (voltam juntos com o tempo)
+	var hold := HUD.pomo_state == "paused" and _pomo_genre != ""
+	if _active_music != null:
+		_active_music.stream_paused = hold
+	for id in _amb_players:
+		(_amb_players[id] as AudioStreamPlayer).stream_paused = HUD.pomo_state == "paused"
 
 
 func _play_track(fade: float) -> void:

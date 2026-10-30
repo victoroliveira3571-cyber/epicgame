@@ -23,6 +23,7 @@ var road_points: Array = []
 var placed_points: Array = []
 var daylight_timer: float = 0.0
 var forced_hour: float = -1.0
+var minimap_tex: Texture2D       # chão da cidade em miniatura (minimapa do HUD)
 
 const BUILDING_DEFS := [
 	{"id": "casa", "name": "Casa", "prop": "b_casa_laranja", "tile": Vector2i(14, 25), "door_dx": -8.0,
@@ -33,6 +34,8 @@ const BUILDING_DEFS := [
 		"npc": "Villager4", "npc_dx": 30.0, "lines": ["Armas novas chegaram!", "Equipamento bom salva vidas.", "Só vendo o que presta."]},
 	{"id": "forja", "name": "Ferreiro", "prop": "b_forja", "tile": Vector2i(51, 25), "door_dx": 0.0,
 		"npc": "Caveman", "npc_dx": -30.0, "lines": ["Traga barras e ouro.", "Aprimoro qualquer arma.", "Ferro quente, trabalho bom."]},
+	{"id": "biblioteca", "name": "Biblioteca", "prop": "b_salao_vermelho", "tile": Vector2i(22, 17), "door_dx": 0.0, "tint": Color(0.72, 0.86, 1.0),
+		"npc": "Master", "npc_dx": 36.0, "lines": ["Silêncio, por favor... aqui se estuda.", "Cada livro é uma aventura.", "As mesas lá dentro estão livres."]},
 	{"id": "guilda", "name": "Guilda dos Aventureiros", "prop": "h_salao_madeira", "tile": Vector2i(32, 17), "door_dx": 0.0,
 		"npc": "OldMan3", "npc_dx": 44.0, "lines": ["Bem-vindo, aventureiro!", "A masmorra espera por você.", "Quem foca, conquista."]},
 ]
@@ -51,7 +54,11 @@ func _ready() -> void:
 		if arg.begins_with("--hour="):
 			forced_hour = float(arg.substr(7))
 	_build_masks()
+	add_to_group("town")
 	var img := TileComposer.compose_town(W, H, dirt, water, rng)
+	var small := img.duplicate() as Image
+	small.resize(int(W * 2), int(H * 2), Image.INTERPOLATE_BILINEAR)
+	minimap_tex = ImageTexture.create_from_image(small)
 	var ground := Sprite2D.new()
 	ground.texture = ImageTexture.create_from_image(img)
 	ground.centered = false
@@ -106,6 +113,7 @@ func _build_masks() -> void:
 	_rect_fill(dirt, 8, 37, 56, 39)
 	_rect_fill(dirt, SPINE_X - 1, 17, SPINE_X + 1, 47)
 	_rect_fill(dirt, 27, 22, 37, 30)
+	_rect_fill(dirt, 21, 18, 23, AVENUE_Y - 1)   # caminho até a biblioteca
 	# lago esquerdo e lagoa direita
 	_rect_fill(water, 8, 30, 16, 35)
 	_rect_fill(water, 47, 31, 52, 35)
@@ -172,8 +180,10 @@ func _build_buildings() -> void:
 	for d in BUILDING_DEFS:
 		var t: Vector2i = d["tile"]
 		var pos := Vector2(t.x * T + 8, t.y * T)
-		var interior: String = d["id"] if d["id"] in ["casa", "restaurante", "guilda"] else ""
+		var interior: String = d["id"] if d["id"] in ["casa", "restaurante", "guilda", "biblioteca"] else ""
 		var b := Building.create(world, d["id"], d["name"], d["prop"], pos, d["door_dx"], interior)
+		if d.has("tint") and b.sprite != null:
+			b.sprite.modulate = d["tint"]
 		buildings[d["id"]] = b
 		if interior != "":
 			door_spawns[interior] = pos + Vector2(d["door_dx"], 24)
@@ -324,7 +334,7 @@ func _build_npcs() -> void:
 		n.move_speed = rng.randf_range(14.0, 20.0)
 		n.lines = lines
 	# bichinhos
-	var animals := [["ChickenWhite", 4], ["ChickenBrown", 3], ["Cat", 1], ["CatOrange", 1], ["Dog", 1], ["Pig", 2], ["Cow", 2]]
+	var animals := [["ChickenWhite", 1], ["ChickenBrown", 1], ["Cat", 1], ["Dog", 1]]
 	for a in animals:
 		for k in a[1]:
 			var pos := _random_grass_near(Vector2(520, 460), 330.0)

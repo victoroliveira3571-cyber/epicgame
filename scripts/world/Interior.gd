@@ -95,13 +95,15 @@ func _ready() -> void:
 		_build_restaurant()
 	elif id == "guilda":
 		_build_guild()
+	elif id == "biblioteca":
+		_build_library()
 	else:
 		_build_resident_house()
 	_spawn_player()
 	var mod := CanvasModulate.new()
 	mod.color = Color(1.0, 0.94, 0.86)
 	add_child(mod)
-	Audio.play_music("home")
+	Audio.play_music("interior_taverna" if id == "restaurante" else "interior_manor")
 	HUD.on_scene_ready("interior")
 
 
@@ -121,6 +123,11 @@ func _configure() -> void:
 		rows = 18
 		floor_tex = "floor_stone"
 		wall_tex = "wall_stone"
+	elif id == "biblioteca":
+		cols = 30
+		rows = 17
+		floor_tex = "floor_wood_dark"
+		wall_tex = "wall_cream"
 	else:
 		var h: Dictionary = HOUSES[_house_index()]
 		cols = 28
@@ -288,6 +295,43 @@ func light(pos: Vector2, color: Color, size: float, energy: float) -> void:
 	Fx.make_light(world, pos, color, size, energy)
 
 
+## Mesa onde dá para estudar: abre o Pomodoro preso ao cenário deste lugar.
+func study_spot(scene: String, pos: Vector2) -> Spot:
+	return spot("Estudar aqui (Pomodoro)", pos, func() -> void: HUD.open_pomodoro_at(scene), 22.0)
+
+
+# ================================================================== Biblioteca
+func _build_library() -> void:
+	var w := cols * T
+	var cx := w / 2.0
+	for x in [40.0, 82.0, 124.0, w - 124.0, w - 82.0, w - 40.0]:
+		prop("i_bookcase", Vector2(x, 62), false)
+	prop("i_painting", Vector2(cx, 28), false, true)
+	# balcão da bibliotecária
+	for dx in [-24.0, 24.0]:
+		prop("i_counter", Vector2(cx + dx, 100))
+	_block(Rect2(cx - 50, 44, 100, 36))
+	npc("OldWoman", Vector2(cx, 82), ["Bem-vindo à biblioteca.", "As mesas de estudo estão livres.", "Um pomodoro por vez, sem pressa."])
+	prop("i_desk_paper", Vector2(cx + 30, 92), false)
+	# estantes no meio da sala
+	for x in [70.0, w - 70.0]:
+		prop("i_bookshelf_s", Vector2(x, 150))
+		prop("i_bookshelf_s", Vector2(x, 200))
+	# mesas de estudo
+	for t in [Vector2(cx - 70, 170), Vector2(cx + 70, 170), Vector2(cx - 70, 222), Vector2(cx + 70, 222)]:
+		prop("i_table", t, true)
+		prop("i_stool", t + Vector2(-16, 6))
+		prop("i_stool", t + Vector2(16, 6))
+		prop("i_mug", t + Vector2(-3, -8), false)
+		study_spot("livraria", t + Vector2(0, 14))
+	prop("i_rug_big", Vector2(cx, 196), false, true)
+	npc("Child", Vector2(cx - 40, 200), ["Shhh! Estou lendo.", "Esse livro tem dragões!"], "wander", 40.0)
+	npc("SorcererOrange", Vector2(cx + 40, 150), ["Procurando um grimório antigo...", "Ler também é treinar."], "wander", 40.0)
+	light(Vector2(cx, 80), Color(1.0, 0.86, 0.6), 2.4, 0.3)
+	light(Vector2(cx - 70, 190), Color(1.0, 0.8, 0.55), 1.3, 0.25)
+	light(Vector2(cx + 70, 190), Color(1.0, 0.8, 0.55), 1.3, 0.25)
+
+
 # ================================================================== Casa do jogador
 const FURNITURE_DEFAULTS := {
 	"cama": Vector2(44, 108), "estante": Vector2(120, 64), "lareira": Vector2(196, 60), "trofeu": Vector2(276, 64),
@@ -303,6 +347,10 @@ func _build_home() -> void:
 	prop("i_desk_paper", Vector2(412, 64))
 	spot("Catálogo de móveis", Vector2(412, 76), func() -> void: HUD.open_window("casa"), 24.0)
 	prop("i_chest", Vector2(32, 232))
+	# escrivaninha de estudo: abre o Pomodoro com o cenário da casa
+	prop("i_desk_paper", Vector2(150, 230))
+	prop("i_stool", Vector2(150, 246))
+	study_spot("casa", Vector2(150, 244))
 	_place_furniture()
 	light(Vector2(224, 130), Color(1.0, 0.85, 0.6), 1.8, 0.3)
 	HUD.set_hint("V  Organizar móveis")
@@ -455,6 +503,7 @@ func _build_restaurant() -> void:
 		prop("i_stool", t + Vector2(-16, 6))
 		prop("i_stool", t + Vector2(16, 6))
 		prop("i_bowl2", t + Vector2(2, -6), false)
+	study_spot("taverna", Vector2(135, 240))
 	prop("i_rug_big", Vector2(cx, 214), false, true)
 	prop("i_painting", Vector2(w - 190, 28), false, true)
 	prop("i_painting", Vector2(190, 28), false, true)

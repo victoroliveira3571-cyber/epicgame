@@ -213,6 +213,8 @@ static func compose_town(w: int, h: int, dirt: PackedByteArray, water: PackedByt
 			elif r2 < 0.075:
 				var f: Vector2i = flowers[rng.randi() % flowers.size()]
 				blend(canvas, nature, f.x, f.y, x, y)
-	autotile(canvas, floor_set, dirt, w, h, Vector2i(0, 7))
+	# caminhos de pedra (tools/gen_stone_path.py); cai na terra se a imagem faltar
+	var stone := src_img("res://assets/custom/tiles/TilesetFloorStone.png")
+	autotile(canvas, stone if stone != null else floor_set, dirt, w, h, Vector2i(0, 7))
 	autotile(canvas, water_set, water, w, h, Vector2i(0, 6))
 	return canvas

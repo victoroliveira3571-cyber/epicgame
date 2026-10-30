@@ -7,7 +7,7 @@ extends UIWindow
 const FOCUS_PRESETS := [15, 25, 45, 60]
 const BREAK_PRESETS := [5, 10, 15, 20]
 const VIEW := Vector2(600, 282)        # área da cena no modo foco
-const SCENE_CROP_TOP := 16.0           # corta um pouco do teto para caber a barra de controles
+const SCENE_CROP_TOP := 4.0            # corta só um fio do teto; o resto sai do chão, embaixo
 const MIXER_W := 232.0
 
 var focus_min: int = 25
@@ -131,7 +131,10 @@ func _build_settings() -> void:
 		rebuild()))
 	left.add_child(UI.spacer(2))
 	left.add_child(UI.label("Cenário", UI.C_ORANGE_L))
+	if HUD.pomo_place != "":
+		left.add_child(UI.wrap_label("%s (fixo: você está estudando neste lugar)" % StudyScene.SCENES[scene_id]["name"], UI.C_TEXT, 272))
 	var grid := GridContainer.new()
+	grid.visible = HUD.pomo_place == ""
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 4)
 	grid.add_theme_constant_override("v_separation", 3)
@@ -285,12 +288,15 @@ func _build_running() -> void:
 	discard.disabled = not HUD.is_focus_running()
 	btns.add_child(discard)
 	btns.add_child(_sep())
-	btns.add_child(UI.button("<", func() -> void: _step_scene(-1), 16))
+	var locked := HUD.pomo_place != ""
+	if not locked:
+		btns.add_child(UI.button("<", func() -> void: _step_scene(-1), 16))
 	var sname := UI.label(StudyScene.SCENES[scene_id]["name"], UI.C_ORANGE_L)
-	sname.custom_minimum_size.x = 104
+	sname.custom_minimum_size.x = 104 if not locked else 140
 	sname.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	btns.add_child(sname)
-	btns.add_child(UI.button(">", func() -> void: _step_scene(1), 16))
+	if not locked:
+		btns.add_child(UI.button(">", func() -> void: _step_scene(1), 16))
 	btns.add_child(_sep())
 	btns.add_child(UI.button("Sons", func() -> void: _toggle_mixer(), 40))
 	btns.add_child(UI.button("Histórico", func() -> void: HUD.open_window("historico"), 56))

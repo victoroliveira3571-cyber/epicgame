@@ -22,7 +22,8 @@ PROPS = "assets/ninja/props/"
 BOOK_PAL = [C("8c2f39"), C("2f5d62"), C("c7923e"), C("3d3a6b"), C("5b7a3a"), C("a8543a"), C("6b3a5a"), C("d6c08a")]
 WOOD = [C("94603a"), C("b9814e"), C("6f4529"), C("4a2d1a")]   # tampo, brilho, frente, sombra
 # quadril do herói (x, y) em pixels de arte; cadeira em x-23, tampo da mesa de x+12 em diante
-HIP = {"livraria": (145, 148), "cafeteria": (145, 153), "estudo": (145, 151), "natureza": (165, 177)}
+HIP = {"livraria": (145, 148), "cafeteria": (145, 153), "estudo": (145, 151), "natureza": (165, 177),
+       "casa": (145, 150), "taverna": (145, 153)}
 
 
 def prop(name):
@@ -537,6 +538,159 @@ def estudo(noite):
     return bg, fg
 
 
+# ================================================================ CASA (quarto do herói)
+def casa():
+    bg, fg = canvas(W, H), canvas(W, H)
+    # papel de parede listrado e lambri
+    rect(bg, 0, 0, W - 1, 160, C("c9b48a"))
+    for x in range(0, W, 12):
+        rect(bg, x, 0, x + 5, 118, C("bfa87e"))
+    box(bg, -2, 0, W + 1, 5, C("6b4430"), C("8a5a3e"))
+    rect(bg, 0, 118, W - 1, 160, C("7a5236"))
+    hline(bg, 0, W - 1, 118, OUT)
+    hline(bg, 0, W - 1, 119, C("9a6a44"))
+    for x in range(0, W, 26):
+        vline(bg, x, 120, 159, OUT)
+        vline(bg, x + 1, 120, 159, C("8a5e3e"))
+    # janela central com cortinas (fim de tarde)
+    wx0, wy0, wx1, wy1 = 152, 28, 248, 104
+    vgrad(bg, wx0, wy0, wx1, wy1, [C("7aa8e0"), C("a8c4ea"), C("f4c890"), C("f0a070")])
+    cloud(bg, 160, 50, 22, C("fff4e8"), C("e8d0c0"))
+    for i in range(6):
+        hx = 154 + i * 16
+        hh = 8 + (i * 5) % 9
+        rect(bg, hx, wy1 - hh, hx + 12, wy1, C("4a3a5a"))
+        rect(bg, hx + 5, wy1 - hh + 3, hx + 6, wy1 - hh + 4, C("ffd27a"))
+    for (a, b, c, d) in ((wx0 - 4, wy0 - 4, wx1 + 4, wy0 - 1), (wx0 - 4, wy1 + 1, wx1 + 4, wy1 + 4),
+                         (wx0 - 4, wy0 - 4, wx0 - 1, wy1 + 4), (wx1 + 1, wy0 - 4, wx1 + 4, wy1 + 4),
+                         (198, wy0, 201, wy1), (wx0, 64, wx1, 66)):
+        rect(bg, a, b, c, d, C("5a3a28"))
+    box(bg, wx0 - 8, wy1 + 3, wx1 + 8, wy1 + 8, C("6a4430"), C("8a5a3e"), C("3a2418"))
+    hline(bg, wx0 - 14, wx1 + 14, wy0 - 9, C("3a2418"))
+    for side in (0, 1):
+        x0 = wx0 - 14 if side == 0 else wx1 - 6
+        box(bg, x0, wy0 - 8, x0 + 20, wy1 + 14, C("b8454a"), C("d8656a"), C("7a2a30"))
+        for k in range(3):
+            vline(bg, x0 + 5 + k * 5, wy0 - 6, wy1 + 12, C("9a3a40"))
+    # cama à esquerda
+    box(bg, 6, 108, 16, 168, C("6a4228"), C("8a5a36"), C("3a2414"))
+    box(bg, 14, 136, 92, 162, C("e8dcc8"), C("fff6e8"), C("b8a890"))
+    box(bg, 18, 126, 40, 138, C("f4f0e4"), C("ffffff"), C("c8c0b0"))
+    box(bg, 38, 132, 92, 160, C("4a6a9a"), C("6a8aba"), C("2a4a6a"))
+    for k in range(4):
+        hline(bg, 40, 90, 138 + k * 6, C("3a5a8a"))
+    box(bg, 88, 128, 96, 168, C("6a4228"), C("8a5a36"), C("3a2414"))
+    # quadro acima da cama
+    box(bg, 30, 52, 74, 84, C("8a5a36"), C("b07a4a"), C("3a2418"))
+    vgrad(bg, 34, 56, 70, 80, [C("8fd0f2"), C("cfeaf2")])
+    poly(bg, [(34, 80), (48, 64), (58, 74), (64, 68), (70, 80)], C("5a9a4a"))
+    # estante com plantas e livros à direita
+    bookcase(bg, 300, 40, 372, 161, 4, 91)
+    hanging_plant(bg, 350, 22, 18)
+    # vaso grande
+    box(bg, 378, 140, 396, 160, C("a8543a"), C("c86a4a"), C("7a3a28"))
+    for k in range(7):
+        ellipse(bg, 374 + k * 3, 110 + (k % 3) * 6, 384 + k * 3, 126 + (k % 3) * 6, C("3f8a48"), OUT)
+    ellipse(bg, 380, 112, 392, 124, C("57b254"))
+    floor_planks(bg, 160, [C("8a5a3a"), C("7a4e32"), C("5a3a26")], C("3a2414"))
+    light_poly(bg, [(152, 108), (248, 108), (300, 190), (110, 190)], C("ffe2a0"), 0.18)
+    # tapete redondo
+    ellipse(bg, 120, 170, 280, 190, OUT)
+    ellipse(bg, 121, 171, 279, 189, C("c8803a"))
+    ellipse(bg, 140, 174, 260, 186, C("e0a050"))
+    # luminária do teto
+    vline(bg, 200, 0, 10, C("2a1a10"))
+    poly(bg, [(192, 18), (208, 18), (204, 10), (196, 10)], C("e8c070"), OUT)
+    glow_patch(bg, 200, 24, 26, C("ffe4a0"), 0.18)
+    # cadeira, mesa e objetos (caneca e livro: StudyScene)
+    hx, hy = HIP["casa"]
+    chair_back(bg, hx - 23, hy + 3)
+    desk(bg, fg, hx + 12, hx + 146, hy - 8, 192, [C("a06c44"), C("c08a5a"), C("7a4e30"), C("4a2d1a")])
+    for k, c in enumerate([C("3d3a6b"), C("8c2f39"), C("c7923e")]):
+        box(bg, 214 + k, 136 - k * 5, 238 - k, 141 - k * 5, c, mix(c, C("ffffff"), 0.25), mix(c, C("000000"), 0.3))
+    box(bg, 246, 134, 254, 141, C("6a8aba"), None, C("2a4a6a"))
+    for k in range(4):
+        vline(bg, 247 + k * 2, 128, 133, [C("e8c070"), C("ff7a6a"), C("8ee28e"), C("7cc4ff")][k])
+    lamp(bg, 272, 142, C("e8a050"))
+    glow_patch(bg, 278, 126, 22, C("ffe4a0"), 0.2)
+    return bg, fg
+
+
+# ================================================================ TAVERNA (à noite)
+def taverna():
+    bg, fg = canvas(W, H), canvas(W, H)
+    # parede de tábuas verticais
+    r = random.Random(12)
+    rect(bg, 0, 0, W - 1, 160, C("5a3a26"))
+    x = 0
+    while x < W:
+        w = 9 + r.randint(0, 4)
+        c = [C("5a3a26"), C("63412b"), C("543522"), C("6a4630")][r.randrange(4)]
+        rect(bg, x, 24, x + w - 2, 160, c)
+        vline(bg, x + w - 1, 24, 160, C("3a2418"))
+        if r.random() < 0.4:
+            px(bg, x + 3, 40 + r.randint(0, 90), C("3a2418"))
+        x += w
+    # teto e vigas
+    vgrad(bg, 0, 0, W - 1, 24, [C("1e140e"), C("2a1a12")])
+    box(bg, -2, 20, W + 1, 28, C("3a2418"), C("6a4630"), C("1e140e"))
+    for bx in (60, 200, 340):
+        box(bg, bx - 4, 28, bx + 4, 160, C("3a2418"), C("5a3a28"), C("1e140e"))
+    # lanternas penduradas (a chama é animada)
+    for lx in (130, 270):
+        vline(bg, lx, 28, 40, C("1d1410"))
+        box(bg, lx - 5, 40, lx + 5, 54, C("2a2a30"), None, OUT)
+        rect(bg, lx - 3, 43, lx + 3, 51, C("ffd27a"))
+        glow_patch(bg, lx, 48, 34, C("ffb860"), 0.25)
+    # janela da noite à esquerda
+    vgrad(bg, 18, 50, 46, 100, [C("0d1230"), C("1a2350"), C("2b3668")])
+    stars(bg, 19, 51, 45, 80, 14, 5, [C("ffffe8"), C("c8d8ff")])
+    ellipse(bg, 30, 58, 40, 68, C("f0f4ff"))
+    for (a, b, c, d) in ((14, 46, 50, 49), (14, 100, 50, 103), (14, 46, 17, 103), (47, 46, 50, 103), (31, 50, 33, 100)):
+        rect(bg, a, b, c, d, C("2a1a12"))
+    # escudo e bandeiras
+    box(bg, 88, 50, 112, 74, C("8a8a92"), C("b8b8c0"), C("4a4a52"))
+    poly(bg, [(92, 54), (108, 54), (108, 64), (100, 72), (92, 64)], C("b8454a"), OUT)
+    for k, c in enumerate((C("2f5d62"), C("c7923e"))):
+        bx0 = 150 + k * 80
+        poly(bg, [(bx0, 30), (bx0 + 16, 30), (bx0 + 16, 58), (bx0 + 8, 52), (bx0, 58)], c, OUT)
+        rect(bg, bx0 + 6, 36, bx0 + 10, 40, C("f4e8c8"))
+    # prateleiras de garrafas atrás do balcão
+    for row in range(3):
+        y = 62 + row * 18
+        box(bg, 262, y + 12, 396, y + 15, C("6a4428"), C("8a5a36"), C("3a2418"))
+        for k in range(10):
+            gx = 266 + k * 13 + (row * 5) % 7
+            c = [C("3a7a4a"), C("8a3a3a"), C("c8a040"), C("4a5a8a"), C("6a3a6a")][(k + row) % 5]
+            box(bg, gx, y + 3, gx + 5, y + 11, c, mix(c, C("ffffff"), 0.35), mix(c, C("000000"), 0.35))
+            rect(bg, gx + 2, y, gx + 3, y + 2, C("c8b090"))
+    # balcão do bar
+    box(bg, 256, 120, 400, 128, C("8a5a36"), C("b07a4a"), C("3a2414"))
+    box(bg, 260, 128, 400, 160, C("6a4228"), C("7a4e30"), C("3a2414"))
+    for x in range(272, 400, 22):
+        vline(bg, x, 130, 158, C("4a2d1a"))
+    for (mx, my) in ((282, 119), (318, 119), (360, 119)):
+        mug(bg, mx, my)
+    # barris empilhados
+    for (bx, by) in ((14, 176), (40, 176), (27, 150)):
+        box(bg, bx - 11, by - 26, bx + 11, by, C("7a4e2c"), C("9a6a3c"), C("4a2d1a"))
+        hline(bg, bx - 10, bx + 10, by - 20, C("3a2418"))
+        hline(bg, bx - 10, bx + 10, by - 6, C("3a2418"))
+        ellipse(bg, bx - 4, by - 16, bx + 4, by - 10, C("5a3a20"), OUT)
+    floor_planks(bg, 160, [C("4a301f"), C("3d2818"), C("2a1a10")], C("1e140e"))
+    glow_patch(bg, 200, 175, 60, C("ffb860"), 0.12)
+    # banco e mesa do herói
+    hx, hy = HIP["taverna"]
+    box(bg, hx - 22, hy - 1, hx + 18, hy + 4, C("6a4228"), C("8a5a36"), C("3a2414"))
+    box(bg, hx - 17, hy + 4, hx - 12, 188, C("4a2d1a"))
+    desk(bg, fg, hx + 12, hx + 138, hy - 8, 198, [C("8a5a36"), C("b07a4a"), C("5a361f"), C("3a2414")])
+    box(bg, 222, 140, 246, 146, C("e6d5b0"), C("fff2d8"), C("b8a888"))
+    ellipse(bg, 226, 134, 242, 144, C("c58a4a"), OUT)
+    box(bg, 252, 134, 262, 146, C("b8b8c0"), C("e0e0e8"), C("6a6a72"))
+    candle(bg, 272, 145, 14)
+    return bg, fg
+
+
 def limit_palette(im, n=32):
     """Reduz para no máximo n cores (sem pontilhado), mantendo a transparência."""
     alpha = im.getchannel("A")
@@ -562,3 +716,5 @@ if __name__ == "__main__":
     save("natureza", natureza())
     save("estudo", estudo(False))
     save("estudo_noite", estudo(True))
+    save("casa", casa())
+    save("taverna", taverna())

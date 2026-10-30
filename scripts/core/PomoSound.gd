@@ -18,7 +18,8 @@ const GENRE_EXTRA := {
 		"res://assets/ninja/audio/music/medieval_3.mp3", "res://assets/ninja/audio/music/medieval_ambient.mp3"],
 }
 ## Gênero padrão de cada cenário (o Victor pode trocar na janela).
-const SCENE_GENRE := {"cafeteria": "lofi", "estudo": "motivacao", "livraria": "classica", "natureza": "classica"}
+const SCENE_GENRE := {"cafeteria": "lofi", "estudo": "motivacao", "livraria": "classica", "natureza": "classica",
+	"casa": "lofi", "taverna": "medieval"}
 
 ## Sons de ambiente: nome, volume padrão (0..1) e arquivo alternativo já existente no jogo.
 const AMBIENTS := {
@@ -41,6 +42,8 @@ const SCENE_AMBIENTS := {
 	"livraria": [["paginas", true], ["chuva", false], ["vento", false], ["escrita", false], ["acoes", true]],
 	"estudo": [["escrita", true], ["chuva", "noite"], ["vento", false], ["lareira", false], ["acoes", true]],
 	"natureza": [["campo", true], ["passaros", true], ["agua", true], ["vento", false], ["fogueira", false], ["acoes", true]],
+	"casa": [["chuva", "noite"], ["vento", false], ["lareira", false], ["escrita", false], ["acoes", true]],
+	"taverna": [["conversa", true], ["copos", true], ["lareira", true], ["chuva", false], ["acoes", true]],
 }
 ## Eventos curtos da cena (dentro de AMB_DIR, prefixo fx_).
 const EVENTS := ["xicara", "gole", "pagina", "livro"]

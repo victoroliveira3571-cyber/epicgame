@@ -108,6 +108,8 @@ func _ready() -> void:
 func on_scene_ready(which: String) -> void:
 	scene_kind = which
 	set_scene_kind(which)
+	if pomo_state == "idle":
+		pomo_place = ""
 	Audio.pomo_update()
 	set_hint("")
 	hide_boss()
@@ -137,7 +139,7 @@ func set_scene_kind(which: String) -> void:
 	_card.visible = playing
 	_hotbar.visible = playing
 	_pomo_panel.visible = playing
-	_minimap.visible = which == "dungeon"
+	_minimap.visible = which == "dungeon" or which == "town"
 	_hint.visible = playing
 
 
@@ -384,6 +386,19 @@ func _build_pomodoro() -> void:
 	_pomo_panel.add_child(_pomo_reset)
 
 
+## Cenário preso pelo lugar onde o Victor sentou para estudar ("" = livre para trocar).
+var pomo_place: String = ""
+
+
+## Abre o Pomodoro com o cenário fixo do lugar (mesa da casa, taverna, biblioteca).
+func open_pomodoro_at(scene: String) -> void:
+	if pomo_state == "idle" or pomo_place == "" or pomo_place == scene:
+		pomo_place = scene
+		GameState.pomo_cfg["scene"] = scene
+		Audio.pomo_update()
+	open_window("pomodoro")
+
+
 ## Começa o foco com as durações escolhidas (minutos) e guarda a escolha.
 func pomodoro_start(focus_min: int, break_min: int) -> void:
 	pomo_minutes = clampi(focus_min, 1, 180)
@@ -542,26 +557,62 @@ func _refresh_pomodoro() -> void:
 # ================================================================== Minimapa
 class Minimap extends Control:
 	const CELL := 2
+	const TOWN_PX := 2.0          # pixels do minimapa por tile da cidade
 	var dungeon: Node = null
+	var town: Node = null
+
+	## Cidade: chão em miniatura, prédios e o jogador.
+	func bind_town(t: Node) -> void:
+		town = t
+		dungeon = null
+		if t != null:
+			size = Vector2(t.W, t.H) * TOWN_PX + Vector2(4, 4)
+			custom_minimum_size = size
+		_anchor()
+		queue_redraw()
+
+	func _anchor() -> void:
+		position = (UI.SIZE - size - Vector2(6, 6)).round()
+
+	func _draw_town() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.05, 0.04, 0.06, 0.82))
+		if town.minimap_tex != null:
+			draw_texture_rect(town.minimap_tex, Rect2(Vector2(2, 2), size - Vector2(4, 4)), false, Color(1, 1, 1, 0.92))
+		draw_rect(Rect2(Vector2.ZERO, size), UI.C_ORANGE, false, 1.0)
+		var k := TOWN_PX / float(town.T)
+		for id in town.buildings:
+			var b: Node2D = town.buildings[id]
+			draw_rect(Rect2(Vector2(2, 2) + b.position * k - Vector2(3, 5), Vector2(6, 5)), Color("c8743a"))
+			draw_rect(Rect2(Vector2(2, 2) + b.position * k - Vector2(3, 5), Vector2(6, 5)), UI.C_LINE, false, 1.0)
+		if town.player != null and is_instance_valid(town.player):
+			var pulse := 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.008)
+			var p: Vector2 = Vector2(2, 2) + town.player.global_position * k
+			draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), Color(UI.C_TEXT, pulse))
+			draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), UI.C_LINE, false, 1.0)
 
 	func _init() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	func bind(d: Node) -> void:
 		dungeon = d
+		town = null
 		if d != null:
 			var s: Vector2i = d.map_size()
 			size = Vector2(s.x * CELL + 4, s.y * CELL + 4)
 			custom_minimum_size = size
 			if d.has_signal("explored_changed") and not d.explored_changed.is_connected(queue_redraw):
 				d.explored_changed.connect(queue_redraw)
+		_anchor()
 		queue_redraw()
 
 	func _process(_delta: float) -> void:
-		if visible and dungeon != null and is_instance_valid(dungeon):
+		if visible and ((dungeon != null and is_instance_valid(dungeon)) or (town != null and is_instance_valid(town))):
 			queue_redraw()
 
 	func _draw() -> void:
+		if town != null and is_instance_valid(town):
+			_draw_town()
+			return
 		if dungeon == null or not is_instance_valid(dungeon):
 			return
 		draw_rect(Rect2(Vector2.ZERO, size), Color(0.05, 0.04, 0.06, 0.78))
@@ -807,6 +858,9 @@ func _process(delta: float) -> void:
 	if scene_kind == "dungeon":
 		if _minimap.dungeon == null or not is_instance_valid(_minimap.dungeon):
 			_minimap.bind(get_tree().get_first_node_in_group("dungeon"))
+	elif scene_kind == "town":
+		if _minimap.town == null or not is_instance_valid(_minimap.town):
+			_minimap.bind_town(get_tree().get_first_node_in_group("town"))
 
 
 func _unhandled_key_input(ev: InputEvent) -> void:
