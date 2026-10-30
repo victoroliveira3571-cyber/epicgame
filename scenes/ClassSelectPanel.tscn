@@ -1,0 +1,125 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ClassSelectPanel.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="class_panel_style"]
+bg_color = Color(0.1, 0.08, 0.14, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.4, 0.8, 0.8)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="btn_style"]
+bg_color = Color(0.2, 0.15, 0.35, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.6, 0.45, 0.85, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+
+[node name="ClassSelectPanel" type="PanelContainer"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -270.0
+offset_top = -190.0
+offset_right = 270.0
+offset_bottom = 190.0
+theme_override_styles/panel = SubResource("class_panel_style")
+script = ExtResource("1")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.7, 1, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+text = "Escolha sua classe"
+
+[node name="SubtitleLabel" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.7, 0.85, 1)
+horizontal_alignment = 1
+text = "Essa escolha é definitiva por enquanto — define como você ataca nas masmorras."
+
+[node name="Grid" type="GridContainer" parent="Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="CavaleiroButton" type="Button" parent="Margin/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/normal = SubResource("btn_style")
+theme_override_colors/font_color = Color(1, 0.85, 0.5, 1)
+text = "Cavaleiro"
+
+[node name="PaladinoButton" type="Button" parent="Margin/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/normal = SubResource("btn_style")
+theme_override_colors/font_color = Color(0.6, 0.85, 1, 1)
+text = "Paladino"
+
+[node name="AssassinoButton" type="Button" parent="Margin/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/normal = SubResource("btn_style")
+theme_override_colors/font_color = Color(1, 0.5, 0.5, 1)
+text = "Assassino"
+
+[node name="EscudeiroButton" type="Button" parent="Margin/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/normal = SubResource("btn_style")
+theme_override_colors/font_color = Color(0.6, 1, 0.6, 1)
+text = "Escudeiro"
+
+[node name="MagoButton" type="Button" parent="Margin/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/normal = SubResource("btn_style")
+theme_override_colors/font_color = Color(0.7, 0.6, 1, 1)
+text = "Mago"
+
+[node name="ArqueiroButton" type="Button" parent="Margin/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/normal = SubResource("btn_style")
+theme_override_colors/font_color = Color(0.5, 0.9, 0.5, 1)
+text = "Arqueiro"

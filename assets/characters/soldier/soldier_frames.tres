@@ -1,0 +1,115 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://2ywvkemuwkje"]
+
+[ext_resource type="Texture2D" uid="uid://8gwg78kd2irr" path="res://assets/characters/soldier/soldier_idle.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://dugksh45ccfwv" path="res://assets/characters/soldier/soldier_walk.png" id="2"]
+
+[sub_resource type="AtlasTexture" id="IdleAtlas_0"]
+atlas = ExtResource("1")
+region = Rect2(0, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="IdleAtlas_1"]
+atlas = ExtResource("1")
+region = Rect2(100, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="IdleAtlas_2"]
+atlas = ExtResource("1")
+region = Rect2(200, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="IdleAtlas_3"]
+atlas = ExtResource("1")
+region = Rect2(300, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="IdleAtlas_4"]
+atlas = ExtResource("1")
+region = Rect2(400, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="IdleAtlas_5"]
+atlas = ExtResource("1")
+region = Rect2(500, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="WalkAtlas_0"]
+atlas = ExtResource("2")
+region = Rect2(0, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="WalkAtlas_1"]
+atlas = ExtResource("2")
+region = Rect2(100, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="WalkAtlas_2"]
+atlas = ExtResource("2")
+region = Rect2(200, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="WalkAtlas_3"]
+atlas = ExtResource("2")
+region = Rect2(300, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="WalkAtlas_4"]
+atlas = ExtResource("2")
+region = Rect2(400, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="WalkAtlas_5"]
+atlas = ExtResource("2")
+region = Rect2(500, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="WalkAtlas_6"]
+atlas = ExtResource("2")
+region = Rect2(600, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="WalkAtlas_7"]
+atlas = ExtResource("2")
+region = Rect2(700, 0, 100, 100)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("IdleAtlas_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("IdleAtlas_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("IdleAtlas_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("IdleAtlas_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("IdleAtlas_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("IdleAtlas_5")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("WalkAtlas_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("WalkAtlas_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("WalkAtlas_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("WalkAtlas_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("WalkAtlas_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("WalkAtlas_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("WalkAtlas_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("WalkAtlas_7")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 10.0
+}]
