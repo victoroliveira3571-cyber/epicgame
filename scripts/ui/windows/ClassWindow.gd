@@ -1,20 +1,17 @@
 extends UIWindow
 
-## Escolha da classe (primeira vez que o jogo abre). Não fecha sem escolher.
+## Escolha da classe, no registro da Guilda (capítulo 1). A arma de madeira inicial depende dela.
 
 var _picked: String = ""
 
 
 func _init() -> void:
-	win_title = "Escolha sua classe"
+	win_title = "Registro da Guilda: escolha sua classe"
 	win_size = Vector2(600, 320)
-	close_on_escape = false
 
 
 func build() -> void:
-	close_button.visible = false
-	_add_landscape()
-	var intro := UI.label("Quem vai explorar a masmorra? A escolha é definitiva.", UI.C_DIM)
+	var intro := UI.label("Você ganha uma arma de madeira da classe (escudeiro e paladino: escudo). Escolha definitiva.", UI.C_DIM)
 	add_to_body(intro, Vector2(2, 0))
 	var ids := Data.CLASSES.keys()
 	for i in ids.size():
@@ -55,7 +52,10 @@ func _choose(id: String) -> void:
 		Audio.sfx("magic_select", -2.0)
 		GameState.choose_class(id)
 		HUD.close_window()
-		Game.go_to_town("start"))
+		var p := get_tree().get_first_node_in_group("player") as Player
+		if p != null:
+			p.refresh_sheet()
+		Story.on_class_chosen())
 
 
 ## Paisagem em pixel art atrás da janela (campo de dia, mar ao entardecer, montanhas à noite).

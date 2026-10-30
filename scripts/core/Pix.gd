@@ -135,7 +135,7 @@ static func boss_frames(boss_id: String) -> SpriteFrames:
 	var key := "boss:" + boss_id
 	if _frames_cache.has(key):
 		return _frames_cache[key]
-	var b: Dictionary = Data.BOSSES[boss_id]
+	var b: Dictionary = Data.boss_def(boss_id)
 	var sf := SpriteFrames.new()
 	sf.remove_animation("default")
 	for anim in b["anims"]:

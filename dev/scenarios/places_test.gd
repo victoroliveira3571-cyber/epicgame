@@ -7,6 +7,7 @@ const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
 func run(dev: Node) -> void:
 	var ok := true
 	GameState.debug_reset()
+	Story.dev_start()
 	GameState.choose_class("arqueiro")
 	get_tree().reload_current_scene()
 	await dev.wait(1.0)

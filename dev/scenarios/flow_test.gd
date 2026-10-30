@@ -5,17 +5,20 @@ const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
 
 func run(dev: Node) -> void:
 	GameState.debug_reset()
+	Story.start_new_game("Teste", "Pai", "Mae", "m")
+	Story.st()["chapter"] = 3
+	Story.st()["step"] = "c3_exame"
+	Story.st()["credits"] = 4
 	GameState.choose_class("mago")
 	GameState.level = 6
-	GameState.energy = 4
 	GameState.mark_dirty()
 	GameState.full_heal()
 	get_tree().reload_current_scene()
 	await dev.wait(1.0)
-	print("[flow] cidade ok, energia=", GameState.energy)
+	print("[flow] cidade ok, créditos=", Story.credits())
 	Game.enter_dungeon(1)
 	await dev.wait(2.5)
-	print("[flow] masmorra: inimigos=", get_tree().get_nodes_in_group("enemy").size(), " energia=", GameState.energy)
+	print("[flow] masmorra: inimigos=", get_tree().get_nodes_in_group("enemy").size(), " créditos=", Story.credits())
 	# luta de verdade: teleporta perto de um inimigo, ataca e usa a skill
 	var d := get_tree().get_first_node_in_group("dungeon")
 	var e: Node2D = get_tree().get_first_node_in_group("enemy")

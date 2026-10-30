@@ -5,6 +5,7 @@ const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
 
 func run(dev: Node) -> void:
 	GameState.debug_reset()
+	Story.dev_start()
 	GameState.choose_class("paladino")
 	GameState.level = 1
 	GameState.buy_furniture("cama") if GameState.gold >= 60 else null

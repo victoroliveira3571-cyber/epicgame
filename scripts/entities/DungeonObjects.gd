@@ -26,7 +26,12 @@ class Stairs extends Interactable:
 		if locked:
 			return "Derrote o chefe para descer"
 		if kind == "down":
-			return "[E] Descer para o andar %d" % (floor_n + 1)
+			var next := floor_n + 1
+			if not Story.floor_unlocked(next):
+				return "Andar %d: ainda bloqueado pela história" % next
+			if Story.has_pass("andar_%d" % next):
+				return "[E] Descer para o andar %d (passe pago)" % next
+			return "[E] Descer para o andar %d (pedágio: %d créditos)" % [next, Data.floor_toll(next)]
 		return "[E] Voltar para a cidade"
 
 	func can_interact(_player: Node) -> bool:
@@ -35,7 +40,7 @@ class Stairs extends Interactable:
 	func interact(_player: Node) -> void:
 		Audio.sfx("jump", -2.0)
 		if kind == "down":
-			Game.descend()
+			Game.try_descend()
 		else:
 			HUD.confirm("Sair da masmorra e voltar para a cidade?", func() -> void: Game.finish_run(false))
 

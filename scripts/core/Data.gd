@@ -248,6 +248,8 @@ func _build_items() -> void:
 		var m: Dictionary = MATERIALS[mid]
 		ITEMS[mid] = {"id": mid, "name": m["name"], "kind": "material", "tier": m["tier"], "icon": m["icon"], "price": m["price"],
 			"desc": "Material de aprimoramento (Ferreiro)."}
+	ITEMS["erva_azul"] = {"id": "erva_azul", "name": "Erva Medicinal", "kind": "material", "tier": 0, "icon": "items/resource/Grass", "price": 4,
+		"desc": "Erva medicinal da floresta. As lojas compram."}
 	for cid in CONSUMABLES:
 		var c: Dictionary = CONSUMABLES[cid].duplicate()
 		c["id"] = cid
@@ -371,6 +373,17 @@ const MONSTERS := {
 	"fera": {"name": "Fera", "sheet": "Beast", "hp": 84, "dmg": 22, "speed": 50.0, "behavior": "melee", "xp": 30, "gold": [11, 25], "radius": 6.0},
 	"polvo_vermelho": {"name": "Polvo Rubro", "sheet": "RedOctopus", "hp": 90, "dmg": 24, "speed": 32.0, "behavior": "hopper", "xp": 32, "gold": [12, 26], "radius": 5.0},
 	"demonio": {"name": "Olho Maligno", "sheet": "Eye", "hp": 70, "dmg": 24, "speed": 34.0, "behavior": "ranged", "xp": 33, "gold": [12, 26], "radius": 5.0, "proj": "orb", "range": 110.0, "cooldown": 1.6},
+	# --- floresta (a força vem do "poder" da zona, ver FOREST_ZONES)
+	"lobo_jovem": {"name": "Lobo Jovem", "sheet": "Beast2", "hp": 26, "dmg": 7, "speed": 50.0, "behavior": "melee", "xp": 6, "gold": [2, 6], "radius": 5.0, "scale": 0.85},
+	"lobo": {"name": "Lobo Cinzento", "sheet": "Beast2", "hp": 40, "dmg": 10, "speed": 54.0, "behavior": "melee", "xp": 9, "gold": [3, 8], "radius": 5.0},
+	"lobo_sombra": {"name": "Lobo-Sombra", "sheet": "Beast2", "hp": 46, "dmg": 12, "speed": 46.0, "behavior": "charger", "xp": 12, "gold": [4, 10], "radius": 5.0, "tint": Color(0.45, 0.4, 0.62)},
+	"urso": {"name": "Urso da Mata", "sheet": "Bear", "hp": 64, "dmg": 13, "speed": 34.0, "behavior": "charger", "xp": 13, "gold": [5, 12], "radius": 6.0, "scale": 1.1},
+	"guaxinim": {"name": "Guaxinim Ladrão", "sheet": "Racoon", "hp": 28, "dmg": 8, "speed": 58.0, "behavior": "melee", "xp": 8, "gold": [5, 12], "radius": 5.0},
+	"axolote": {"name": "Sapo do Pântano", "sheet": "Axolot", "hp": 40, "dmg": 11, "speed": 30.0, "behavior": "hopper", "xp": 11, "gold": [4, 10], "radius": 5.0},
+	"nevoa": {"name": "Espírito da Névoa", "sheet": "Spirit2", "hp": 30, "dmg": 11, "speed": 30.0, "behavior": "ranged", "xp": 12, "gold": [4, 10], "radius": 5.0, "proj": "orb", "range": 100.0, "cooldown": 2.2, "tint": Color(0.75, 0.8, 0.95, 0.85)},
+	"guardiao": {"name": "Guardião de Pedra", "sheet": "Statue", "kind": "char", "hp": 70, "dmg": 13, "speed": 26.0, "behavior": "melee", "xp": 14, "gold": [5, 12], "radius": 6.0, "tint": Color(0.75, 0.78, 0.82)},
+	"pagina": {"name": "Página Viva", "sheet": "Larva", "hp": 24, "dmg": 9, "speed": 48.0, "behavior": "flyer", "xp": 8, "gold": [3, 8], "radius": 4.0, "tint": Color(1.0, 0.95, 0.8)},
+	"sombra": {"name": "Sombra Esquecida", "sheet": "Skeleton", "kind": "char", "hp": 52, "dmg": 14, "speed": 38.0, "behavior": "melee", "xp": 13, "gold": [5, 12], "radius": 5.0, "tint": Color(0.5, 0.45, 0.65)},
 }
 
 # Chefes: sprites em tiras horizontais. frames = quantidade; w = largura de cada quadro.
@@ -390,6 +403,98 @@ const BOSSES := {
 		"patterns": ["slam", "burst", "summon", "charge"], "anims": {"idle": ["Idle", 60, 6, 6], "walk": ["Idle", 60, 6, 8], "hit": ["Idle", 60, 6, 10]}, "summon": "ciclope"},
 }
 const BOSS_ORDER := ["slime_gigante", "ciclope_demoniaco", "sapo_gigante", "tengu_rubro", "samurai_azul", "guaxinim_gigante"]
+
+# Chefes da história. "char" = usa a folha de personagem (4 direções) ampliada por "scale".
+# gate_hours: horas de foco acumuladas para o chefe aceitar a luta. quiz: formato das perguntas
+# (ver Recall.gd): "" = sem perguntas, "bank" = lacuna com banco de palavras, "type" = digitar a
+# palavra, "free" = pergunta livre do Caderno.
+const STORY_BOSSES := {
+	"espirito_cacador": {"name": "Espírito do Caçador", "folder": "GiantSpirit", "hp": 150, "dmg": 8, "speed": 26.0, "xp": 90, "gold": [30, 50], "radius": 13.0,
+		"patterns": ["charge", "burst", "summon"], "anims": {"idle": ["Idle", 50, 5, 6], "walk": ["Idle", 50, 5, 8], "hit": ["Hit", 50, 5, 10]}, "summon": "lobo_jovem",
+		"tint": Color(0.75, 1.0, 0.85, 0.85), "gate_hours": 1, "quiz": "", "power": 2},
+	"sentinela": {"name": "Sentinela de Pedra", "char": "Statue", "scale": 2.4, "hp": 330, "dmg": 13, "speed": 20.0, "xp": 260, "gold": [60, 90], "radius": 13.0,
+		"patterns": ["slam", "burst", "summon"], "summon": "guardiao", "tint": Color(0.8, 0.82, 0.86), "gate_hours": 2, "quiz": "bank", "power": 6},
+	"bibliotecario": {"name": "Bibliotecário Corrompido", "char": "NinjaMageBlack", "scale": 2.2, "hp": 450, "dmg": 17, "speed": 30.0, "xp": 420, "gold": [80, 120], "radius": 12.0,
+		"patterns": ["burst", "summon", "charge"], "summon": "pagina", "gate_hours": 4, "quiz": "type", "power": 8},
+	"ivo_duelo": {"name": "Ivo, o Vento", "char": "NinjaBlue2", "scale": 1.5, "hp": 380, "dmg": 15, "speed": 46.0, "xp": 300, "gold": [60, 90], "radius": 8.0,
+		"patterns": ["charge", "burst", "charge"], "summon": "", "gate_hours": 0, "quiz": "", "power": 9},
+	"cavaleiro_sem_nome": {"name": "Cavaleiro Sem Nome", "char": "Knight", "scale": 2.3, "hp": 600, "dmg": 21, "speed": 32.0, "xp": 600, "gold": [110, 160], "radius": 12.0,
+		"patterns": ["charge", "slam", "burst"], "summon": "sombra", "tint": Color(0.55, 0.52, 0.62), "gate_hours": 6, "quiz": "free", "power": 10},
+	"rei_demonio": {"name": "Rei Demônio", "char": "DemonRed", "scale": 2.7, "hp": 800, "dmg": 25, "speed": 32.0, "xp": 1200, "gold": [200, 300], "radius": 14.0,
+		"patterns": ["slam", "charge", "burst", "summon"], "summon": "sombra", "gate_hours": 8, "quiz": "free", "power": 12},
+}
+
+
+func boss_def(boss_id: String) -> Dictionary:
+	if STORY_BOSSES.has(boss_id):
+		return STORY_BOSSES[boss_id]
+	return BOSSES.get(boss_id, {})
+
+
+# ------------------------------------------------------------------- Ranks e créditos
+const RANKS := ["F", "E", "D", "C", "B", "A", "S"]
+const MINUTES_PER_CREDIT := 60     # 1 crédito de estudo = 1 hora de foco concluída
+
+# ------------------------------------------------------------------- Masmorra da história
+# Os 5 andares da história. "power" = força dos monstros (equivale ao andar antigo).
+# Depois do Rei Demônio abrem as Profundezas (andar 6 em diante, chefes a cada 5 andares).
+const STORY_FLOORS := {
+	1: {"name": "Galerias Úmidas", "style": 0, "music": "dungeon1", "power": 7, "enemies": ["morcego", "cogumelo", "aranha", "pagina"], "chapter": 3},
+	2: {"name": "Biblioteca Subterrânea", "style": 1, "music": "dungeon2", "power": 8, "enemies": ["pagina", "espirito", "cranio"], "boss": "bibliotecario", "chapter": 3},
+	3: {"name": "Salas de Espelho", "style": 1, "music": "dungeon2", "power": 9, "enemies": ["espirito", "sombra", "cranio", "aranha"], "chapter": 4},
+	4: {"name": "Corredor das Correntes", "style": 2, "music": "dungeon3", "power": 10, "enemies": ["sombra", "esqueleto", "lagarto", "cobra"], "boss": "cavaleiro_sem_nome", "chapter": 4},
+	5: {"name": "Trono Sem Luz", "style": 3, "music": "dungeon4", "power": 12, "enemies": ["sombra", "chama", "demonio"], "boss": "rei_demonio", "chapter": 5},
+}
+const STORY_LAST_FLOOR := 5
+const MAX_TOLL := 5
+
+
+func floor_power(floor_n: int) -> int:
+	if STORY_FLOORS.has(floor_n):
+		return int(STORY_FLOORS[floor_n]["power"])
+	return floor_n + 7
+
+
+## Nome, estilo, música, monstros e chefe de um andar (história ou Profundezas).
+func floor_info(floor_n: int) -> Dictionary:
+	if STORY_FLOORS.has(floor_n):
+		return STORY_FLOORS[floor_n]
+	var b: Dictionary = biome_for_floor(floor_n)
+	var out := {"name": "Profundezas - %s" % b["name"], "style": b["style"], "music": b["music"], "power": floor_power(floor_n),
+		"enemies": b["enemies"], "chapter": 6}
+	if floor_n % 5 == 0:
+		out["boss"] = boss_for_floor(floor_n)
+	return out
+
+
+## Pedágio para entrar no andar: o número do andar (no máximo MAX_TOLL).
+func floor_toll(floor_n: int) -> int:
+	return clampi(floor_n, 1, MAX_TOLL)
+
+
+# ------------------------------------------------------------------- Floresta
+# Zonas da floresta (ver Forest.gd). power = força dos monstros; rank = rank mínimo para entrar.
+const FOREST_ZONES := {
+	"borda": {"name": "Borda da Floresta", "power": 1, "rank": 0, "enemies": ["slime", "lobo_jovem", "cogumelo"]},
+	"clareira": {"name": "Clareira das Casas", "power": 3, "rank": 0, "enemies": ["lobo", "guaxinim", "esqueleto", "urso"]},
+	"mata": {"name": "Mata Profunda", "power": 5, "rank": 1, "enemies": ["aranha", "lobo_sombra", "nevoa", "morcego"]},
+	"pantano": {"name": "Pântano da Névoa", "power": 6, "rank": 1, "enemies": ["axolote", "cobra", "kappa", "nevoa"]},
+	"ruinas": {"name": "Ruínas sob as Raízes", "power": 6, "rank": 1, "enemies": ["guardiao", "cranio"]},
+}
+
+# ------------------------------------------------------------------- Pets
+# bonus: somado aos atributos (mesmas chaves de GameState._compute_stats). grow: por capítulo concluído.
+const PETS := {
+	"corvin": {"name": "Corvin", "kind": "animal", "sheet": "Parrot", "tint": Color(0.32, 0.3, 0.4), "attack": "dive",
+		"bonus": {"crit": 3.0, "luck": 5.0}, "desc": "Corvo esperto. +3% de crítico e mais chance de item raro.", "face": "animals/Parrot_face.png"},
+	"brisa": {"name": "Brisa", "kind": "monster", "sheet": "Beast2", "tint": Color(1.15, 1.15, 1.3), "attack": "bite",
+		"bonus": {"atk_pct": 0.06, "hp": 10.0}, "grow": {"atk_pct": 0.02}, "desc": "Loba leal. +6% de ataque e +10 de vida; fica mais forte a cada capítulo.", "face": "monsters/Beast2_face.png"},
+	"lumen": {"name": "Lúmen", "kind": "monster", "sheet": "Owl2", "tint": Color.WHITE, "attack": "orb",
+		"bonus": {"xp_pct": 0.10, "focus_xp_pct": 0.05}, "desc": "Coruja sábia. +10% de XP em combate e +5% nas sessões de foco.", "face": "monsters/Owl2_face.png"},
+	"airevis": {"name": "Airevis", "kind": "monster", "sheet": "Spirit2", "tint": Color(0.8, 0.88, 1.0, 0.8), "attack": "orb",
+		"bonus": {"regen": 0.6, "hp": 8.0}, "desc": "Espírito da névoa. Regenera 0,6 de vida por segundo e +8 de vida.", "face": "monsters/Spirit2_face.png"},
+}
+const PET_ORDER := ["corvin", "brisa", "lumen", "airevis"]
 
 # Biomas: 4 camadas de 5 andares. floor_style escolhe a paleta do chão/parede.
 const BIOMES := [
@@ -460,38 +565,38 @@ func _monster_stat_value(monster_id: String, stat: String) -> float:
 # --------------------------------------------------------------------- Missões
 # stat: contador do GameState. reward: gold/xp/energy/item.
 const MISSIONS := [
-	{"id": "m1", "title": "Primeiros Passos", "desc": "Complete 1 sessão de foco", "stat": "focus_sessions", "goal": 1, "reward": {"gold": 10, "energy": 1}},
-	{"id": "m2", "title": "Disciplina", "desc": "Complete 5 sessões de foco", "stat": "focus_sessions", "goal": 5, "reward": {"gold": 30, "energy": 2}},
+	{"id": "m1", "title": "Primeiros Passos", "desc": "Complete 1 sessão de foco", "stat": "focus_sessions", "goal": 1, "reward": {"gold": 10, "xp": 10}},
+	{"id": "m2", "title": "Disciplina", "desc": "Complete 5 sessões de foco", "stat": "focus_sessions", "goal": 5, "reward": {"gold": 30, "xp": 30}},
 	{"id": "m3", "title": "Ganhando Fama", "desc": "Alcance o nível 3", "stat": "level", "goal": 3, "reward": {"gold": 25}},
 	{"id": "m4", "title": "Pé-de-Meia", "desc": "Tenha 50 de ouro", "stat": "gold", "goal": 50, "reward": {"xp": 15}},
-	{"id": "m5", "title": "Maratonista", "desc": "Complete 10 sessões de foco", "stat": "focus_sessions", "goal": 10, "reward": {"gold": 60, "energy": 3}},
+	{"id": "m5", "title": "Maratonista", "desc": "Complete 10 sessões de foco", "stat": "focus_sessions", "goal": 10, "reward": {"gold": 60, "xp": 60}},
 	{"id": "m6", "title": "Caçador", "desc": "Derrote 1 monstro na masmorra", "stat": "monsters", "goal": 1, "reward": {"gold": 15}},
 	{"id": "m7", "title": "Exterminador", "desc": "Derrote 5 monstros na masmorra", "stat": "monsters", "goal": 5, "reward": {"gold": 40}},
 	{"id": "m8", "title": "Veterano", "desc": "Alcance o nível 5", "stat": "level", "goal": 5, "reward": {"xp": 30}},
 	{"id": "m9", "title": "Descendo a Escada", "desc": "Chegue ao andar 3 da masmorra", "stat": "best_floor", "goal": 3, "reward": {"gold": 50, "item": "pocao_vida"}},
 	{"id": "m10", "title": "Matador de Slimes", "desc": "Derrote 50 monstros", "stat": "monsters", "goal": 50, "reward": {"gold": 120, "xp": 80}},
 	{"id": "m11", "title": "Abre-Baús", "desc": "Abra 5 baús", "stat": "chests", "goal": 5, "reward": {"gold": 60}},
-	{"id": "m12", "title": "Fim da Caverna", "desc": "Derrote o Slime Gigante (andar 5)", "stat": "bosses", "goal": 1, "reward": {"gold": 150, "xp": 120, "item": "pocao_media"}},
-	{"id": "m13", "title": "Hábito Forte", "desc": "Marque hábitos 10 vezes", "stat": "habit_marks", "goal": 10, "reward": {"gold": 80, "energy": 2}},
+	{"id": "m12", "title": "Primeira Vitória", "desc": "Derrote seu primeiro chefe", "stat": "bosses", "goal": 1, "reward": {"gold": 150, "xp": 120, "item": "pocao_media"}},
+	{"id": "m13", "title": "Hábito Forte", "desc": "Marque hábitos 10 vezes", "stat": "habit_marks", "goal": 10, "reward": {"gold": 80, "xp": 40}},
 	{"id": "m14", "title": "Ferreiro Cliente", "desc": "Aprimore um equipamento", "stat": "upgrades", "goal": 1, "reward": {"gold": 70}},
 	{"id": "m15", "title": "Mestre Cuca", "desc": "Coma 5 pratos do Restaurante", "stat": "meals", "goal": 5, "reward": {"gold": 60}},
-	{"id": "m16", "title": "Profundezas", "desc": "Chegue ao andar 8", "stat": "best_floor", "goal": 8, "reward": {"gold": 160, "xp": 150}},
-	{"id": "m17", "title": "Foco Inabalável", "desc": "Complete 25 sessões de foco", "stat": "focus_sessions", "goal": 25, "reward": {"gold": 250, "energy": 5}},
-	{"id": "m18", "title": "Senhor da Cripta", "desc": "Derrote 2 chefes", "stat": "bosses", "goal": 2, "reward": {"gold": 300, "xp": 250}},
+	{"id": "m16", "title": "Profundezas", "desc": "Chegue ao andar 4", "stat": "best_floor", "goal": 4, "reward": {"gold": 160, "xp": 150}},
+	{"id": "m17", "title": "Foco Inabalável", "desc": "Complete 25 sessões de foco", "stat": "focus_sessions", "goal": 25, "reward": {"gold": 250, "xp": 200}},
+	{"id": "m18", "title": "Caçador de Chefes", "desc": "Derrote 2 chefes", "stat": "bosses", "goal": 2, "reward": {"gold": 300, "xp": 250}},
 	{"id": "m19", "title": "Lenda Viva", "desc": "Alcance o nível 15", "stat": "level", "goal": 15, "reward": {"gold": 400}},
-	{"id": "m20", "title": "Abismo", "desc": "Chegue ao andar 15", "stat": "best_floor", "goal": 15, "reward": {"gold": 600, "xp": 500}},
+	{"id": "m20", "title": "Abismo", "desc": "Chegue ao andar 10 (Profundezas)", "stat": "best_floor", "goal": 10, "reward": {"gold": 600, "xp": 500}},
 ]
 
 # Missões diárias: 3 sorteadas por dia. {stat, goal, titulo}
 const DAILY_TEMPLATES := [
-	{"id": "d_focus1", "title": "Foco do dia", "desc": "Complete 1 sessão de foco", "stat": "focus_sessions", "goal": 1, "reward": {"gold": 25, "xp": 30, "energy": 1}},
-	{"id": "d_focus3", "title": "Dia produtivo", "desc": "Complete 3 sessões de foco", "stat": "focus_sessions", "goal": 3, "reward": {"gold": 80, "xp": 100, "energy": 2}},
+	{"id": "d_focus1", "title": "Foco do dia", "desc": "Complete 1 sessão de foco", "stat": "focus_sessions", "goal": 1, "reward": {"gold": 25, "xp": 30}},
+	{"id": "d_focus3", "title": "Dia produtivo", "desc": "Complete 3 sessões de foco", "stat": "focus_sessions", "goal": 3, "reward": {"gold": 80, "xp": 100}},
 	{"id": "d_kill15", "title": "Caçada", "desc": "Derrote 15 monstros", "stat": "monsters", "goal": 15, "reward": {"gold": 50, "xp": 60}},
 	{"id": "d_kill30", "title": "Limpeza geral", "desc": "Derrote 30 monstros", "stat": "monsters", "goal": 30, "reward": {"gold": 100, "xp": 120}},
 	{"id": "d_chest2", "title": "Caçador de tesouros", "desc": "Abra 2 baús", "stat": "chests", "goal": 2, "reward": {"gold": 45, "xp": 40}},
-	{"id": "d_habit3", "title": "Rotina em dia", "desc": "Marque 3 hábitos", "stat": "habit_marks", "goal": 3, "reward": {"gold": 40, "xp": 50, "energy": 1}},
-	{"id": "d_floor3", "title": "Mergulho", "desc": "Desça 3 andares na masmorra", "stat": "floors_descended", "goal": 3, "reward": {"gold": 60, "xp": 80}},
-	{"id": "d_boss", "title": "Caça ao chefe", "desc": "Derrote 1 chefe", "stat": "bosses", "goal": 1, "reward": {"gold": 120, "xp": 150, "energy": 1}},
+	{"id": "d_habit3", "title": "Rotina em dia", "desc": "Marque 3 hábitos", "stat": "habit_marks", "goal": 3, "reward": {"gold": 40, "xp": 50}},
+	{"id": "d_herb", "title": "Herborista", "desc": "Colha 4 ervas na floresta", "stat": "herbs", "goal": 4, "reward": {"gold": 40, "xp": 60}},
+	{"id": "d_boss", "title": "Caça ao chefe", "desc": "Derrote 1 chefe", "stat": "bosses", "goal": 1, "reward": {"gold": 120, "xp": 150}},
 	{"id": "d_meal", "title": "Hora do rango", "desc": "Coma 1 prato do Restaurante", "stat": "meals", "goal": 1, "reward": {"gold": 30, "xp": 30}},
 ]
 
@@ -503,7 +608,7 @@ const FURNITURE := {
 	"estante": {"name": "Estante de Livros", "price": 120, "desc": "+5% de XP.", "stat": {"xp_pct": 0.05}, "icon": "furn_estante"},
 	"planta": {"name": "Vaso de Planta", "price": 80, "desc": "Regenera 0,4 de vida por segundo.", "stat": {"regen": 0.4}, "icon": "furn_planta"},
 	"tapete": {"name": "Tapete Dourado", "price": 150, "desc": "+5% de ouro.", "stat": {"gold_pct": 0.05}, "icon": "furn_tapete"},
-	"lareira": {"name": "Lareira", "price": 200, "desc": "+1 de energia no reabastecimento diário.", "stat": {"daily_energy": 1.0}, "icon": "furn_lareira"},
+	"lareira": {"name": "Lareira", "price": 200, "desc": "Regenera 0,6 de vida por segundo.", "stat": {"regen": 0.6}, "icon": "furn_lareira"},
 	"trofeu": {"name": "Armário de Troféus", "price": 250, "desc": "+3% de crítico.", "stat": {"crit": 3.0}, "icon": "furn_trofeu"},
 	"relogio": {"name": "Relógio Antigo", "price": 300, "desc": "+10% de XP nas sessões de foco.", "stat": {"focus_xp_pct": 0.10}, "icon": "furn_relogio"},
 }

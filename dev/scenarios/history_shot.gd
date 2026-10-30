@@ -5,6 +5,7 @@ const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
 
 func run(dev: Node) -> void:
 	GameState.debug_reset()
+	Story.dev_start()
 	GameState.choose_class("arqueiro")
 	var now := int(Time.get_unix_time_from_system())
 	var r := RandomNumberGenerator.new()

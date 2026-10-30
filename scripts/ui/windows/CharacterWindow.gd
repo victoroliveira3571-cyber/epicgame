@@ -1,6 +1,9 @@
 extends UIWindow
 
-## Personagem (C): atributos, habilidade da classe e talentos.
+## Personagem (C): atributos, habilidade da classe e talentos; aba "Pets e história" com o
+## rank, créditos de estudo, horas de foco e a escolha do pet que acompanha o herói.
+
+var mode: String = "atributos"
 
 
 func _init() -> void:
@@ -9,6 +12,13 @@ func _init() -> void:
 
 
 func build() -> void:
+	if mode == "pets" or not GameState.has_chosen_class():
+		_pets()
+		return
+	var sw := UI.button("Pets e história  >", func() -> void:
+		mode = "pets"
+		rebuild(), 120)
+	add_to_body(sw, Vector2(410, 244))
 	var cls: Dictionary = Data.CLASSES[GameState.player_class]
 	var st := GameState.get_stats()
 	# --- coluna esquerda: identidade e atributos
@@ -89,3 +99,52 @@ func _n(v: float) -> String:
 	if absf(v - round(v)) < 0.05:
 		return str(int(round(v)))
 	return ("%.1f" % v).replace(".", ",")
+
+
+
+func _pets() -> void:
+	if GameState.has_chosen_class():
+		var back := UI.button("<  Atributos", func() -> void:
+			mode = "atributos"
+			rebuild(), 90)
+		add_to_body(back, Vector2(430, 244))
+	var left := UI.vbox(3)
+	add_to_body(left, Vector2(0, 0))
+	left.add_child(UI.label(Story.hero_name(), UI.C_ORANGE_L))
+	left.add_child(UI.label(Story.rank_name() + "  -  " + Story.chapter_title(), UI.C_TEXT))
+	left.add_child(UI.hline())
+	left.add_child(UI.label("Créditos de estudo: %d" % Story.credits(), UI.C_ENERGY))
+	left.add_child(UI.label("Próximo crédito em %d min de foco" % Story.minutes_to_next_credit(), UI.C_DIM))
+	left.add_child(UI.label("Horas de foco na história: %s h" % Story._hours_text(), UI.C_XP))
+	left.add_child(UI.label("Cartas no Caderno: %d" % (GameState.story.get("cards", []) as Array).size(), UI.C_TEXT))
+	left.add_child(UI.hline())
+	left.add_child(UI.wrap_label("1 hora de foco = 1 crédito. Pedágios: floresta 1 por dia; andar N da masmorra custa N por dia (máximo 5). Os chefes pedem horas de foco acumuladas.", UI.C_DIM, 220))
+	left.add_child(UI.hline())
+	left.add_child(UI.label("Objetivo:", UI.C_ORANGE_L))
+	left.add_child(UI.wrap_label(Story.objective_text(), UI.C_TEXT, 220))
+	var right := UI.vbox(4)
+	add_to_body(right, Vector2(250, 0))
+	right.add_child(UI.label("Pets (um acompanha você por vez)", UI.C_ORANGE_L))
+	right.add_child(UI.hline())
+	var owned: Array = Story.pets()
+	for pid in Data.PET_ORDER:
+		var pd: Dictionary = Data.PETS[pid]
+		var has := owned.has(pid)
+		var card := UI.card(UI.C_PANEL, UI.C_ORANGE if Story.active_pet() == pid else UI.C_LINE)
+		card.custom_minimum_size = Vector2(300, 40)
+		right.add_child(card)
+		var h := UI.hbox(6)
+		card.add_child(h)
+		var ic := UI.icon(Pix.tex(pd["face"]) if has else null, 30)
+		ic.modulate = pd.get("tint", Color.WHITE) if pid == "corvin" else Color.WHITE
+		h.add_child(ic)
+		var v := UI.vbox(0)
+		v.custom_minimum_size.x = 196
+		h.add_child(v)
+		v.add_child(UI.label(pd["name"] if has else "???", UI.C_ORANGE_L if has else UI.C_DIM))
+		v.add_child(UI.wrap_label(pd["desc"] if has else "Ainda não encontrado. Siga a história.", UI.C_DIM, 196))
+		if has:
+			var active: bool = Story.active_pet() == pid
+			h.add_child(UI.button("Guardar" if active else "Levar", func() -> void:
+				Story.set_pet("" if active else pid)
+				rebuild(), 56))

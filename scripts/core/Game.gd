@@ -9,11 +9,14 @@ signal run_finished(summary: Dictionary)
 const TOWN_SCENE := "res://scenes/Main.tscn"
 const DUNGEON_SCENE := "res://scenes/Dungeon.tscn"
 const INTERIOR_SCENE := "res://scenes/Interior.tscn"
+const FOREST_SCENE := "res://scenes/Forest.tscn"
 
 var current_floor: int = 0
 var run: Dictionary = {}
-var town_spawn: String = "start"      # "start" | "gate" | "door:<id do interior>"
+var town_spawn: String = "start"      # "start" | "gate" | "forest" | "door:<id do interior>"
+var forest_spawn: String = "town"     # "town" | "door:<id do interior>"
 var interior_id: String = ""
+var interior_return: String = "town"  # para onde a porta do interior leva: "town" | "forest"
 var transitioning: bool = false
 var input_locked: bool = false    # janelas abertas / diálogo / transição
 var last_run_summary: Dictionary = {}
@@ -104,28 +107,46 @@ func go_to_town(spawn: String = "start") -> void:
 
 
 # ============================================================ Interiores
-func enter_interior(id: String) -> void:
+func enter_interior(id: String, from: String = "town") -> void:
 	interior_id = id
-	town_spawn = "door:" + id
+	interior_return = from
+	if from == "town":
+		town_spawn = "door:" + id
 	GameState.in_dungeon = false
 	change_scene(INTERIOR_SCENE, 0.25)
 
 
 func leave_interior() -> void:
-	go_to_town("door:" + interior_id)
+	if interior_return == "forest":
+		go_to_forest("door:" + interior_id)
+	else:
+		go_to_town("door:" + interior_id)
+
+
+# ============================================================ Floresta
+func go_to_forest(spawn: String = "town") -> void:
+	forest_spawn = spawn
+	GameState.in_dungeon = false
+	change_scene(FOREST_SCENE)
 
 
 # ============================================================ Masmorra
-func can_enter_dungeon() -> bool:
-	return GameState.energy >= Data.ENERGY_PER_RUN
+## Pode entrar no andar: liberado pela história e pedágio pago hoje (ou créditos para pagar).
+func can_enter_floor(floor_n: int) -> bool:
+	if not Story.floor_unlocked(floor_n):
+		return false
+	return Story.has_pass("andar_%d" % floor_n) or Story.credits() >= Data.floor_toll(floor_n)
 
 
 func enter_dungeon(start_floor: int = 1) -> bool:
-	if not can_enter_dungeon():
-		GameState.toast.emit("Sem energia! Complete sessões de foco para recarregar.", Color("ff7a6a"))
+	if not Story.floor_unlocked(start_floor):
+		GameState.toast.emit("Este andar ainda não está liberado pela história.", Color("ff7a6a"))
 		Audio.sfx("ui_error")
 		return false
-	GameState.spend_energy(Data.ENERGY_PER_RUN)
+	if not Story.buy_pass("andar_%d" % start_floor, Data.floor_toll(start_floor)):
+		GameState.toast.emit("Faltam créditos de estudo: o andar %d custa %d." % [start_floor, Data.floor_toll(start_floor)], Color("ff7a6a"))
+		Audio.sfx("ui_error")
+		return false
 	current_floor = start_floor
 	run = {
 		"start_floor": start_floor, "kills": 0, "bosses": 0, "gold": 0, "xp": 0, "items": {},
@@ -136,6 +157,26 @@ func enter_dungeon(start_floor: int = 1) -> bool:
 	run_updated.emit()
 	change_scene(DUNGEON_SCENE)
 	return true
+
+
+## Escada para baixo: confere se o próximo andar está liberado e cobra o pedágio dele.
+func try_descend() -> void:
+	var next := current_floor + 1
+	if not Story.floor_unlocked(next):
+		HUD.show_toast("O andar %d ainda não está liberado pela história." % next, UI.C_BAD)
+		Audio.sfx("ui_error")
+		return
+	if Story.has_pass("andar_%d" % next):
+		descend()
+		return
+	var cost := Data.floor_toll(next)
+	if Story.credits() < cost:
+		HUD.show_toast("O andar %d custa %d créditos de estudo (você tem %d)." % [next, cost, Story.credits()], UI.C_BAD)
+		Audio.sfx("ui_error")
+		return
+	HUD.confirm("Pagar %d crédito%s de estudo para descer ao andar %d? (passe válido hoje)" % [cost, "s" if cost > 1 else "", next], func() -> void:
+		if Story.buy_pass("andar_%d" % next, cost):
+			descend())
 
 
 func descend() -> void:
@@ -165,9 +206,32 @@ func run_add_item(item_id: String, amount: int = 1) -> void:
 	items[item_id] = int(items.get(item_id, 0)) + amount
 
 
+## Duelo da história (Torneio das Guildas): arena com o chefe dado, sem pedágio e sem castigo.
+func start_duel(boss_id: String) -> void:
+	current_floor = 9
+	run = {
+		"start_floor": 0, "kills": 0, "bosses": 0, "gold": 0, "xp": 0, "items": {},
+		"time": 0.0, "chests": 0, "deepest": 0, "died": false, "duel": boss_id,
+	}
+	GameState.in_dungeon = true
+	change_scene(DUNGEON_SCENE)
+
+
+func is_duel() -> bool:
+	return not run.is_empty() and String(run.get("duel", "")) != ""
+
+
 func finish_run(died: bool) -> void:
 	if run.is_empty():
 		go_to_town("gate")
+		return
+	if is_duel():
+		run = {}
+		GameState.full_heal()
+		if died:
+			GameState.toast.emit("Você perdeu o duelo. Recupere o fôlego e fale com Helena para tentar de novo.", Color("ffb23e"))
+		town_spawn = "door:guilda"
+		go_to_town("door:guilda")
 		return
 	run["died"] = died
 	last_run_summary = run.duplicate(true)

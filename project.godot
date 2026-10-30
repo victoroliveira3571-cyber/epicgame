@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="Focus Town RPG"
+config/version="2.0"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7")
 config/icon="res://icon.png"
@@ -23,6 +24,7 @@ GameState="*res://scripts/core/GameState.gd"
 Audio="*res://scripts/core/Audio.gd"
 Game="*res://scripts/core/Game.gd"
 HUD="*res://scripts/ui/HUD.gd"
+Story="*res://scripts/story/Story.gd"
 Dev="*res://dev/Dev.gd"
 
 [display]

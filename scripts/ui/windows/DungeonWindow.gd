@@ -1,63 +1,74 @@
 extends UIWindow
 
-## Portão da Masmorra: escolhe o andar inicial (checkpoints a cada chefe) e entra.
+## Portão da Masmorra: os 5 andares da história (e as Profundezas depois do Rei Demônio).
+## Cada andar abre com o capítulo e cobra pedágio em créditos de estudo (andar N = N créditos,
+## no máximo 5), válido até a meia-noite.
 
 var start_floor: int = 1
 
 
 func _init() -> void:
 	win_title = "Portão da Masmorra"
-	win_size = Vector2(420, 250)
+	win_size = Vector2(560, 290)
 
 
-func _max_start() -> int:
-	return maxi(1, ((GameState.best_floor - 1) / 5) * 5 + 1)
+func _floors() -> Array:
+	var out: Array = []
+	for f in range(1, Data.STORY_LAST_FLOOR + 1):
+		out.append(f)
+	if Story.chapter() >= 6:
+		for f2 in range(Data.STORY_LAST_FLOOR + 1, maxi(GameState.best_floor + 2, Data.STORY_LAST_FLOOR + 2)):
+			out.append(f2)
+	return out
 
 
 func build() -> void:
-	start_floor = clampi(start_floor, 1, _max_start())
-	var biome := Data.biome_for_floor(start_floor)
-	var boss_floor := ((start_floor - 1) / 5 + 1) * 5
-	var boss: Dictionary = Data.BOSSES[Data.boss_for_floor(boss_floor)]
-	var v := UI.vbox(5)
+	var floors := _floors()
+	if not Story.floor_unlocked(start_floor):
+		start_floor = 1
+	var v := UI.vbox(4)
 	add_to_body(v, Vector2(0, 0))
-	v.add_child(UI.label("Melhor andar alcançado: %d" % GameState.best_floor, UI.C_DIM))
+	v.add_child(UI.label("Créditos de estudo: %d    Horas de foco: %s h" % [Story.credits(), Story._hours_text()], UI.C_ENERGY))
 	v.add_child(UI.hline())
-	var sel := UI.hbox(8)
-	v.add_child(sel)
-	var prev := UI.button("<", func() -> void:
-		start_floor -= 5
-		rebuild(), 22)
-	prev.disabled = start_floor <= 1
-	sel.add_child(prev)
-	var f := UI.label("Começar no andar %d" % start_floor, UI.C_ORANGE_L, 1)
-	f.custom_minimum_size.x = 160
-	f.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sel.add_child(f)
-	var nxt := UI.button(">", func() -> void:
-		start_floor += 5
-		rebuild(), 22)
-	nxt.disabled = start_floor >= _max_start()
-	sel.add_child(nxt)
-	v.add_child(UI.label("Bioma: %s" % biome["name"], UI.C_TEXT))
-	v.add_child(UI.label("Chefe do andar %d: %s" % [boss_floor, boss["name"]], UI.C_BAD))
-	v.add_child(UI.wrap_label("Derrote o chefe para liberar a escada. Novos pontos de partida aparecem a cada chefe derrotado.", UI.C_DIM, 390))
-	v.add_child(UI.hline())
-	var en := UI.hbox(2)
-	v.add_child(en)
-	en.add_child(UI.label("Energia: ", UI.C_TEXT))
-	for i in Data.ENERGY_MAX:
-		var pip := ColorRect.new()
-		pip.custom_minimum_size = Vector2(8, 8)
-		pip.color = UI.C_ENERGY if i < GameState.energy else Color("3a3426")
-		en.add_child(pip)
-	v.add_child(UI.wrap_label("Custo da expedição: %d de energia. Energia vem de sessões de foco (+%d) e hábitos (+%d)." % [Data.ENERGY_PER_RUN, Data.ENERGY_PER_FOCUS, Data.ENERGY_PER_HABIT], UI.C_DIM, 390))
-	v.add_child(UI.spacer(4))
-	var go := UI.button("Entrar na masmorra", func() -> void:
+	var col := scroll_column(Vector2(0, 22), Vector2(540, 150))
+	for f in floors:
+		var info := Data.floor_info(f)
+		var unlocked := Story.floor_unlocked(f)
+		var paid := Story.has_pass("andar_%d" % f)
+		var sub := ""
+		if not unlocked:
+			sub = "Liberado no capítulo %d" % int(info.get("chapter", 6)) if f <= Data.STORY_LAST_FLOOR else "Chegue ao andar anterior"
+		elif paid:
+			sub = "Passe de hoje pago"
+		else:
+			sub = "Pedágio: %d crédito%s" % [Data.floor_toll(f), "s" if Data.floor_toll(f) > 1 else ""]
+		if info.has("boss"):
+			var bd := Data.boss_def(info["boss"])
+			sub += "  -  Chefe: %s" % bd.get("name", "")
+			if bd.has("gate_hours"):
+				sub += " (%d h de foco)" % int(bd["gate_hours"])
+		var fnum: int = f
+		var row := list_row(Pix.tex("props/stairs_down_%d.png" % int(info["style"])), "Andar %d: %s" % [f, info["name"]],
+			UI.C_ORANGE_L if f == start_floor else (UI.C_TEXT if unlocked else UI.C_DIM), sub, "", UI.C_DIM,
+			"Escolher" if f != start_floor else "Escolhido", func() -> void:
+				start_floor = fnum
+				rebuild(), not unlocked or f == start_floor, 520)
+		col.add_child(row)
+	var bottom := UI.vbox(3)
+	add_to_body(bottom, Vector2(0, 178))
+	var cost := Data.floor_toll(start_floor)
+	var paid_now := Story.has_pass("andar_%d" % start_floor)
+	var can := Story.floor_unlocked(start_floor) and (paid_now or Story.credits() >= cost)
+	var label := "Entrar no andar %d" % start_floor + ("" if paid_now else " (pagar %d)" % cost)
+	var go := UI.button(label, func() -> void:
 		var floor_to_go := start_floor
 		HUD.close_window()
-		Game.enter_dungeon(floor_to_go), 140)
-	go.disabled = not Game.can_enter_dungeon()
-	v.add_child(go)
-	if not Game.can_enter_dungeon():
-		v.add_child(UI.wrap_label("Sem energia! Complete uma sessão de foco (P) ou marque hábitos (T).", UI.C_BAD, 390))
+		Game.enter_dungeon(floor_to_go), 160)
+	go.disabled = not can
+	bottom.add_child(go)
+	if not Story.floor_unlocked(1):
+		bottom.add_child(UI.wrap_label("A masmorra abre no capítulo 3. Siga o objetivo da história.", UI.C_BAD, 530))
+	elif not can:
+		bottom.add_child(UI.wrap_label("Faltam créditos: estude no Pomodoro (P). Cada hora de foco vale 1 crédito (faltam %d min para o próximo)." % Story.minutes_to_next_credit(), UI.C_BAD, 530))
+	else:
+		bottom.add_child(UI.wrap_label("Descer pela escada também cobra o pedágio do próximo andar. Passes valem até a meia-noite.", UI.C_DIM, 530))

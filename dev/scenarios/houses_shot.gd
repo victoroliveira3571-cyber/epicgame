@@ -2,6 +2,7 @@ extends Node
 const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
 func run(dev: Node) -> void:
 	GameState.debug_reset()
+	Story.dev_start()
 	GameState.choose_class("cavaleiro")
 	get_tree().reload_current_scene()
 	await dev.wait(1.0)

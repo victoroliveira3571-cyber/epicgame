@@ -1,6 +1,6 @@
 extends UIWindow
 
-## Hábitos (T): 5 hábitos diários com sequência. Cada marcação dá XP, ouro e energia.
+## Hábitos (T): 5 hábitos diários com sequência. Cada marcação dá XP e ouro.
 
 var _editing: LineEdit = null
 
@@ -73,4 +73,4 @@ func _mark(i: int) -> void:
 		return
 	Audio.jingle("success")
 	Audio.sfx("star", -6.0)
-	HUD.show_toast("Hábito marcado! +%d XP  +%d ouro  +%d energia  (sequência %d)" % [r["xp"], r["gold"], r["energy"], r["streak"]], UI.C_GOLD)
+	HUD.show_toast("Hábito marcado! +%d XP  +%d ouro  (sequência %d)" % [r["xp"], r["gold"], r["streak"]], UI.C_GOLD)

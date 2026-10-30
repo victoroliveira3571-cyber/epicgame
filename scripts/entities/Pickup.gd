@@ -32,6 +32,7 @@ static func spawn(parent: Node, pos: Vector2, pickup_kind: String, value: int, i
 
 
 func _ready() -> void:
+	add_to_group("pickup")
 	z_index = 2
 	var angle := randf() * TAU
 	var speed := randf_range(30.0, 60.0)
@@ -89,6 +90,12 @@ func _physics_process(delta: float) -> void:
 		global_position += dir * (95.0 + (MAGNET_RANGE - minf(d, MAGNET_RANGE)) * 4.0) * delta
 		if d < COLLECT_RANGE:
 			_collect(player)
+
+
+## Pets também recolhem (Pet.gd): vale como se o jogador tivesse pegado.
+func collect_by_pet(player: Player) -> void:
+	if age >= 0.45 and is_inside_tree():
+		_collect(player)
 
 
 func _collect(player: Player) -> void:

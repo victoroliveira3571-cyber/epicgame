@@ -129,6 +129,7 @@ func _ready() -> void:
 func _build_sprite() -> void:
 	var folder := "chars" if data.get("kind", "") == "char" else "monsters"
 	sprite.sprite_frames = Pix.actor_frames("%s/%s.png" % [folder, data["sheet"]])
+	sprite.self_modulate = data.get("tint", Color.WHITE)
 
 
 func _start_anim() -> void:

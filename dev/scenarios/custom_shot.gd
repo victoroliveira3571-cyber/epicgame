@@ -5,6 +5,7 @@ const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
 
 func run(dev: Node) -> void:
 	GameState.debug_reset()
+	Story.dev_start()
 	get_tree().reload_current_scene()
 	await dev.wait(1.2)
 	await dev.shot(OUT + "custom_classe.png")

@@ -21,6 +21,9 @@ const WINDOWS := {
 	"historico": "res://scripts/ui/windows/PomodoroHistoryWindow.gd",
 	"guarda_roupa": "res://scripts/ui/windows/WardrobeWindow.gd",
 	"creditos": "res://scripts/ui/windows/CreditsWindow.gd",
+	"criacao": "res://scripts/ui/windows/CreationWindow.gd",
+	"caderno": "res://scripts/ui/windows/NotebookWindow.gd",
+	"preocupacoes": "res://scripts/ui/windows/WorryWindow.gd",
 }
 
 var root: Control
@@ -43,7 +46,11 @@ var _hp_bar: UI.Bar
 var _xp_bar: UI.Bar
 var _food_bar: UI.Bar
 var _gold_label: Label
-var _energy_box: HBoxContainer
+var _credit_label: Label
+var _objective: Control
+var _obj_title: Label
+var _obj_text: Label
+var _dialog: DialogueBox = null
 var _buff_box: HBoxContainer
 var _hotbar: Control
 var _hot_potion: UI.Slot
@@ -81,6 +88,7 @@ func _ready() -> void:
 	add_child(root)
 	_build_card()
 	_build_pomodoro()
+	_build_objective()
 	_build_minimap()
 	_build_hotbar()
 	_build_boss_bar()
@@ -94,6 +102,7 @@ func _ready() -> void:
 	root.add_child(_toasts)
 	GameState.stats_changed.connect(_refresh_card)
 	GameState.energy_changed.connect(_refresh_card)
+	Story.changed.connect(_refresh_objective)
 	GameState.buffs_changed.connect(_refresh_buffs)
 	GameState.toast.connect(show_toast)
 	GameState.leveled_up.connect(_on_level_up)
@@ -116,16 +125,18 @@ func on_scene_ready(which: String) -> void:
 	_prompt.text = ""
 	if window != null:
 		close_window()
+	_refresh_card()
+	_refresh_objective()
 	if which == "town":
-		if not GameState.has_chosen_class():
+		if not Story.started():
 			Audio.play_music("title")
-			open_window("classe")
+			open_window("criacao")
 		elif not Game.last_run_summary.is_empty() and not Game.last_run_summary.get("shown", false):
 			Game.last_run_summary["shown"] = true
 			open_window("resumo")
 
 
-const DEFAULT_HINT := "I Inventário  C Personagem  T Hábitos  G Missões  P Pomodoro  Esc Pausa"
+const DEFAULT_HINT := "I Inventário  C Personagem  N Caderno  T Hábitos  G Missões  P Pomodoro  Esc Pausa"
 
 
 ## Texto pequeno no canto de baixo; vazio volta ao padrão.
@@ -139,8 +150,9 @@ func set_scene_kind(which: String) -> void:
 	_card.visible = playing
 	_hotbar.visible = playing
 	_pomo_panel.visible = playing
-	_minimap.visible = which == "dungeon" or which == "town"
+	_minimap.visible = which == "dungeon" or which == "town" or which == "forest"
 	_hint.visible = playing
+	_objective.visible = playing and Story.started()
 
 
 # ================================================================== Cartão do jogador
@@ -185,10 +197,9 @@ func _build_card() -> void:
 	_gold_label = UI.label("", UI.C_GOLD)
 	_gold_label.position = Vector2(8, 44)
 	_card.add_child(_gold_label)
-	_energy_box = UI.hbox(2)
-	_energy_box.position = Vector2(46, 46)
-	_energy_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_card.add_child(_energy_box)
+	_credit_label = UI.label("", UI.C_ENERGY)
+	_credit_label.position = Vector2(46, 44)
+	_card.add_child(_credit_label)
 	_buff_box = UI.hbox(2)
 	_buff_box.position = Vector2(6, 68)
 	_buff_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -196,15 +207,17 @@ func _build_card() -> void:
 
 
 func _refresh_card() -> void:
-	if _card == null or not GameState.has_chosen_class():
+	if _card == null or not Story.started():
 		return
-	var cls: Dictionary = Data.CLASSES[GameState.player_class]
-	if _face_class != GameState.player_class:
-		_face_class = GameState.player_class
-		_card_face.texture = Pix.atlas("chars/%s.png" % cls["sheet"], Rect2(0, 0, 16, 16))
+	var has_class := GameState.has_chosen_class()
+	var sheet: String = Data.CLASSES[GameState.player_class]["sheet"] if has_class else "Villager5"
+	if _face_class != sheet:
+		_face_class = sheet
+		_card_face.texture = Pix.atlas("chars/%s.png" % sheet, Rect2(0, 0, 16, 16))
 		_card_face.custom_minimum_size = Vector2(32, 32)
 		_card_face.size = Vector2(32, 32)
-	_card_name.text = "Nv %d %s" % [GameState.level, cls["name"]]
+	_card_name.text = "%s  Nv %d" % [Story.hero_name(), GameState.level]
+	_credit_label.text = "Créd. %d   %s" % [Story.credits(), Story.rank_name()]
 	var max_hp := GameState.get_max_hp()
 	_hp_bar.set_ratio(float(GameState.hp) / float(max_hp), "%d/%d" % [GameState.hp, max_hp])
 	_xp_bar.set_ratio(float(GameState.xp) / float(maxi(1, GameState.xp_to_next)))
@@ -212,15 +225,6 @@ func _refresh_card() -> void:
 	_food_bar.fill = UI.C_FOOD if GameState.hunger > 20 else UI.C_BAD
 	_gold_label.text = "%s" % UI.fmt_int(GameState.gold)
 	_gold_label.position.x = 8
-	for c in _energy_box.get_children():
-		_energy_box.remove_child(c)
-		c.queue_free()
-	for i in Data.ENERGY_MAX:
-		var pip := ColorRect.new()
-		pip.custom_minimum_size = Vector2(6, 6)
-		pip.color = UI.C_ENERGY if i < GameState.energy else Color("3a3426")
-		pip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_energy_box.add_child(pip)
 	_refresh_buffs()
 	_refresh_hotbar()
 
@@ -479,7 +483,7 @@ func pomodoro_stop_prompt() -> void:
 	if m < 1:
 		confirm("Parar o foco? Ainda não passou 1 minuto, então nada será contado.", func() -> void: pomodoro_cancel())
 		return
-	confirm("Finalizar agora e contar os %d min estudados? (XP, ouro, créditos e histórico proporcionais)" % m,
+	confirm("Finalizar agora e contar os %d min estudados? (XP, ouro, créditos de estudo e histórico proporcionais)" % m,
 		func() -> void: pomodoro_finish())
 
 
@@ -498,17 +502,18 @@ func _pomodoro_done() -> void:
 		_end_break("Pausa terminada. Hora de focar!")
 
 
-## Dá a recompensa de `minutes` de foco (XP 4/min, ouro 2/min, créditos 1/min, energia proporcional
-## a 25 min) e começa a pausa. `early` = o Victor finalizou antes do fim.
+## Dá a recompensa de `minutes` de foco (XP 4/min, ouro 2/min, fichas de estilo 1/min e minutos para os
+## créditos de estudo da história) e começa a pausa. `early` = o Victor finalizou antes do fim.
 func _reward_focus(minutes: int, early: bool) -> void:
 	var xp := int(round(minutes * 4.0))
 	var gold := int(round(minutes * 2.0))
-	var energy := Data.ENERGY_PER_FOCUS if not early else mini(Data.ENERGY_PER_FOCUS, int(floor(float(minutes) * Data.ENERGY_PER_FOCUS / 25.0)))
-	var r := GameState.complete_focus_session(xp, gold, minutes, energy, (not early) or minutes >= Data.FOCUS_MIN_SESSION)
+	var r := GameState.complete_focus_session(xp, gold, minutes, 0, (not early) or minutes >= Data.FOCUS_MIN_SESSION)
 	GameState.log_pomodoro(minutes, str(GameState.pomo_cfg.get("scene", "")), early)
 	Audio.jingle("pomo_done", -3.0)
 	var head := "Foco finalizado (%d min)!" % minutes if early else "Foco concluído!"
-	show_toast("%s +%d XP  +%d ouro  +%d energia  +%d créditos" % [head, r["xp"], r["gold"], r["energy"], r["credits"]], UI.C_GOLD)
+	show_toast("%s +%d XP  +%d ouro  +%d fichas de estilo" % [head, r["xp"], r["gold"], r["credits"]], UI.C_GOLD)
+	if Story.started() and int(r.get("story_credits", 0)) == 0:
+		show_toast("Próximo crédito de estudo em %d min de foco." % Story.minutes_to_next_credit(), UI.C_ENERGY)
 	pomo_state = "break"
 	pomo_total = float(int(GameState.pomo_cfg.get("break", 5))) * 60.0
 	pomo_left = pomo_total
@@ -558,6 +563,7 @@ func _refresh_pomodoro() -> void:
 class Minimap extends Control:
 	const CELL := 2
 	const TOWN_PX := 2.0          # pixels do minimapa por tile da cidade
+	var px: float = 2.0           # escala em uso (mapas grandes ficam menores)
 	var dungeon: Node = null
 	var town: Node = null
 
@@ -566,7 +572,8 @@ class Minimap extends Control:
 		town = t
 		dungeon = null
 		if t != null:
-			size = Vector2(t.W, t.H) * TOWN_PX + Vector2(4, 4)
+			px = minf(TOWN_PX, 132.0 / float(t.W))
+			size = (Vector2(t.W, t.H) * px).round() + Vector2(4, 4)
 			custom_minimum_size = size
 		_anchor()
 		queue_redraw()
@@ -579,7 +586,7 @@ class Minimap extends Control:
 		if town.minimap_tex != null:
 			draw_texture_rect(town.minimap_tex, Rect2(Vector2(2, 2), size - Vector2(4, 4)), false, Color(1, 1, 1, 0.92))
 		draw_rect(Rect2(Vector2.ZERO, size), UI.C_ORANGE, false, 1.0)
-		var k := TOWN_PX / float(town.T)
+		var k := px / float(town.T)
 		for id in town.buildings:
 			var b: Node2D = town.buildings[id]
 			draw_rect(Rect2(Vector2(2, 2) + b.position * k - Vector2(3, 5), Vector2(6, 5)), Color("c8743a"))
@@ -800,8 +807,8 @@ func close_window() -> void:
 	window_id = ""
 	get_tree().paused = false
 	Game.input_locked = false
-	if closing_id == "classe" and not GameState.has_chosen_class():
-		open_window("classe")
+	if closing_id == "criacao" and not Story.started():
+		open_window("criacao")
 
 
 func toggle_window(id: String) -> void:
@@ -858,7 +865,7 @@ func _process(delta: float) -> void:
 	if scene_kind == "dungeon":
 		if _minimap.dungeon == null or not is_instance_valid(_minimap.dungeon):
 			_minimap.bind(get_tree().get_first_node_in_group("dungeon"))
-	elif scene_kind == "town":
+	elif scene_kind == "town" or scene_kind == "forest":
 		if _minimap.town == null or not is_instance_valid(_minimap.town):
 			_minimap.bind_town(get_tree().get_first_node_in_group("town"))
 
@@ -870,12 +877,18 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 		return
 	if _confirm_box != null and is_instance_valid(_confirm_box):
 		return
+	if is_dialogue_open() or not Story.started():
+		return
 	var shortcuts := {
 		"inventory": "inventario", "character": "personagem", "habits": "habitos", "quests": "guilda", "pause": "pausa",
 	}
+	if ev.keycode == KEY_N and not (is_window_open() and window_id != "caderno"):
+		get_viewport().set_input_as_handled()
+		toggle_window("caderno")
+		return
 	for action in shortcuts:
 		if ev.is_action(action):
-			if action == "quests" and scene_kind != "town":
+			if action == "quests" and scene_kind == "dungeon":
 				return
 			if action == "pause" and is_window_open():
 				return  # a própria janela fecha com Esc
@@ -884,3 +897,98 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 			return
 	if ev.keycode == KEY_P:
 		toggle_window("pomodoro")
+
+
+# ================================================================== Objetivo da história
+func _build_objective() -> void:
+	_objective = Control.new()
+	_objective.position = Vector2(UI.SIZE.x - 164, 60)
+	_objective.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_objective)
+	var bg := Panel.new()
+	bg.name = "bg"
+	bg.size = Vector2(158, 40)
+	bg.add_theme_stylebox_override("panel", UI.flat(Color(0.1, 0.08, 0.08, 0.72), UI.C_LINE, 1))
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_objective.add_child(bg)
+	_obj_title = UI.label("", UI.C_ORANGE_L)
+	_obj_title.position = Vector2(6, 2)
+	_objective.add_child(_obj_title)
+	_obj_text = UI.wrap_label("", UI.C_TEXT, 146)
+	_obj_text.position = Vector2(6, 14)
+	_obj_text.size = Vector2(146, 12)
+	_objective.add_child(_obj_text)
+	_objective.visible = false
+
+
+func _refresh_objective() -> void:
+	if _objective == null:
+		return
+	if not Story.started() or scene_kind == "":
+		_objective.visible = false
+		return
+	_objective.visible = true
+	var ch: Dictionary = StoryData.CHAPTERS.get(Story.chapter(), {})
+	_obj_title.text = String(ch.get("title", "")) + "  -  Objetivo"
+	_obj_text.text = Story.objective_text()
+	_obj_text.size = Vector2(146, 0)
+	var lines := maxi(1, int(ceil(Pix.font(1).get_string_size(_obj_text.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x / 128.0)))
+	(_objective.get_node("bg") as Panel).size = Vector2(158, 20 + 15 * lines)
+	_refresh_card()
+
+
+## Esconde o cartão do jogador (fase final do Rei Demônio "apaga" o nome e os atributos).
+func set_card_hidden(hidden: bool) -> void:
+	if _card != null:
+		_card.modulate.a = 0.0 if hidden else 1.0
+
+
+# ================================================================== Diálogo e perguntas
+func is_dialogue_open() -> bool:
+	return _dialog != null and is_instance_valid(_dialog)
+
+
+## Mostra um diálogo da história (id de StoryData.DIALOGS ou lista de falas) e espera o fim.
+func dialogue(entry: Variant) -> void:
+	var lines: Array = entry if entry is Array else StoryData.DIALOGS.get(String(entry), [])
+	if lines.is_empty():
+		return
+	while is_dialogue_open():
+		await get_tree().process_frame
+	set_prompt("")
+	var was_paused := get_tree().paused
+	get_tree().paused = true
+	Game.input_locked = true
+	_dialog = DialogueBox.new()
+	root.add_child(_dialog)
+	_dialog.start(lines)
+	await _dialog.finished
+	_dialog.queue_free()
+	_dialog = null
+	if not is_window_open() and not was_paused:
+		get_tree().paused = false
+		_unlock_soon()
+
+
+## Pergunta de memória (QuizPanel). Devolve {"result": ..., "hints": n}.
+func quiz(card: Dictionary, title: String) -> Dictionary:
+	var was_paused := get_tree().paused
+	get_tree().paused = true
+	Game.input_locked = true
+	var q := QuizPanel.new()
+	root.add_child(q)
+	q.start(card, title)
+	var res: Dictionary = await q.done
+	q.queue_free()
+	if not is_window_open() and not is_dialogue_open() and not was_paused:
+		get_tree().paused = false
+		_unlock_soon()
+	return res
+
+
+## Solta os controles um instante depois: a tecla que fechou a fala não pode reabrir a conversa.
+func _unlock_soon() -> void:
+	Game.input_locked = true
+	await get_tree().create_timer(0.2).timeout
+	if not is_window_open() and not is_dialogue_open() and not Game.transitioning:
+		Game.input_locked = false

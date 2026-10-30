@@ -9,6 +9,7 @@ func run(dev: Node) -> void:
 		if arg.begins_with("--ids="):
 			ids = arg.substr(6).split(",")
 	GameState.debug_reset()
+	Story.dev_start()
 	GameState.choose_class("mago")
 	GameState.gold = 5000
 	for f in Data.FURNITURE_ORDER:

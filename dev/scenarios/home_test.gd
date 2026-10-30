@@ -5,6 +5,7 @@ const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
 
 func run(dev: Node) -> void:
 	GameState.debug_reset()
+	Story.dev_start()
 	GameState.choose_class("escudeiro")
 	GameState.gold = 5000
 	for f in Data.FURNITURE_ORDER:

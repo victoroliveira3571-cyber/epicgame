@@ -12,6 +12,7 @@ func run(dev: Node) -> void:
 		if arg.begins_with("--scenes="):
 			scenes = arg.substr(9).split(",")
 	GameState.debug_reset()
+	Story.dev_start()
 	GameState.choose_class(cls)
 	GameState.mark_dirty()
 	get_tree().reload_current_scene()

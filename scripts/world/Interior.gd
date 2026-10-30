@@ -11,11 +11,11 @@ const DOOR_W := 2          # largura do vão da porta (tiles)
 
 # Moradores das casas de cenário (índice = ordem de HOUSE_DEFS na cidade)
 const HOUSES := [
-	{"title": "Casa da Dona Marta", "npc": "OldWoman", "floor": "floor_wood", "wall": "wall_cream",
-		"lines": ["Entre, querido! Aceita um chá?", "Eu costurava para os aventureiros.", "Foco e chá quente: receita de vovó."]},
+	{"title": "Casa da Costureira", "npc": "Villager6", "floor": "floor_wood", "wall": "wall_cream",
+		"lines": ["Entre! Aceita um chá?", "Eu costuro capas para os aventureiros.", "A Dona Marta manda lembranças."]},
 	{"title": "Estalagem do Viajante", "npc": "Villager4", "floor": "floor_wood_dark", "wall": "wall_red",
 		"lines": ["Os quartos estão cheios hoje!", "Quem sobe a masmorra dorme melhor.", "Já ouvi histórias do chefe do andar 5."]},
-	{"title": "Casa do Mestre Lin", "npc": "Monk", "floor": "floor_stone", "wall": "wall_stone",
+	{"title": "Casa do Mestre Lin", "npc": "Master", "floor": "floor_stone", "wall": "wall_stone",
 		"lines": ["Respire fundo. Um pomodoro por vez.", "A mente calma corta mais fundo.", "Hoje meditei por 25 minutos."]},
 	{"title": "Salão do Clã", "npc": "Samurai", "floor": "floor_wood_dark", "wall": "wall_red",
 		"lines": ["Aqui treinamos de madrugada.", "Honra vem da disciplina.", "Mostre o que você aprendeu."]},
@@ -97,14 +97,21 @@ func _ready() -> void:
 		_build_guild()
 	elif id == "biblioteca":
 		_build_library()
+	elif id == "casa_familia":
+		_build_family_home()
+	elif id == "casa_pai":
+		_build_father_house()
 	else:
 		_build_resident_house()
 	_spawn_player()
 	var mod := CanvasModulate.new()
-	mod.color = Color(1.0, 0.94, 0.86)
+	mod.color = Color(0.72, 0.7, 0.76) if id == "casa_pai" else Color(1.0, 0.94, 0.86)
 	add_child(mod)
-	Audio.play_music("interior_taverna" if id == "restaurante" else "interior_manor")
+	Audio.play_music("interior_taverna" if id == "restaurante" else ("home" if id == "casa_familia" else "interior_manor"))
 	HUD.on_scene_ready("interior")
+	if id == "casa_familia" and Story.step() == "c1_casa":
+		await get_tree().create_timer(0.8).timeout
+		Story.talk("mae")
 
 
 func _configure() -> void:
@@ -128,6 +135,16 @@ func _configure() -> void:
 		rows = 17
 		floor_tex = "floor_wood_dark"
 		wall_tex = "wall_cream"
+	elif id == "casa_familia":
+		cols = 24
+		rows = 14
+		floor_tex = "floor_wood"
+		wall_tex = "wall_cream"
+	elif id == "casa_pai":
+		cols = 20
+		rows = 12
+		floor_tex = "floor_wood_dark"
+		wall_tex = "wall_stone"
 	else:
 		var h: Dictionary = HOUSES[_house_index()]
 		cols = 28
@@ -219,8 +236,19 @@ func _build_exit() -> void:
 func _leave() -> void:
 	if _ending:
 		return
+	if id == "casa_familia" and Story.step() == "c1_casa":
+		HUD.set_prompt("")
+		HUD.show_toast("Fale com %s antes de partir." % Story.fmt("{mae}"), UI.C_ORANGE_L)
+		player.global_position.y -= 18.0
+		return
 	_ending = true
 	Audio.sfx("ui_close", -4.0)
+	# prólogo: da casa da família a trilha leva direto a Focus Town
+	if id == "casa_familia" and not Story.flag("saiu_casa"):
+		Story.set_flag("saiu_casa")
+		await Story.say("c1_saida")
+		Game.go_to_town("start")
+		return
 	Game.leave_interior()
 
 
@@ -491,11 +519,12 @@ func _build_restaurant() -> void:
 	for dx in [-45.0, 0.0, 45.0]:
 		prop("i_counter", Vector2(cx + dx, 98))
 	_block(Rect2(cx - 70, 40, 140, 36))     # cozinha atrás do balcão
-	var cook := npc("Woman", Vector2(cx - 20, 78), ["Hoje tem macarrão quentinho!", "Comer bem rende mais foco.", "O que vai ser?"])
+	var cook := npc("OldWoman", Vector2(cx - 20, 78), ["Hoje tem pão quentinho!", "Estudou hoje?", "Chá e foco: receita de vó."])
 	cook.sprite.z_index = 0
+	spot("Falar com Dona Marta", Vector2(cx - 20, 112), func() -> void: Story.talk("marta"), 22.0)
 	prop("i_bowl1", Vector2(cx + 22, 90), false)
 	prop("i_mug", Vector2(cx - 50, 90), false)
-	spot("Pedir comida", Vector2(cx, 112), func() -> void: HUD.open_window("restaurante"), 28.0)
+	spot("Pedir comida", Vector2(cx + 30, 112), func() -> void: HUD.open_window("restaurante"), 22.0)
 	# mesas com banquinhos
 	var tables := [Vector2(90, 168), Vector2(180, 168), Vector2(w - 180, 168), Vector2(w - 90, 168), Vector2(135, 226), Vector2(w - 135, 226)]
 	for t in tables:
@@ -532,9 +561,11 @@ func _build_guild() -> void:
 	for dx in [-45.0, 0.0, 45.0]:
 		prop("i_counter", Vector2(cx + dx, 104))
 	_block(Rect2(cx - 70, 44, 140, 38))
-	npc("OldMan3", Vector2(cx, 84), ["Bem-vindo, aventureiro!", "As missões do dia estão no quadro.", "Quem foca, conquista."])
+	npc("Princess", Vector2(cx, 84), ["Bem-vindo à Guilda!", "As missões do dia estão no quadro.", "Quem foca, conquista."])
 	prop("i_desk_paper", Vector2(cx - 50, 96), false)
-	spot("Falar com o atendente (missões)", Vector2(cx, 118), func() -> void: HUD.open_window("guilda"), 30.0)
+	spot("Falar com Helena", Vector2(cx, 118), func() -> void: Story.talk("helena"), 22.0)
+	spot("Missões da Guilda", Vector2(cx + 46, 118), func() -> void: HUD.open_window("guilda"), 18.0)
+	_guild_story_npcs(cx, w)
 	spot("Quadro de missões", Vector2(cx - 110, 70), func() -> void: HUD.open_window("guilda"), 24.0)
 	spot("Quadro de missões", Vector2(cx + 110, 70), func() -> void: HUD.open_window("guilda"), 24.0)
 	# escada para a masmorra
@@ -556,6 +587,67 @@ func _build_guild() -> void:
 	light(Vector2(cx, 80), Color(1.0, 0.82, 0.55), 2.4, 0.3)
 	light(Vector2(130, 150), Color(1.0, 0.8, 0.55), 1.4, 0.25)
 	light(Vector2(w - 130, 150), Color(1.0, 0.8, 0.55), 1.4, 0.25)
+
+
+## Personagens da história que aparecem na Guilda conforme o capítulo.
+func _guild_story_npcs(cx: float, w: float) -> void:
+	var s := Story.step()
+	var ch := Story.chapter()
+	if s == "c2_exame":
+		StoryProp.talker(npc("NinjaBlue2", Vector2(cx + 40, 140), ["Hoje eu passo no exame.", "Vento não espera ninguém."]), "ivo", "Ivo")
+	elif ch >= 2:
+		StoryProp.talker(npc("NinjaBlue2", Vector2(cx + 60, 160), ["Já fez seu foco de hoje?", "Revanche quando quiser."], "wander", 40.0), "ivo", "Ivo")
+	if ch >= 3:
+		StoryProp.talker(npc("Master", Vector2(w - 100, 170), ["A Névoa espera lá embaixo.", "Respire antes de descer."]), "lin", "Mestre Lin")
+	if s == "c1_volta" or s == "c4_pietro":
+		StoryProp.talker(npc("Hunter", Vector2(cx - 60, 150), ["Boa caçada hoje?", "A floresta muda todo dia."]), "pietro", "Pietro")
+
+
+# ================================================================== Casa da família (floresta)
+func _build_family_home() -> void:
+	var w := cols * T
+	prop("i_painting", Vector2(70, 26), false, true)
+	prop("i_painting", Vector2(w - 70, 26), false, true)
+	prop("furn_lareira", Vector2(w / 2.0, 58), true)
+	light(Vector2(w / 2.0, 50), Color(1.0, 0.55, 0.25), 0.9, 0.9)
+	prop("furn_cama", Vector2(48, 104))
+	prop("furn_cama", Vector2(48, 150))
+	prop("i_dresser", Vector2(w - 50, 62), false)
+	prop("furn_mesa", Vector2(w / 2.0 + 40, 150))
+	prop("i_stool", Vector2(w / 2.0 + 20, 162))
+	prop("i_stool", Vector2(w / 2.0 + 60, 162))
+	prop("i_bowl3", Vector2(w / 2.0 + 40, 145), false)
+	prop("furn_tapete", Vector2(w / 2.0 - 40, 170), false, true)
+	prop("furn_planta", Vector2(w - 34, 120))
+	prop("i_basket", Vector2(w - 40, 190))
+	var mom := npc("Woman", Vector2(w / 2.0 - 30, 120), ["Coma alguma coisa antes de sair.", "Seu pai adorava esta lareira."])
+	StoryProp.talker(mom, "mae", Story.fmt("{mae}"))
+	spot("Descansar", Vector2(48, 116), func() -> void:
+		GameState.full_heal()
+		Audio.sfx("sleep", -4.0)
+		HUD.show_toast("Você descansou em casa. Vida cheia!", UI.C_GOOD), 20.0)
+	light(Vector2(w / 2.0, 130), Color(1.0, 0.82, 0.55), 2.0, 0.3)
+
+
+# ================================================================== Casa abandonada do pai
+func _build_father_house() -> void:
+	var w := cols * T
+	prop("i_bookcase", Vector2(60, 62), false)
+	prop("i_shelf_s", Vector2(w - 60, 62), false)
+	prop("i_desk_paper", Vector2(w / 2.0, 100))
+	prop("i_stool", Vector2(w / 2.0, 114))
+	prop("i_crate", Vector2(30, 160))
+	prop("i_sack", Vector2(w - 30, 150))
+	var chest_prop := prop("i_chest", Vector2(w / 2.0 + 60, 150))
+	spot("Abrir o baú do pai", Vector2(w / 2.0 + 60, 162), func() -> void:
+		await Story.say("casa_pai")
+		if not Story.flag("diario_pai"):
+			Story.set_flag("diario_pai")
+			GameState.add_gold(30)
+			GameState.add_xp(30, false)
+			HUD.show_toast("Página do diário guardada. +30 ouro  +30 XP", UI.C_GOLD), 22.0)
+	chest_prop.modulate = Color(0.85, 0.8, 0.75)
+	light(Vector2(w / 2.0, 100), Color(0.9, 0.85, 0.7), 1.4, 0.35)
 
 
 # ================================================================== Casa de morador
@@ -581,7 +673,9 @@ func _build_resident_house() -> void:
 	prop("furn_planta", Vector2(w - 40, 112))
 	prop("i_pot", Vector2(w - 40, 215))
 	prop("i_barrel", Vector2(30, 232))
-	npc(h["npc"], Vector2(w / 2.0 - 30, 150), h["lines"], "wander", 50.0)
+	var resident := npc(h["npc"], Vector2(w / 2.0 - 30, 150), h["lines"], "wander", 50.0)
+	if idx == 2:
+		StoryProp.talker(resident, "lin", "Mestre Lin")
 	var title := UI.label(h["title"], Color("fff1c9"))
 	title.size = Vector2(300, 14)
 	title.position = Vector2(w / 2.0 - 150, 6)

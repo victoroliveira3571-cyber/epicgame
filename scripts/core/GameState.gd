@@ -42,6 +42,7 @@ var furniture_layout: Dictionary = {} # id do móvel -> [x, y] na casa (px)
 var study_credits: int = 0             # créditos de estudo: 1 por minuto de foco concluído
 var looks_owned: Array = []            # ids de peças compradas (as de preço 0 são de graça)
 var look: Dictionary = {}              # ver Lpc.default_look()
+var story: Dictionary = {}             # história (ver Story.gd): nomes, capítulo, passo, rank, pets, créditos, Caderno
 var pomo_log: Array = []              # histórico de focos concluídos: {d: "AAAA-MM-DD", t: unix, m: minutos, s: cenário}
 
 # --- contadores (nunca resetam; missões leem daqui)
@@ -169,6 +170,14 @@ func _compute_stats() -> Dictionary:
 		s["focus_xp_pct"] += float(fs.get("focus_xp_pct", 0.0))
 		s["daily_energy"] += float(fs.get("daily_energy", 0.0))
 		s["hunger_mult"] -= float(fs.get("hunger_mult", 0.0))
+	var pet_id := String(story.get("pet", ""))
+	if Data.PETS.has(pet_id) and (story.get("pets", []) as Array).has(pet_id):
+		var pet: Dictionary = Data.PETS[pet_id]
+		var growth := maxi(0, int(story.get("chapter", 1)) - 2)
+		for k in pet["bonus"]:
+			s[k] = float(s.get(k, 0.0)) + float(pet["bonus"][k])
+		for k in pet.get("grow", {}):
+			s[k] = float(s.get(k, 0.0)) + float(pet["grow"][k]) * growth
 	for bid in buffs:
 		var b: Dictionary = Data.BUFFS.get(bid, {})
 		s["atk_pct"] += float(b.get("atk_pct", 0.0))
@@ -227,6 +236,10 @@ func _give_starter_kit() -> void:
 		inventory[weapon_id] = 1
 	if equipped.get("weapon", "") == "":
 		equipped["weapon"] = weapon_id
+	if player_class in ["escudeiro", "paladino"]:
+		inventory["escudo_couro"] = maxi(inventory.get("escudo_couro", 0), 1)
+		if equipped.get("shield", "") == "":
+			equipped["shield"] = "escudo_couro"
 	inventory["pocao_vida"] = maxi(inventory.get("pocao_vida", 0), 2)
 	inventory["pao"] = maxi(inventory.get("pao", 0), 2)
 	mark_dirty()
@@ -749,7 +762,8 @@ func complete_focus_session(xp_reward: int, gold_reward: int, minutes: int = 0, 
 	if en > 0:
 		add_energy(en)
 	var credits := add_study_credits(minutes)
-	return {"xp": real_xp, "gold": gold_gain, "energy": en, "credits": credits}
+	var story_credits := Story.add_focus_minutes(minutes)
+	return {"xp": real_xp, "gold": gold_gain, "energy": en, "credits": credits, "story_credits": story_credits}
 
 
 # ===================================================================== Aparência (guarda-roupa)
@@ -892,8 +906,7 @@ func complete_habit(index: int) -> Dictionary:
 	bump("habit_marks")
 	add_gold(gold_gain)
 	add_xp(xp_gain, false)
-	add_energy(Data.ENERGY_PER_HABIT)
-	return {"xp": xp_gain, "gold": gold_gain, "streak": new_streak, "energy": Data.ENERGY_PER_HABIT}
+	return {"xp": xp_gain, "gold": gold_gain, "streak": new_streak, "energy": 0}
 
 
 # ===================================================================== Masmorra
@@ -960,7 +973,7 @@ func save_now() -> void:
 		"player_class": player_class, "talent_points": talent_points, "talents": talents,
 		"energy": energy, "energy_day": energy_day, "best_floor": best_floor, "playtime": playtime,
 		"inventory": inventory, "equipped": equipped, "upgrades": upgrades, "furniture": furniture, "furniture_layout": furniture_layout, "pomo_log": pomo_log,
-		"study_credits": study_credits, "looks_owned": looks_owned, "look": look,
+		"study_credits": study_credits, "looks_owned": looks_owned, "look": look, "story": story,
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
 		"music_volume": music_volume, "music_on": music_on, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
@@ -1044,6 +1057,7 @@ func load_game() -> void:
 		study_credits = int(d.get("study_credits", 0))
 		looks_owned = d.get("looks_owned", []) if typeof(d.get("looks_owned", [])) == TYPE_ARRAY else []
 		look = _dict_of(d.get("look", {}))
+		story = _dict_of(d.get("story", {}))
 		pomo_log = d.get("pomo_log", []) if typeof(d.get("pomo_log", [])) == TYPE_ARRAY else []
 		counters = _dict_of(d.get("counters", {}))
 		daily = _dict_of(d.get("daily", {}))
@@ -1119,6 +1133,7 @@ func debug_reset() -> void:
 	study_credits = 0
 	looks_owned = []
 	look = {}
+	story = {}
 	pomo_log = []
 	counters = {}
 	claimed_missions = []

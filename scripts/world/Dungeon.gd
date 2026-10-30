@@ -12,6 +12,8 @@ const AMBIENT := [Color(0.5, 0.52, 0.68), Color(0.46, 0.55, 0.72), Color(0.46, 0
 const LIGHT_TINT := [Color(1.0, 0.92, 0.8), Color(0.85, 0.95, 1.0), Color(0.9, 1.0, 0.8), Color(1.0, 0.8, 0.6)]
 
 var floor_n: int = 1
+var power: int = 1                # força dos monstros (Data.floor_power)
+var duel_boss: String = ""        # duelo da história (Torneio): arena só com o rival
 var biome: Dictionary = {}
 var style: int = 0
 var boss_floor: bool = false
@@ -37,9 +39,14 @@ func _ready() -> void:
 	rng.randomize()
 	_ensure_run()
 	floor_n = maxi(1, Game.current_floor)
-	biome = Data.biome_for_floor(floor_n)
+	duel_boss = String(Game.run.get("duel", ""))
+	biome = Data.floor_info(floor_n)
+	power = Data.floor_power(floor_n)
 	style = int(biome["style"])
-	boss_floor = Data.is_boss_floor(floor_n)
+	boss_floor = biome.has("boss") or duel_boss != ""
+	if duel_boss != "":
+		style = 0
+		power = int(Data.boss_def(duel_boss).get("power", 9))
 	gen = DungeonGen.generate(floor_n, rng, boss_floor)
 	w = gen["w"]
 	h = gen["h"]
@@ -63,16 +70,21 @@ func _ready() -> void:
 		_populate_boss()
 	else:
 		_populate_rooms()
+		_story_objects()
 	_spawn_player()
 	var mod := CanvasModulate.new()
 	mod.color = AMBIENT[style]
 	add_child(mod)
 	Audio.play_music(biome["music"])
 	HUD.on_scene_ready("dungeon")
-	var subtitle: String = biome["name"] if not boss_floor else "%s - covil do chefe" % biome["name"]
-	HUD.floor_banner("Andar %d" % floor_n, subtitle)
+	if duel_boss != "":
+		HUD.floor_banner("Torneio das Guildas", "Duelo contra Ivo")
+	else:
+		var subtitle: String = biome["name"] if not boss_floor else "%s - covil do chefe" % biome["name"]
+		HUD.floor_banner("Andar %d" % floor_n, subtitle)
 	GameState.player_died.connect(_on_player_died, CONNECT_ONE_SHOT)
 	_reveal()
+	_story_on_enter()
 
 
 func _process(delta: float) -> void:
@@ -283,6 +295,8 @@ func _place_torches() -> void:
 
 func _enemy_pool() -> Array:
 	var all: Array = biome["enemies"]
+	if Data.STORY_FLOORS.has(floor_n):
+		return all
 	var in_biome := (floor_n - 1) % 5
 	var count := mini(all.size(), 2 + in_biome)
 	return all.slice(0, count)
@@ -292,7 +306,7 @@ func _spawn_enemy(c: Vector2i, elite: bool = false) -> void:
 	var pool := _enemy_pool()
 	var id: String = pool[rng.randi() % pool.size()]
 	var jitter := Vector2(rng.randf_range(-4, 4), rng.randf_range(-3, 3))
-	Enemy.spawn(world, id, cell_center(c) + jitter, floor_n, elite)
+	Enemy.spawn(world, id, cell_center(c) + jitter, power, elite)
 
 
 func _populate_rooms() -> void:
@@ -301,7 +315,7 @@ func _populate_rooms() -> void:
 	var treasure_room: int = gen["treasure_room"]
 	var shrine_room: int = gen["shrine_room"]
 	_place_stairs_down(_room_center(rooms[stairs_room]), false)
-	var elite_chance := clampf(0.05 + 0.012 * float(floor_n), 0.05, 0.22)
+	var elite_chance := clampf(0.05 + 0.012 * float(power), 0.05, 0.22)
 	for i in rooms.size():
 		if i == gen["start_room"]:
 			continue
@@ -313,7 +327,7 @@ func _populate_rooms() -> void:
 		var guard := 0
 		if i == treasure_room:
 			var chest := DungeonObjects.Chest.new()
-			chest.floor_n = floor_n
+			chest.floor_n = power
 			chest.big = rng.randf() < 0.35
 			chest.position = cell_center(center) + Vector2(0, 6)
 			world.add_child(chest)
@@ -325,13 +339,13 @@ func _populate_rooms() -> void:
 			guard = 1
 		elif i != stairs_room and rng.randf() < 0.3:
 			var side := DungeonObjects.Chest.new()
-			side.floor_n = floor_n
+			side.floor_n = power
 			var pick: Vector2i = spots[0] if spots.size() > 0 else center
 			side.position = cell_center(pick) + Vector2(0, 6)
 			world.add_child(side)
 			spots.remove_at(0)
 		var area := r.size.x * r.size.y
-		var n := clampi(area / 24 + floor_n / 6, 2, 9) + guard
+		var n := clampi(area / 24 + power / 6, 2, 9) + guard
 		if i == stairs_room:
 			n = clampi(n - 1, 2, 7)
 		var placed := 0
@@ -352,10 +366,11 @@ func _populate_boss() -> void:
 	var rooms: Array = gen["rooms"]
 	var arena: Rect2i = rooms[gen["boss_room"]]
 	var center := _room_center(arena)
-	var boss_id := Data.boss_for_floor(floor_n)
-	boss = Boss.spawn_boss(world, boss_id, cell_center(center) + Vector2(0, 8), floor_n)
+	var boss_id: String = duel_boss if duel_boss != "" else String(biome["boss"])
+	boss = Boss.spawn_boss(world, boss_id, cell_center(center) + Vector2(0, 8), power)
 	boss.died.connect(_on_boss_died)
-	_place_stairs_down(Vector2i(arena.end.x - 3, center.y), true)
+	if duel_boss == "":
+		_place_stairs_down(Vector2i(arena.end.x - 3, center.y), true)
 	# tochas nos pilares dão leitura do campo de batalha
 	for p in gen["pillars"]:
 		var cell := Vector2i(p.x + 1, p.y + 2)
@@ -367,6 +382,18 @@ func _populate_boss() -> void:
 
 func _on_boss_died(_e: Enemy) -> void:
 	boss_defeated.emit()
+	if boss.boss_id == "rei_demonio":
+		# o pai aparece no trono, com Aldric ao lado
+		var at := boss.global_position
+		var pai := NPC.create(world, "Noble", at + Vector2(0, -8), "static")
+		pai.sprite.modulate = Color(0.85, 0.85, 0.9)
+		NPC.create(world, "Knight", at + Vector2(34, 6), "static")
+		Fx.ring(world, at + Vector2(0, -10), 40.0, Color(1.0, 0.95, 0.7), 0.8, 2.0)
+	if Data.STORY_BOSSES.has(boss.boss_id):
+		await Story.on_boss_defeated(boss.boss_id)
+	if duel_boss != "":
+		Game.finish_run(false)
+		return
 	if stairs_down != null:
 		stairs_down.locked = false
 		Fx.ring(world, stairs_down.global_position + Vector2(0, -6), 36.0, Color(1.0, 0.9, 0.5), 0.6, 2.0)
@@ -388,3 +415,41 @@ func _on_player_died() -> void:
 	Audio.jingle("defeat", -4.0)
 	await get_tree().create_timer(2.2).timeout
 	Game.finish_run(true)
+
+
+# ================================================================== História
+## Objetos da história num andar comum: as 3 páginas de Mestre Lin e o Ivo preso (andar 1).
+func _story_objects() -> void:
+	if floor_n != 1 or Story.chapter() != 3:
+		return
+	var rooms: Array = gen["rooms"]
+	var order: Array = []
+	for i in rooms.size():
+		if i != gen["start_room"]:
+			order.append(i)
+	order.shuffle()
+	var k := 0
+	if Story.step() == "c3_paginas":
+		for i in range(int(Story.st().get("pages", 0)), 3):
+			if k >= order.size():
+				break
+			var page := StoryProp.make_page()
+			var cells := _room_cells(rooms[order[k]], 2)
+			page.position = cell_center(cells[rng.randi() % cells.size()] if not cells.is_empty() else _room_center(rooms[order[k]])) + Vector2(0, 6)
+			world.add_child(page)
+			k += 1
+	if not Story.flag("ivo_evento") and k < order.size():
+		var ivo := StoryProp.make_ivo_trap()
+		ivo.position = cell_center(_room_center(rooms[order[k]])) + Vector2(0, 6)
+		world.add_child(ivo)
+
+
+## Falas ao chegar no andar (espelhos do andar 3, Ivo na escada do andar 5).
+func _story_on_enter() -> void:
+	await get_tree().create_timer(1.0).timeout
+	if floor_n == 3 and Story.chapter() == 4 and not Story.flag("espelhos"):
+		Story.set_flag("espelhos")
+		await Story.say("c4_espelhos")
+	elif floor_n == 5 and Story.step() == "c5_trono" and not Story.flag("escada_ivo"):
+		Story.set_flag("escada_ivo")
+		await Story.say("c5_escada")

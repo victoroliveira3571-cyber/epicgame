@@ -12,6 +12,7 @@ func run(dev: Node) -> void:
 		if arg.begins_with("--floor="):
 			fl = int(arg.substr(8))
 	GameState.debug_reset()
+	Story.dev_start()
 	GameState.choose_class("mago")
 	GameState.level = 60
 	GameState.talents["vigor"] = 40

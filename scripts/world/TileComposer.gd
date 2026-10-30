@@ -177,6 +177,50 @@ static func compose_dungeon(cells: PackedByteArray, w: int, h: int, style: int, 
 	return canvas
 
 
+# ===================================================================== Floresta
+## Gramado + trilhas de terra + rio/pântano + chão de pedra das ruínas. `dark` (0..255 por tile)
+## escurece a mata fechada e o pântano.
+static func compose_forest(w: int, h: int, dirt: PackedByteArray, water: PackedByteArray, stone: PackedByteArray,
+		dark: PackedByteArray, rng: RandomNumberGenerator) -> Image:
+	var canvas := new_canvas(w, h)
+	var floor_set := tileset("TilesetFloor")
+	var water_set := tileset("TilesetWater")
+	var nature := tileset("TilesetNature")
+	var grass_variants := [Vector2i(0, 12), Vector2i(1, 12), Vector2i(2, 12), Vector2i(3, 12), Vector2i(4, 12)]
+	for y in h:
+		for x in w:
+			var g: Vector2i = grass_variants[rng.randi() % grass_variants.size()]
+			blit(canvas, floor_set, g.x, g.y, x, y)
+	var details := [Vector2i(3, 10), Vector2i(4, 10), Vector2i(5, 10), Vector2i(7, 10), Vector2i(8, 10), Vector2i(9, 10)]
+	var flowers := [Vector2i(0, 11), Vector2i(1, 11), Vector2i(2, 11), Vector2i(3, 11), Vector2i(6, 11)]
+	for y in h:
+		for x in w:
+			var i := y * w + x
+			if dirt[i] != 0 or water[i] != 0 or stone[i] != 0:
+				continue
+			var r := rng.randf()
+			if r < 0.09:
+				var d: Vector2i = details[rng.randi() % details.size()]
+				blend(canvas, nature, d.x, d.y, x, y)
+			elif r < 0.11 and dark[i] < 60:
+				var f: Vector2i = flowers[rng.randi() % flowers.size()]
+				blend(canvas, nature, f.x, f.y, x, y)
+	autotile(canvas, floor_set, dirt, w, h, Vector2i(0, 7))
+	var stone_img := src_img("res://assets/custom/tiles/TilesetFloorStone.png")
+	autotile(canvas, stone_img if stone_img != null else floor_set, stone, w, h, Vector2i(0, 7))
+	autotile(canvas, water_set, water, w, h, Vector2i(0, 6))
+	# sombra da mata: escurece por tile, com borda suave
+	var shade := Image.create(T, T, false, Image.FORMAT_RGBA8)
+	for y in h:
+		for x in w:
+			var a := float(dark[y * w + x]) / 255.0
+			if a <= 0.0:
+				continue
+			shade.fill(Color(0.02, 0.06, 0.05, a))
+			canvas.blend_rect(shade, Rect2i(0, 0, T, T), Vector2i(x * T, y * T))
+	return canvas
+
+
 # ===================================================================== Cidade
 ## Gramado: escolhe uma variação aleatória por tile. mask_dirt/mask_water marcam onde entram caminho e lago.
 static func compose_town(w: int, h: int, dirt: PackedByteArray, water: PackedByteArray, rng: RandomNumberGenerator) -> Image:

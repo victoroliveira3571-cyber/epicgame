@@ -4,7 +4,7 @@ extends UIWindow
 
 
 func _init() -> void:
-	win_title = "Pausa"
+	win_title = "Pausa  -  Focus Town v2.0"
 	win_size = Vector2(440, 290)
 
 
@@ -45,8 +45,8 @@ func build() -> void:
 	v.add_child(UI.label("Controles", UI.C_ORANGE_L))
 	var keys := [
 		["WASD / setas", "Mover"], ["Espaço / J", "Atacar"], ["Shift / K", "Rolar"], ["Q / L", "Habilidade da classe"],
-		["E", "Interagir"], ["H", "Poção"], ["F", "Comer"], ["I", "Inventário"], ["C", "Personagem"],
-		["T", "Hábitos"], ["G", "Missões"], ["P", "Pomodoro"], ["Esc", "Pausa"],
+		["E", "Interagir / falar"], ["H", "Poção"], ["F", "Comer"], ["I", "Inventário"], ["C", "Personagem e pets"],
+		["N", "Caderno"], ["T", "Hábitos"], ["G", "Missões"], ["P", "Pomodoro"], ["Esc", "Pausa"],
 	]
 	var grid := GridContainer.new()
 	grid.columns = 4

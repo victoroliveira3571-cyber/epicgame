@@ -67,6 +67,9 @@ for a, f in {"Cat": "SpriteSheet.png", "CatBlack": "SpriteSheet.png", "CatOrange
         shutil.copyfile(p, dst("animals", a + ".png"))
 for c in ["White", "Brown", "Black", "Cute"]:
     shutil.copyfile(src("Actor", "Animal", "Chicken", "SpriteSheet%s.png" % c), dst("animals", "Chicken%s.png" % c))
+# papagaio (vira o corvo Corvin, tingido no jogo) e o retrato dele
+shutil.copyfile(src("Actor", "Animal", "Parrot", "SpriteSheetBlue.png"), dst("animals", "Parrot.png"))
+shutil.copyfile(src("Actor", "Animal", "Parrot", "FacesetBlue.png"), dst("animals", "Parrot_face.png"))
 
 # --------------------------------------------------------------------- itens
 for cat in ["Food", "Potion", "Resource", "Treasure", "Object", "Scroll", "Tool", "Projectile", "Other"]:

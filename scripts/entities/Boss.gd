@@ -14,6 +14,18 @@ var forced_move: Vector2 = Vector2.ZERO
 var minions: Array = []
 var frame_h: float = 32.0
 var _bar_timer: float = 0.0
+# --- história
+var story_boss: bool = false
+var char_sheet: String = ""        # chefe feito com folha de personagem ampliada
+var _activating: bool = false
+var _locked_cd: float = 0.0
+var _quiz_cards: Array = []
+var _quiz_marks: Array = []        # frações de vida em que o chefe faz uma pergunta
+var _quiz_running: bool = false
+var _phase_fx: int = 1             # Rei Demônio: 2 = some e aparece, 3 = apaga o cartão do jogador
+var _fx_t: float = 0.0
+
+const INTRO := {"sentinela": "c2_sentinela", "bibliotecario": "c3_bibliotecario", "cavaleiro_sem_nome": "c4_cavaleiro", "rei_demonio": "c5_rei"}
 
 signal activated(boss: Boss)
 
@@ -29,8 +41,10 @@ static func spawn_boss(parent: Node, id: String, pos: Vector2, floor_number: int
 
 
 func _setup_stats() -> void:
-	boss_data = Data.BOSSES[boss_id]
+	boss_data = Data.boss_def(boss_id)
 	data = boss_data
+	story_boss = Data.STORY_BOSSES.has(boss_id)
+	char_sheet = String(boss_data.get("char", ""))
 	is_boss = true
 	display_name = boss_data["name"]
 	behavior = "boss"
@@ -45,31 +59,47 @@ func _setup_stats() -> void:
 	gold_range = [int(round(float(boss_data["gold"][0]) * Data.BOSS_GOLD_MULT)), int(round(float(boss_data["gold"][1]) * Data.BOSS_GOLD_MULT))]
 	aggro_radius = 170.0
 	leash_radius = 400.0
-	base_scale = 1.0
+	base_scale = float(boss_data.get("scale", 1.0)) if char_sheet != "" else 1.0
+	if char_sheet != "":
+		body_radius = float(boss_data["radius"]) / base_scale   # a colisão já multiplica pela escala
 	attack_cd = 1.5
+	if story_boss and String(boss_data.get("quiz", "")) != "":
+		_quiz_marks = [1.0, 0.66, 0.33]
 
 
 func _build_sprite() -> void:
-	sprite.sprite_frames = Pix.boss_frames(boss_id)
-	var t: Texture2D = sprite.sprite_frames.get_frame_texture("idle", 0)
-	frame_h = float(t.get_height()) if t != null else 32.0
+	if char_sheet != "":
+		sprite.sprite_frames = Pix.actor_frames("chars/%s.png" % char_sheet)
+		frame_h = 16.0 * base_scale
+	else:
+		sprite.sprite_frames = Pix.boss_frames(boss_id)
+		var t: Texture2D = sprite.sprite_frames.get_frame_texture("idle", 0)
+		frame_h = float(t.get_height()) if t != null else 32.0
+	sprite.self_modulate = boss_data.get("tint", Color.WHITE)
 
 
 func _start_anim() -> void:
 	sprite.position = Vector2(0, -frame_h / 2.0 + 3.0)
-	sprite.play("idle")
+	sprite.play("idle_down" if char_sheet != "" else "idle")
 
 
 func _ready() -> void:
 	super()
 	sprite.position = Vector2(0, -frame_h / 2.0 + 3.0)
 	if shadow != null:
-		shadow.scale = Vector2(body_radius * 2.4 / 16.0, body_radius * 2.4 / 16.0)
+		var sr := float(boss_data["radius"])
+		shadow.scale = Vector2(sr * 2.4 / 16.0, sr * 2.4 / 16.0)
 	bar.position = Vector2(0, -frame_h - 4.0)
 
 
 func _animate() -> void:
 	if state == State.DEAD:
+		return
+	if char_sheet != "":
+		var dn := Pix.dir_name(facing)
+		var anim := ("walk_" if velocity.length() > 8.0 else "idle_") + dn
+		if sprite.animation != anim:
+			sprite.play(anim)
 		return
 	var want := "walk" if velocity.length() > 8.0 else "idle"
 	if sprite.animation == "hit" and sprite.is_playing():
@@ -81,6 +111,76 @@ func _animate() -> void:
 
 
 # ================================================================ Controle
+## Chefes da história só lutam com quem já estudou as horas pedidas; antes da luta, falam.
+func _try_activate() -> void:
+	if active or _activating or state == State.DEAD:
+		return
+	if story_boss and not Story.boss_ready(boss_id):
+		if _locked_cd <= 0.0:
+			_locked_cd = 6.0
+			var need := int(boss_data.get("gate_hours", 0))
+			var lines := [["boss:" + _speaker(), "Ainda não. Volte quando tiver estudado o bastante."],
+				["narr", "%s exige %d horas de foco acumuladas. Você tem %s. Estude no Pomodoro (P) e volte." % [display_name, need, Story._hours_text()]]]
+			Story.say(lines)
+		return
+	_activating = true
+	if story_boss and INTRO.has(boss_id):
+		await Story.say(INTRO[boss_id])
+	if state == State.DEAD or not is_inside_tree():
+		return
+	_activate()
+	_activating = false
+	if not _quiz_marks.is_empty():
+		_quiz_cards = Recall.pick(String(boss_data["quiz"]), _quiz_marks.size())
+		await get_tree().create_timer(0.6).timeout
+		_check_quiz()
+
+
+func _speaker() -> String:
+	match boss_id:
+		"espirito_cacador":
+			return "espirito"
+		"cavaleiro_sem_nome":
+			return "cavaleiro"
+		"rei_demonio":
+			return "rei"
+		"ivo_duelo":
+			return "ivo"
+	return boss_id
+
+
+## Faz a próxima pergunta quando a vida passa da marca. Acerto = golpe de memória.
+func _check_quiz() -> void:
+	if _quiz_running or state == State.DEAD or _quiz_marks.is_empty():
+		return
+	if hp / max_hp > float(_quiz_marks[0]) + 0.001:
+		return
+	_quiz_marks.pop_front()
+	if _quiz_cards.is_empty():
+		return
+	_quiz_running = true
+	var card: Dictionary = _quiz_cards.pop_front()
+	var res: Dictionary = await HUD.quiz(card, "Pergunta de memória  -  " + display_name)
+	_quiz_running = false
+	if state == State.DEAD or not is_inside_tree():
+		return
+	var p := get_player()
+	match String(res["result"]):
+		"full", "partial":
+			var pct := 0.10 if res["result"] == "full" else 0.05
+			if res["result"] == "full" and int(res["hints"]) > 0:
+				pct *= 0.75
+			Fx.ring(get_parent(), global_position + Vector2(0, -frame_h * 0.5), 46.0, Color(0.6, 0.9, 1.0), 0.5, 2.0)
+			Fx.float_text(get_parent(), "Golpe de memória!", global_position + Vector2(0, -frame_h - 10), Color("8fd4ff"), 2, 22.0, 1.2)
+			Audio.sfx("magic3", -2.0)
+			take_hit(max_hp * pct, Vector2.ZERO, true)
+		"wrong":
+			if p != null and not p.is_dead():
+				p.invuln = 0.0
+				p.hurt(contact_dmg * 1.4, global_position, 80.0)
+	_check_quiz()
+
+
 func _activate() -> void:
 	active = true
 	activated.emit(self)
@@ -96,12 +196,18 @@ func _activate() -> void:
 
 func _ai_boss(delta: float, dist: float, pp: Vector2) -> void:
 	_bar_timer -= delta
-	if _bar_timer <= 0.0:
+	_locked_cd -= delta
+	if _phase_fx == 2:
+		_fx_t += delta
+		sprite.modulate.a = 0.12 if fmod(_fx_t, 3.0) > 1.6 else 1.0
+	if _bar_timer <= 0.0 and active:
 		_bar_timer = 0.1
 		HUD.update_boss(hp / max_hp)
 	if not active:
 		if dist < aggro_radius:
-			_activate()
+			_try_activate()
+		return
+	if _quiz_running:
 		return
 	if busy:
 		move_dir = forced_move
@@ -265,13 +371,18 @@ func take_hit(amount: float, kb: Vector2, crit: bool, from: Vector2 = Vector2.ZE
 	if state == State.DEAD:
 		return
 	if not active:
-		_activate()
+		_try_activate()
+		return
 	super(amount, kb, crit, from)
 	if state == State.DEAD:
 		return
 	if sprite.sprite_frames.has_animation("hit") and not busy:
 		sprite.play("hit")
 	HUD.update_boss(hp / max_hp)
+	if boss_id == "rei_demonio":
+		_rei_phases()
+	if not _quiz_running:
+		_check_quiz()
 	if phase == 1 and hp <= max_hp * 0.5:
 		phase = 2
 		move_speed *= 1.2
@@ -283,8 +394,22 @@ func take_hit(amount: float, kb: Vector2, crit: bool, from: Vector2 = Vector2.ZE
 		Fx.shake_camera(get_player().camera, 4.0, 0.4)
 
 
+## Rei Demônio: em 66% some e aparece (lembrar onde ele está); em 33% apaga o cartão do jogador.
+func _rei_phases() -> void:
+	if _phase_fx == 1 and hp <= max_hp * 0.66:
+		_phase_fx = 2
+		Story.say("c5_rei_fase2")
+	elif _phase_fx == 2 and hp <= max_hp * 0.33:
+		_phase_fx = 3
+		sprite.modulate.a = 1.0
+		HUD.set_card_hidden(true)
+		Story.say("c5_rei_fase3")
+
+
 func _die() -> void:
 	HUD.hide_boss()
+	HUD.set_card_hidden(false)
+	sprite.modulate.a = 1.0
 	for m in minions:
 		if is_instance_valid(m) and (m as Enemy).state != State.DEAD:
 			(m as Enemy).take_hit(99999.0, Vector2.ZERO, false)

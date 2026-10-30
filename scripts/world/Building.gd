@@ -9,6 +9,7 @@ var display_name: String = ""
 var interior_id: String = ""      # se não vazio, a porta leva a este interior (senão abre a janela)
 var prop_name: String = ""
 var door_dx: float = 0.0
+var return_scene: String = "town"   # cena para onde a porta do interior devolve ("town" | "forest")
 
 var sprite: Sprite2D
 var label: Label
@@ -27,7 +28,7 @@ class DoorTrigger extends Interactable:
 	func interact(_player: Node) -> void:
 		Audio.sfx("ui_open", -4.0)
 		if building.interior_id != "":
-			Game.enter_interior(building.interior_id)
+			Game.enter_interior(building.interior_id, building.return_scene)
 		else:
 			HUD.open_window(building.building_id)
 

@@ -28,7 +28,7 @@ var minimap_tex: Texture2D       # chão da cidade em miniatura (minimapa do HUD
 const BUILDING_DEFS := [
 	{"id": "casa", "name": "Casa", "prop": "b_casa_laranja", "tile": Vector2i(14, 25), "door_dx": -8.0,
 		"npc": "OldWoman", "npc_dx": 36.0, "lines": ["Descanse, você merece.", "Em casa tudo fica melhor.", "Uma casa bonita rende bons hábitos."]},
-	{"id": "restaurante", "name": "Restaurante", "prop": "b_padaria", "tile": Vector2i(23, 25), "door_dx": 0.0,
+	{"id": "restaurante", "name": "Pousada Pão Quente", "prop": "b_padaria", "tile": Vector2i(23, 25), "door_dx": 0.0,
 		"npc": "Woman", "npc_dx": -30.0, "lines": ["Fome? Tenho pratos quentes!", "Comer bem rende mais foco.", "Hoje tem macarrão!"]},
 	{"id": "loja", "name": "Loja de Armas", "prop": "b_casa_empena", "tile": Vector2i(42, 25), "door_dx": 0.0,
 		"npc": "Villager4", "npc_dx": 30.0, "lines": ["Armas novas chegaram!", "Equipamento bom salva vidas.", "Só vendo o que presta."]},
@@ -71,6 +71,7 @@ func _ready() -> void:
 	_build_water_colliders()
 	_build_buildings()
 	_build_gate()
+	_build_forest_gate()
 	_build_decor()
 	_build_npcs()
 	_build_ambient()
@@ -81,6 +82,9 @@ func _ready() -> void:
 	Audio.play_music("town")
 	HUD.on_scene_ready("town")
 	GameState.check_daily_reset()
+	# o jogo foi fechado no prólogo: volta para a casa da família
+	if Story.started() and Story.step() == "c1_casa":
+		Game.enter_interior.call_deferred("casa_familia")
 
 
 func _process(delta: float) -> void:
@@ -109,7 +113,7 @@ func _build_masks() -> void:
 	water.fill(0)
 	reserved.fill(0)
 	# avenida, rua de baixo, espinha norte-sul e praça
-	_rect_fill(dirt, 6, AVENUE_Y - 1, 57, AVENUE_Y + 1)
+	_rect_fill(dirt, 2, AVENUE_Y - 1, 57, AVENUE_Y + 1)
 	_rect_fill(dirt, 8, 37, 56, 39)
 	_rect_fill(dirt, SPINE_X - 1, 17, SPINE_X + 1, 47)
 	_rect_fill(dirt, 27, 22, 37, 30)
@@ -242,6 +246,39 @@ class GateTrigger extends Interactable:
 	func interact(_player: Node) -> void:
 		Audio.sfx("ui_open", -4.0)
 		HUD.open_window("dungeon")
+
+
+# ============================================================ Trilha da Floresta
+## Saída oeste da avenida: Osvaldo cobra o pedágio (1 crédito por dia) e leva à floresta.
+func _build_forest_gate() -> void:
+	var pos := Vector2(4 * T, AVENUE_Y * T + 8)
+	for dy in [-30.0, -18.0, 26.0, 38.0]:
+		_add_prop("h_cerca_ferro", pos + Vector2(2, dy), 4.0)
+	_add_prop("i_board", pos + Vector2(26, -26), 4.0)
+	_add_prop("i_barrel", pos + Vector2(30, 30), 5.0)
+	var osv := NPC.create(world, "OldMan", pos + Vector2(14, -14), "static")
+	osv.lines = ["Pedágio da floresta: 1 crédito.", "Estudou hoje?", "Cuidado com os lobos."]
+	StoryProp.talker(osv, "osvaldo", "Osvaldo (Trilha da Floresta)")
+	var l := Label.new()
+	l.text = "Trilha da Floresta"
+	l.add_theme_font_override("font", Pix.font(1))
+	l.add_theme_font_size_override("font_size", 12)
+	l.add_theme_color_override("font_color", Color("d9ffc2"))
+	l.add_theme_color_override("font_outline_color", Color("10200f"))
+	l.add_theme_constant_override("outline_size", 3)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.size = Vector2(160, 14)
+	l.position = pos + Vector2(-40, -52)
+	l.z_index = 60
+	world.add_child(l)
+	# Ivo passeia pela cidade depois do exame de Rank E
+	if Story.chapter() >= 2 and Story.step() not in ["c2_exame"]:
+		var ivo := NPC.create(world, "NinjaBlue2", Vector2(SPINE_X * T + 40, 21 * T), "wander")
+		ivo.wander_points = road_points
+		ivo.wander_radius = 120.0
+		ivo.move_speed = 22.0
+		ivo.lines = ["Hoje eu ganho de você.", "Já fez seu foco de hoje?"]
+		StoryProp.talker(ivo, "ivo", "Ivo")
 
 
 # ==================================================================== Decor
@@ -401,6 +438,8 @@ func _spawn_player() -> void:
 	var spawn := Vector2(SPINE_X * T + 8, 29 * T)
 	if Game.town_spawn == "gate":
 		spawn = Vector2(SPINE_X * T + 8, (GATE_Y - 3) * T)
+	elif Game.town_spawn == "forest":
+		spawn = Vector2(6 * T, AVENUE_Y * T + 8)
 	elif Game.town_spawn.begins_with("door:"):
 		spawn = door_spawns.get(Game.town_spawn.substr(5), spawn)
 	player = Player.spawn(world, spawn)

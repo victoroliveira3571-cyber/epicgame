@@ -1,6 +1,6 @@
 extends UIWindow
 
-## Guarda-roupa: compra visuais do herói (LPC) com créditos de estudo (1 por minuto de foco),
+## Guarda-roupa: compra visuais do herói (LPC) com fichas de estilo (1 por minuto de foco),
 ## veste/tira, escolhe cores e mostra a prévia andando ou sentado. Abre pela Casa e pelo Pomodoro.
 
 const ROW_H := 30.0
@@ -43,7 +43,7 @@ func build() -> void:
 		add_to_body(UI.label("Catálogo de roupas não encontrado (rode tools/build_lpc.py).", UI.C_BAD))
 		return
 	# cabeçalho
-	add_to_body(UI.label("Créditos de estudo: %d" % GameState.study_credits, UI.C_GOLD), Vector2(0, 0))
+	add_to_body(UI.label("Fichas de estilo: %d" % GameState.study_credits, UI.C_GOLD), Vector2(0, 0))
 	add_to_body(UI.label("Ganhe 1 crédito por minuto de foco no Pomodoro.", UI.C_DIM), Vector2(150, 0))
 	# categorias
 	var cats := UI.vbox(2)
@@ -108,7 +108,7 @@ func _item_row(id: String) -> Control:
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(v)
 	v.add_child(UI.label(str(it["name"]), UI.C_GOOD if worn else UI.C_TEXT))
-	var sub := "Vestindo" if worn else ("Seu" if owned else ("Grátis" if price == 0 else "%d créditos" % price))
+	var sub := "Vestindo" if worn else ("Seu" if owned else ("Grátis" if price == 0 else "%d fichas" % price))
 	v.add_child(UI.label(sub, UI.C_GOOD if worn else (UI.C_DIM if owned else (UI.C_GOLD if GameState.study_credits >= price else UI.C_BAD))))
 	var see := UI.button("Ver", func() -> void:
 		selected = id

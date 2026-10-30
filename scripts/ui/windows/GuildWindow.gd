@@ -14,7 +14,7 @@ func build() -> void:
 	tab_bar(["Diárias", "Missões"], tab, func(i: int) -> void:
 		tab = i
 		rebuild(), Vector2(0, 0), 80)
-	var enter := UI.button("Entrar na masmorra (energia %d/%d)" % [GameState.energy, Data.ENERGY_MAX], func() -> void:
+	var enter := UI.button("Portão da masmorra (créditos: %d)" % Story.credits(), func() -> void:
 		HUD.open_window("dungeon"), 0)
 	enter.position = Vector2(300, 0)
 	body.add_child(enter)
@@ -31,8 +31,6 @@ func _reward_text(r: Dictionary) -> String:
 		parts.append("%d ouro" % r["gold"])
 	if r.has("xp"):
 		parts.append("%d XP" % r["xp"])
-	if r.has("energy"):
-		parts.append("%d energia" % r["energy"])
 	if r.has("item"):
 		parts.append(Data.item_name(r["item"]))
 	return ", ".join(parts)

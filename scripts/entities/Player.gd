@@ -76,8 +76,7 @@ func _ready() -> void:
 	add_child(col)
 	shadow = Fx.make_shadow(self, 12.0, 0.0)
 	sprite = AnimatedSprite2D.new()
-	var sheet: String = "chars/%s.png" % Data.CLASSES.get(GameState.player_class, Data.CLASSES["cavaleiro"])["sheet"]
-	sprite.sprite_frames = Pix.actor_frames(sheet)
+	sprite.sprite_frames = Pix.actor_frames(_sheet_path())
 	sprite.position = Vector2(0, -9)
 	add_child(sprite)
 	sprite.play("idle_down")
@@ -99,6 +98,19 @@ func _ready() -> void:
 	GameState.player_died.connect(_on_died)
 	GameState.stats_changed.connect(_refresh_equipment_visual)
 	_refresh_equipment_visual()
+	Pet.attach_to.call_deferred(self)
+
+
+## Folha do personagem: a da classe ou, antes do registro na Guilda, a de aprendiz.
+func _sheet_path() -> String:
+	if GameState.has_chosen_class():
+		return "chars/%s.png" % Data.CLASSES[GameState.player_class]["sheet"]
+	return "chars/Villager5.png"
+
+
+func refresh_sheet() -> void:
+	sprite.sprite_frames = Pix.actor_frames(_sheet_path())
+	sprite.play("idle_" + Pix.dir_name(facing))
 
 
 func set_camera_limits(rect: Rect2) -> void:
@@ -183,6 +195,8 @@ func _tick_timers(delta: float) -> void:
 
 
 func _handle_actions() -> void:
+	if not GameState.has_chosen_class():
+		return
 	if Input.is_action_just_pressed("dodge") and dodge_cd_left <= 0.0:
 		_start_dodge()
 		return
