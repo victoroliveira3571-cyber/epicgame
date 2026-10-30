@@ -38,6 +38,10 @@ var equipped: Dictionary = {}         # slot -> item_id
 var upgrades: Dictionary = {}         # item_id -> nível de aprimoramento
 var furniture: Array = []             # ids de móveis comprados
 var furniture_layout: Dictionary = {} # id do móvel -> [x, y] na casa (px)
+# --- aparência do herói (LPC): moeda própria ganha estudando, peças compradas e o visual em uso
+var study_credits: int = 0             # créditos de estudo: 1 por minuto de foco concluído
+var looks_owned: Array = []            # ids de peças compradas (as de preço 0 são de graça)
+var look: Dictionary = {}              # ver Lpc.default_look()
 var pomo_log: Array = []              # histórico de focos concluídos: {d: "AAAA-MM-DD", t: unix, m: minutos, s: cenário}
 
 # --- contadores (nunca resetam; missões leem daqui)
@@ -726,7 +730,7 @@ func log_pomodoro(minutes: int, scene: String = "") -> void:
 
 
 ## Chamado ao concluir uma sessão de foco. Fome zerada = recompensa pela metade.
-func complete_focus_session(xp_reward: int, gold_reward: int) -> Dictionary:
+func complete_focus_session(xp_reward: int, gold_reward: int, minutes: int = 0) -> Dictionary:
 	var mult := 0.5 if hunger <= 0 else 1.0
 	var xp_gain := int(round(float(xp_reward) * mult * (1.0 + stat("focus_xp_pct"))))
 	var gold_gain := int(round(float(gold_reward) * mult))
@@ -737,7 +741,69 @@ func complete_focus_session(xp_reward: int, gold_reward: int) -> Dictionary:
 	add_gold(gold_gain)
 	var real_xp := add_xp(xp_gain)
 	add_energy(Data.ENERGY_PER_FOCUS)
-	return {"xp": real_xp, "gold": gold_gain, "energy": Data.ENERGY_PER_FOCUS}
+	var credits := add_study_credits(minutes)
+	return {"xp": real_xp, "gold": gold_gain, "energy": Data.ENERGY_PER_FOCUS, "credits": credits}
+
+
+# ===================================================================== Aparência (guarda-roupa)
+func add_study_credits(minutes: int) -> int:
+	var n := maxi(minutes, 0) * Lpc.CREDITS_PER_MINUTE
+	study_credits += n
+	_queue_save()
+	stats_changed.emit()
+	return n
+
+
+func owns_look(item_id: String) -> bool:
+	return looks_owned.has(item_id) or int(Lpc.item(item_id).get("price", 1)) == 0
+
+
+func buy_look(item_id: String) -> bool:
+	var it := Lpc.item(item_id)
+	if it.is_empty() or owns_look(item_id):
+		return false
+	var price := int(it["price"])
+	if study_credits < price:
+		return false
+	study_credits -= price
+	looks_owned.append(item_id)
+	_queue_save()
+	stats_changed.emit()
+	return true
+
+
+## Veste a peça (ou tira, se já estiver vestida e o slot puder ficar vazio).
+func toggle_look(item_id: String) -> void:
+	var it := Lpc.item(item_id)
+	if it.is_empty() or not owns_look(item_id):
+		return
+	var slot := Lpc.slot_of(item_id)
+	look = Lpc.resolve(look)
+	var eq: Dictionary = look.get("equip", {})
+	if eq.get(slot, "") == item_id:
+		if slot != "cabelo":
+			eq.erase(slot)
+	else:
+		eq[slot] = item_id
+	look["equip"] = eq
+	_queue_save()
+	stats_changed.emit()
+
+
+func set_look_color(item_id: String, hex: String) -> void:
+	look = Lpc.resolve(look)
+	var colors: Dictionary = look.get("colors", {})
+	colors[item_id] = hex
+	look["colors"] = colors
+	_queue_save()
+	stats_changed.emit()
+
+
+func set_look_value(key: String, value: Variant) -> void:
+	look = Lpc.resolve(look)
+	look[key] = value
+	_queue_save()
+	stats_changed.emit()
 
 
 # ===================================================================== Mobília
@@ -887,6 +953,7 @@ func save_now() -> void:
 		"player_class": player_class, "talent_points": talent_points, "talents": talents,
 		"energy": energy, "energy_day": energy_day, "best_floor": best_floor, "playtime": playtime,
 		"inventory": inventory, "equipped": equipped, "upgrades": upgrades, "furniture": furniture, "furniture_layout": furniture_layout, "pomo_log": pomo_log,
+		"study_credits": study_credits, "looks_owned": looks_owned, "look": look,
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
 		"music_volume": music_volume, "music_on": music_on, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
@@ -967,6 +1034,9 @@ func load_game() -> void:
 		upgrades = _dict_of(d.get("upgrades", {}))
 		furniture = d.get("furniture", []) if typeof(d.get("furniture", [])) == TYPE_ARRAY else []
 		furniture_layout = _dict_of(d.get("furniture_layout", {}))
+		study_credits = int(d.get("study_credits", 0))
+		looks_owned = d.get("looks_owned", []) if typeof(d.get("looks_owned", [])) == TYPE_ARRAY else []
+		look = _dict_of(d.get("look", {}))
 		pomo_log = d.get("pomo_log", []) if typeof(d.get("pomo_log", [])) == TYPE_ARRAY else []
 		counters = _dict_of(d.get("counters", {}))
 		daily = _dict_of(d.get("daily", {}))
@@ -1039,6 +1109,9 @@ func debug_reset() -> void:
 	upgrades = {}
 	furniture = []
 	furniture_layout = {}
+	study_credits = 0
+	looks_owned = []
+	look = {}
 	pomo_log = []
 	counters = {}
 	claimed_missions = []

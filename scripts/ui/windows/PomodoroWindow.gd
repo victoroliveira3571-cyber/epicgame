@@ -160,6 +160,7 @@ func _make_scene() -> StudyScene:
 	var sc := StudyScene.new()
 	sc.scene_id = scene_id
 	sc.class_id = GameState.player_class if GameState.has_chosen_class() else "cavaleiro"
+	sc.look = GameState.look
 	sc.state = HUD.pomo_state if HUD.pomo_state != "idle" else "focus"
 	return sc
 

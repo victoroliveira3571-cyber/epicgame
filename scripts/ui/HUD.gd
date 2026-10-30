@@ -428,10 +428,10 @@ func _pomodoro_done() -> void:
 	if pomo_state == "focus":
 		var xp := int(round(pomo_minutes * 4.0))
 		var gold := int(round(pomo_minutes * 2.0))
-		var r := GameState.complete_focus_session(xp, gold)
+		var r := GameState.complete_focus_session(xp, gold, pomo_minutes)
 		GameState.log_pomodoro(pomo_minutes, str(GameState.pomo_cfg.get("scene", "")))
 		Audio.jingle("pomo_done", -3.0)
-		show_toast("Foco concluído! +%d XP  +%d ouro  +%d energia" % [r["xp"], r["gold"], r["energy"]], UI.C_GOLD)
+		show_toast("Foco concluído! +%d XP  +%d ouro  +%d energia  +%d créditos" % [r["xp"], r["gold"], r["energy"], r["credits"]], UI.C_GOLD)
 		pomo_state = "break"
 		pomo_total = float(int(GameState.pomo_cfg.get("break", 5))) * 60.0
 		pomo_left = pomo_total

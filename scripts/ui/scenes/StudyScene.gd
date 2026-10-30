@@ -37,6 +37,8 @@ const FX_SPOTS := {
 var scene_id: String = "cafeteria"
 var class_id: String = "cavaleiro"
 var state: String = "focus"       # focus | break | paused | idle
+var look: Dictionary = {}         # visual LPC do herói (GameState.look); vazio = padrão
+var use_lpc: bool = true          # herói LPC em camadas (false = herói antigo por classe)
 var t: float = 0.0
 static var _art_cache: Dictionary = {}
 
@@ -134,8 +136,11 @@ func _draw_art() -> void:
 	var p := pose()
 	if sit == "ground" and p == "write":
 		p = "read"
-	var pixel_hero := _hero_art(p, sit) != null
-	if pixel_hero:
+	var lpc_hero := use_lpc and Lpc.available()
+	var pixel_hero := lpc_hero or _hero_art(p, sit) != null
+	if lpc_hero:
+		_draw_lpc_hero(hero_pos, p, sit)
+	elif pixel_hero:
 		_draw_hero_art(hero_pos, p, sit)
 	else:
 		ArtKit.hero(self, class_id, hero_pos, HS, t, p, sit)
@@ -151,6 +156,54 @@ func _draw_art() -> void:
 				_book_in_hand(hand + (Vector2(-6, 10) if sit == "ground" else Vector2.ZERO))
 			_:
 				_pen(hand)
+
+
+## Herói LPC em camadas (Lpc.gd), de lado, com o quadril em `hip`. Pisca de vez em quando e
+## segura o livro (foco) ou a caneca (pausa) no colo; os objetos são pixel art na mesma escala.
+func _draw_lpc_hero(hip: Vector2, p: String, sit: String) -> void:
+	var kind := "ground" if sit == "ground" else "chair"
+	var frame := Lpc.F_GROUND if kind == "ground" else Lpc.F_CHAIR
+	var blink := fmod(t + 1.3, 4.7) < 0.14
+	var top := (hip - Lpc.anchor(kind) * ART_SCALE).round()
+	Lpc.draw(self, top, ART_SCALE, frame, Lpc.layers(look, blink))
+	# mãos no colo (coordenadas do quadro 64x64)
+	var hand := Vector2(38, 44) if kind == "chair" else Vector2(33, 50)
+	if p == "sip":
+		_px_mug(top, hand + Vector2(0, -6))
+	else:
+		_px_book(top, hand + Vector2(-3, -6))
+
+
+## Retângulo em "pixels de arte" relativos ao canto do quadro do herói.
+func _px(top: Vector2, x: float, y: float, w: float, h: float, c: Color) -> void:
+	draw_rect(Rect2(top + Vector2(x, y) * ART_SCALE, Vector2(w, h) * ART_SCALE), c)
+
+
+func _px_book(top: Vector2, at: Vector2) -> void:
+	var x := at.x
+	var y := at.y
+	_px(top, x - 1, y + 1, 13, 6, Color("2b1e24"))           # contorno
+	_px(top, x, y + 2, 11, 4, Color("2f5d62"))               # capa
+	_px(top, x, y, 5, 4, Color("fff3d4"))                    # página esquerda
+	_px(top, x + 6, y, 5, 4, Color("f3e3bd"))                # página direita
+	_px(top, x + 5, y, 1, 5, Color("8a6a4a"))                # lombada
+	for k in 2:
+		_px(top, x + 1, y + 1 + k * 2, 3, 1, Color("b9a888"))
+		_px(top, x + 7, y + 1 + k * 2, 3, 1, Color("b9a888"))
+	if fmod(t, 9.0) > 8.4:                                    # vira a página
+		_px(top, x + 6, y - 2, 3, 5, Color("fff8e6"))
+
+
+func _px_mug(top: Vector2, at: Vector2) -> void:
+	_px(top, at.x - 1, at.y - 1, 7, 8, Color("2b1e24"))
+	_px(top, at.x, at.y, 5, 6, Color("c58a3a"))
+	_px(top, at.x, at.y, 5, 1, Color("6b3a20"))
+	_px(top, at.x + 5, at.y + 1, 2, 3, Color("2b1e24"))
+	_px(top, at.x + 5, at.y + 2, 1, 1, Color("c58a3a"))
+	var ph := fmod(t * 0.8, 1.0)
+	var steam := Color(1, 1, 1, 0.55 * (1.0 - ph))
+	_px(top, at.x + 1 + round(sin(t * 3.0)), at.y - 3 - ph * 5.0, 1, 2, steam)
+	_px(top, at.x + 3 + round(sin(t * 3.0 + 1.5)), at.y - 4 - ph * 4.0, 1, 2, steam)
 
 
 ## Herói em pixel art (tools/gen_pomodoro_hero.py): folha de 6 quadros por classe/pose/assento.
