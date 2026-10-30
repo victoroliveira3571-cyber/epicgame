@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://bbvrbheaoe1hf"
+path="res://.godot/imported/pf36.fnt-9f83302938466609d1cd775982f88583.fontdata"
+
+[deps]
+
+source_file="res://assets/ui/pf36.fnt"
+dest_files=["res://.godot/imported/pf36.fnt-9f83302938466609d1cd775982f88583.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2

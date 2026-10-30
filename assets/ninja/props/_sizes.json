@@ -1,0 +1,356 @@
+{
+ "props": {
+  "b_casa_laranja": [
+   64,
+   48
+  ],
+  "b_casa_creme": [
+   62,
+   44
+  ],
+  "b_casa_laranja2": [
+   64,
+   48
+  ],
+  "b_salao_vermelho": [
+   64,
+   46
+  ],
+  "b_padaria": [
+   48,
+   48
+  ],
+  "b_estalagem": [
+   64,
+   48
+  ],
+  "b_forja": [
+   48,
+   48
+  ],
+  "b_casa_empena": [
+   48,
+   47
+  ],
+  "n_arvore_redonda": [
+   32,
+   29
+  ],
+  "n_arvore_pinheiro": [
+   32,
+   30
+  ],
+  "n_arvore_seca": [
+   32,
+   31
+  ],
+  "n_arvore_raiz": [
+   31,
+   31
+  ],
+  "n_arvore_redonda2": [
+   32,
+   31
+  ],
+  "n_arvore_redonda3": [
+   32,
+   31
+  ],
+  "n_pinheiros_trio": [
+   64,
+   47
+  ],
+  "n_arvores_trio": [
+   64,
+   47
+  ],
+  "n_arvores_trio_b": [
+   64,
+   48
+  ],
+  "n_arbusto1": [
+   15,
+   13
+  ],
+  "n_arbusto2": [
+   16,
+   14
+  ],
+  "n_arbusto3": [
+   16,
+   12
+  ],
+  "n_arbusto4": [
+   14,
+   11
+  ],
+  "n_arbusto5": [
+   16,
+   14
+  ],
+  "n_mato1": [
+   16,
+   13
+  ],
+  "n_mato2": [
+   15,
+   15
+  ],
+  "n_mato3": [
+   16,
+   13
+  ],
+  "n_mato4": [
+   16,
+   14
+  ],
+  "n_mato5": [
+   15,
+   15
+  ],
+  "n_mato6": [
+   16,
+   14
+  ],
+  "n_flor_girassol": [
+   15,
+   15
+  ],
+  "n_flor_girassol2": [
+   15,
+   16
+  ],
+  "n_flor_trevo": [
+   15,
+   11
+  ],
+  "n_flor_vermelha": [
+   14,
+   14
+  ],
+  "n_flor_margarida": [
+   16,
+   14
+  ],
+  "n_pedra_marrom": [
+   32,
+   30
+  ],
+  "n_pedra_marrom_g": [
+   64,
+   46
+  ],
+  "n_pedra_marrom_alta": [
+   32,
+   48
+  ],
+  "n_pedra_marrom_p1": [
+   16,
+   16
+  ],
+  "n_pedra_marrom_p2": [
+   16,
+   14
+  ],
+  "n_pedra_marrom_p3": [
+   16,
+   16
+  ],
+  "n_pedra_cinza": [
+   32,
+   30
+  ],
+  "n_pedra_cinza_g": [
+   64,
+   46
+  ],
+  "n_pedra_cinza_alta": [
+   32,
+   48
+  ],
+  "n_pedra_cinza_p1": [
+   16,
+   16
+  ],
+  "n_pedra_cinza_p2": [
+   16,
+   14
+  ],
+  "n_pedra_cinza_p3": [
+   16,
+   16
+  ],
+  "n_frutas_bush1": [
+   16,
+   16
+  ],
+  "n_frutas_bush2": [
+   16,
+   16
+  ],
+  "n_frutas_bush3": [
+   16,
+   16
+  ],
+  "n_frutas_bush4": [
+   16,
+   16
+  ],
+  "n_frutas_bush5": [
+   16,
+   16
+  ],
+  "n_frutas_bush6": [
+   16,
+   16
+  ],
+  "n_frutas_bush_g1": [
+   28,
+   25
+  ],
+  "n_frutas_bush_g2": [
+   28,
+   25
+  ],
+  "n_frutas_bush_g3": [
+   28,
+   25
+  ],
+  "n_toco1": [
+   16,
+   16
+  ],
+  "n_toco2": [
+   16,
+   16
+  ],
+  "n_cristal1": [
+   15,
+   14
+  ],
+  "n_cristal2": [
+   15,
+   14
+  ],
+  "n_cristal3": [
+   15,
+   14
+  ],
+  "n_cristal4": [
+   15,
+   14
+  ],
+  "n_arvore_rosa": [
+   48,
+   48
+  ],
+  "n_arvore_grande": [
+   48,
+   48
+  ],
+  "n_arvore_branca": [
+   48,
+   48
+  ],
+  "n_arvore_outono": [
+   48,
+   48
+  ],
+  "h_torii": [
+   34,
+   29
+  ],
+  "h_estatua_grande": [
+   80,
+   63
+  ],
+  "h_estatua_pequena": [
+   30,
+   30
+  ],
+  "h_totem": [
+   31,
+   62
+  ],
+  "h_cerca_ferro": [
+   68,
+   46
+  ],
+  "h_salao_madeira": [
+   78,
+   78
+  ],
+  "h_estatua_grande_verde": [
+   80,
+   63
+  ],
+  "h_estatua_pequena_verde": [
+   30,
+   30
+  ],
+  "furn_cama": [
+   14,
+   27
+  ],
+  "furn_mesa": [
+   45,
+   13
+  ],
+  "furn_estante": [
+   16,
+   29
+  ],
+  "furn_planta": [
+   15,
+   24
+  ],
+  "furn_tapete": [
+   47,
+   32
+  ],
+  "furn_lareira": [
+   13,
+   15
+  ],
+  "furn_trofeu": [
+   32,
+   30
+  ],
+  "furn_relogio": [
+   9,
+   7
+  ],
+  "stairs_down_0": [
+   16,
+   16
+  ],
+  "stairs_up_0": [
+   16,
+   16
+  ],
+  "stairs_down_1": [
+   16,
+   16
+  ],
+  "stairs_up_1": [
+   16,
+   16
+  ],
+  "stairs_down_2": [
+   16,
+   16
+  ],
+  "stairs_up_2": [
+   16,
+   16
+  ],
+  "stairs_down_3": [
+   16,
+   16
+  ],
+  "stairs_up_3": [
+   16,
+   16
+  ]
+ }
+}
