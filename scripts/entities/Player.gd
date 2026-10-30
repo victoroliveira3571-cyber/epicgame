@@ -74,11 +74,11 @@ func _ready() -> void:
 	col.shape = shape
 	col.position = Vector2(0, -3)
 	add_child(col)
-	shadow = Fx.make_shadow(self, 12.0, -1.0)
+	shadow = Fx.make_shadow(self, 12.0, 0.0)
 	sprite = AnimatedSprite2D.new()
 	var sheet: String = "chars/%s.png" % Data.CLASSES.get(GameState.player_class, Data.CLASSES["cavaleiro"])["sheet"]
 	sprite.sprite_frames = Pix.actor_frames(sheet)
-	sprite.position = Vector2(0, -8)
+	sprite.position = Vector2(0, -9)
 	add_child(sprite)
 	sprite.play("idle_down")
 	weapon_pivot = Node2D.new()

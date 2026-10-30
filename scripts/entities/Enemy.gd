@@ -106,10 +106,10 @@ func _ready() -> void:
 	col.shape = shape
 	col.position = Vector2(0, -3)
 	add_child(col)
-	shadow = Fx.make_shadow(self, (10.0 + body_radius) * base_scale, -1.0)
+	shadow = Fx.make_shadow(self, (10.0 + body_radius) * base_scale, 0.0)
 	sprite = AnimatedSprite2D.new()
 	_build_sprite()
-	sprite.position = Vector2(0, -8 * base_scale)
+	sprite.position = Vector2(0, -9 * base_scale)
 	sprite.scale = Vector2(base_scale, base_scale)
 	add_child(sprite)
 	_start_anim()
@@ -546,12 +546,12 @@ func _ai_hopper(delta: float, dist: float, pp: Vector2) -> void:
 				tw2.tween_property(sprite, "scale", Vector2(base_scale, base_scale), 0.25)
 		State.ATTACK:
 			var t := 1.0 - state_time / 0.38
-			sprite.position.y = (-8.0 - sin(t * PI) * 7.0) * base_scale
+			sprite.position.y = (-9.0 - sin(t * PI) * 7.0) * base_scale
 			move_dir = attack_dir * 3.2
 			if t > 0.55:
 				_attack_overlap(12.0 + body_radius * 0.4, 1.0)
 			if state_time <= 0.0:
-				sprite.position.y = -8.0 * base_scale
+				sprite.position.y = -9.0 * base_scale
 				Fx.burst(get_parent(), global_position + Vector2(0, -1), Color(1, 1, 1, 0.6), 3, 20.0, 0.2)
 				state = State.CHASE
 				state_time = randf_range(0.35, 0.7)

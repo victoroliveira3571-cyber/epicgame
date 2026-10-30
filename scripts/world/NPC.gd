@@ -50,13 +50,13 @@ func _ready() -> void:
 	sprite = AnimatedSprite2D.new()
 	if mode == "animal":
 		sprite.sprite_frames = Pix.animal_frames(sheet)
-		sprite.position = Vector2(0, -7)
-		Fx.make_shadow(self, 9.0, -1.0)
+		sprite.position = Vector2(0, -8)
+		Fx.make_shadow(self, 9.0, 0.0)
 		sprite.play("idle")
 	else:
 		sprite.sprite_frames = Pix.actor_frames("chars/%s.png" % sheet)
-		sprite.position = Vector2(0, -8)
-		Fx.make_shadow(self, 11.0, -1.0)
+		sprite.position = Vector2(0, -9)
+		Fx.make_shadow(self, 11.0, 0.0)
 		sprite.play("idle_down")
 	add_child(sprite)
 	wait_time = randf_range(0.5, 3.0)
