@@ -40,6 +40,8 @@ const BUILDING_DEFS := [
 		"npc": "OldMan3", "npc_dx": 44.0, "lines": ["Bem-vindo, aventureiro!", "A masmorra espera por você.", "Quem foca, conquista."]},
 	{"id": "arena", "name": "Arena de Combate", "prop": "b_salao_vermelho", "tile": Vector2i(44, 17), "door_dx": 0.0, "tint": Color(1.0, 0.82, 0.6),
 		"npc": "guarda", "npc_dx": 34.0, "lines": ["Duelos todos os dias!", "Ninguém morre na Arena. Só o orgulho.", "A Bruna está lá dentro."]},
+	{"id": "laboratorio", "name": "Laboratório do Dr. Faísca", "prop": "b_casa_empena", "tile": Vector2i(54, 17), "door_dx": 0.0, "tint": Color(0.72, 1.0, 0.82),
+		"npc": "tonico", "npc_dx": -32.0, "lines": ["Cuidado: o laboratório explode às terças.", "Traga gosma! Muita gosma!", "O doutor é um gênio. Às vezes."]},
 ]
 const HOUSE_DEFS := [
 	{"prop": "b_casa_creme", "tile": Vector2i(14, 37)}, {"prop": "b_estalagem", "tile": Vector2i(22, 37)},
@@ -123,6 +125,7 @@ func _build_masks() -> void:
 	_rect_fill(dirt, 27, 22, 37, 30)
 	_rect_fill(dirt, 21, 18, 23, AVENUE_Y - 1)   # caminho até a biblioteca
 	_rect_fill(dirt, 43, 18, 45, AVENUE_Y - 1)   # caminho até a arena
+	_rect_fill(dirt, 53, 18, 55, AVENUE_Y - 1)   # caminho até o laboratório
 	# lago esquerdo e lagoa direita
 	_rect_fill(water, 8, 30, 16, 35)
 	_rect_fill(water, 47, 31, 52, 35)
@@ -189,7 +192,7 @@ func _build_buildings() -> void:
 	for d in BUILDING_DEFS:
 		var t: Vector2i = d["tile"]
 		var pos := Vector2(t.x * T + 8, t.y * T)
-		var interior: String = d["id"] if d["id"] in ["casa", "restaurante", "guilda", "biblioteca", "forja", "loja", "arena"] else ""
+		var interior: String = d["id"] if d["id"] in ["casa", "restaurante", "guilda", "biblioteca", "forja", "loja", "arena", "laboratorio"] else ""
 		var b := Building.create(world, d["id"], d["name"], d["prop"], pos, d["door_dx"], interior)
 		if d.has("tint") and b.sprite != null:
 			b.sprite.modulate = d["tint"]

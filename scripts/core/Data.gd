@@ -114,6 +114,19 @@ const SKILLS := {
 	"recuo": {"name": "Salto e Mira", "icon": "items/Boot", "cd": 12.0, "kind": "dash", "anim": "shoot",
 		"mult": 0.0, "speed": -280.0, "buff": "foco", "buff_time": 6.0,
 		"desc": "Salta para trás, imune, e ganha Foco (+12% de velocidade, +5% de crítico) por 6s."},
+	# ---- magias dos Livros de Magia do laboratório (tecla Z, uma por vez)
+	"chamas": {"name": "Bola de Fogo", "icon": "spell/Fireball", "cd": 7.0, "kind": "blast", "anim": "spellcast",
+		"dist": 90.0, "radius": 28.0, "mult": 2.0, "kb": 120.0, "delay": 0.25, "fx": "explosion", "color": Color(1, 0.6, 0.3),
+		"desc": "Uma bola de fogo explode no inimigo mais próximo: 200% de dano em área."},
+	"gelo": {"name": "Lanças de Gelo", "icon": "spell/BookIce", "cd": 6.0, "kind": "fan", "anim": "spellcast",
+		"count": 3, "spread": 22.0, "mult": 1.4, "proj": "ARROW", "speed": 300.0, "range": 0.8,
+		"desc": "Três lanças de gelo em leque (140% de dano cada)."},
+	"raio": {"name": "Relâmpago", "icon": "spell/BookThunder", "cd": 9.0, "kind": "blast", "anim": "spellcast",
+		"dist": 100.0, "radius": 26.0, "mult": 2.6, "kb": 90.0, "delay": 0.2, "fx": "thunder", "color": Color(0.8, 0.9, 1.0),
+		"desc": "Um raio cai do céu no inimigo mais próximo: 260% de dano."},
+	"cura": {"name": "Bênção Curativa", "icon": "spell/Heal", "cd": 20.0, "kind": "buff", "anim": "spellcast",
+		"buff": "regen", "buff_time": 6.0, "heal_pct": 0.35, "fx": "shield", "color": Color(0.7, 1.0, 0.7),
+		"desc": "Cura 35% da vida e dá Regeneração por 6s."},
 }
 
 # ------------------------------------------------------------- Progressão de habilidades
@@ -121,7 +134,7 @@ const SKILLS := {
 #   "active": ativa nova numa tecla (R no nível 10, X no 30)
 #   "passive": bônus permanente nos atributos (mesmas chaves dos buffs; hp_pct = % de vida, cdr = recarga menor)
 #   "mastery": fortalece uma ativa (+30% de dano, -20% de recarga)
-const SKILL_KEYS := {"skill": "Q", "skill2": "R", "skill3": "X"}
+const SKILL_KEYS := {"skill": "Q", "skill2": "R", "skill3": "X", "skill_book": "Z"}
 const MASTERY_DMG := 1.3
 const MASTERY_CD := 0.8
 const SKILL_LEVELS := [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -316,6 +329,54 @@ const MATERIALS := {
 	"gema_vermelha": {"name": "Gema Vermelha", "icon": "items/resource/GemRed", "price": 240, "tier": 3},
 	"gema_amarela": {"name": "Gema Amarela", "icon": "items/resource/GemYellow", "price": 480, "tier": 4},
 }
+# ------------------------------------------------------------------- Laboratório (Dr. Faísca)
+# Ingredientes que os monstros soltam (Loot.drop_from_enemy) e receitas da bancada (LabWindow).
+const LAB_MATERIALS := {
+	"gosma": {"name": "Gosma Viscosa", "icon": "items/resource/Water", "price": 6, "tier": 0},
+	"pelo": {"name": "Pelo de Fera", "icon": "items/resource/Branch", "price": 7, "tier": 0},
+	"asa": {"name": "Asa de Morcego", "icon": "items/resource/feather", "price": 9, "tier": 0},
+	"osso": {"name": "Fragmento de Osso", "icon": "items/resource/Rock", "price": 9, "tier": 0},
+	"essencia": {"name": "Essência da Névoa", "icon": "items/resource/BarPurple", "price": 14, "tier": 1},
+	"cristal": {"name": "Cristal Arcano", "icon": "items/resource/GemPurple", "price": 40, "tier": 2},
+}
+const LAB_DROP := {
+	"slime": "gosma", "slime_verde": "gosma", "kappa": "gosma", "axolote": "gosma", "polvo": "gosma", "polvo_vermelho": "gosma",
+	"lagarto": "gosma", "cobra": "gosma", "reptil": "gosma",
+	"rato": "pelo", "lobo_jovem": "pelo", "lobo": "pelo", "lobo_sombra": "pelo", "urso": "pelo", "guaxinim": "pelo", "fera": "pelo",
+	"morcego": "asa", "aranha": "asa", "espirito": "asa",
+	"esqueleto": "osso", "cranio": "osso", "guardiao": "osso", "ciclope": "osso",
+	"cogumelo": "essencia", "chama": "essencia", "demonio": "essencia", "nevoa": "essencia", "sombra": "essencia", "pagina": "essencia",
+}
+const LAB_DROP_CHANCE := 0.4
+const LAB_CRYSTAL_CHANCE := 0.04       # elites: 0.3
+# Itens novos do laboratório. kind tonic = efeito no estudo; book = ensina uma magia (tecla Z).
+const LAB_ITEMS := {
+	"tonico_memoria": {"name": "Tônico da Memória", "icon": "items/potion/WaterPot", "price": 60, "kind": "tonic", "sessions": 3, "pct": 0.25,
+		"desc": "+25% de XP nas próximas 3 sessões de foco do Pomodoro."},
+	"elixir_sabedoria": {"name": "Elixir da Sabedoria", "icon": "items/potion/MilkPot", "price": 45, "kind": "tonic", "buff": "sabedoria", "buff_time": 600.0,
+		"desc": "Buff Sabedoria (+20% de XP) por 10 min."},
+	"livro_chamas": {"name": "Livro de Magia: Chamas", "icon": "items/scroll/ScrollFire", "price": 150, "kind": "book", "spell": "chamas",
+		"desc": "Ensina Bola de Fogo (tecla Z)."},
+	"livro_gelo": {"name": "Livro de Magia: Gelo", "icon": "items/scroll/ScrollIce", "price": 150, "kind": "book", "spell": "gelo",
+		"desc": "Ensina Lanças de Gelo (tecla Z)."},
+	"livro_raio": {"name": "Livro de Magia: Raio", "icon": "items/scroll/ScrollThunder", "price": 220, "kind": "book", "spell": "raio",
+		"desc": "Ensina Relâmpago (tecla Z)."},
+	"livro_cura": {"name": "Livro de Magia: Cura", "icon": "items/scroll/ScrollPlant", "price": 180, "kind": "book", "spell": "cura",
+		"desc": "Ensina Bênção Curativa (tecla Z)."},
+}
+## [resultado, quantidade, {ingrediente: qtd}, horas de foco exigidas (livros: estudo de verdade), fala do Dr. Faísca]
+const LAB_RECIPES := [
+	["pocao_vida", 2, {"erva_azul": 2, "gosma": 1}, 0, "Borbulhou verde! Isso é bom. Acho."],
+	["pocao_media", 1, {"erva_azul": 2, "gosma": 2, "pelo": 2}, 0, "Cheira a cachorro molhado, mas cura que é uma beleza."],
+	["pocao_grande", 1, {"erva_azul": 3, "essencia": 2, "cristal": 1}, 0, "ELIXIR VITAL! Pipeta, anota isso antes que eu esqueça!"],
+	["tonico_memoria", 1, {"asa": 2, "essencia": 1, "erva_azul": 1}, 1, "Tônico da Memória: beba e estude. Ele só funciona se você ESTUDAR, viu?"],
+	["elixir_sabedoria", 1, {"pelo": 2, "asa": 1}, 0, "Sabedoria engarrafada! Tem gosto de biblioteca."],
+	["livro_chamas", 1, {"essencia": 3, "osso": 2, "cristal": 1}, 2, "O livro pegou fogo sozinho. Exatamente como planejado. Quase."],
+	["livro_gelo", 1, {"gosma": 3, "asa": 2, "cristal": 1}, 2, "Brr! As páginas congelaram. Leia com luvas."],
+	["livro_cura", 1, {"erva_azul": 4, "pelo": 2, "cristal": 1}, 3, "Um livro que abraça de volta. Não pergunte."],
+	["livro_raio", 1, {"osso": 3, "essencia": 2, "cristal": 2}, 4, "KABUM! Meu cabelo ficou assim por causa desse livro."],
+]
+
 # Material exigido para aprimorar até o nível indicado (1..5) e quantidade.
 const UPGRADE_MATERIAL := ["barra_cobre", "barra_cobre", "barra_ferro", "barra_prata", "barra_ouro"]
 const UPGRADE_MATERIAL_QTY := [1, 2, 3, 3, 4]
@@ -391,6 +452,15 @@ func _build_items() -> void:
 		var m: Dictionary = MATERIALS[mid]
 		ITEMS[mid] = {"id": mid, "name": m["name"], "kind": "material", "tier": m["tier"], "icon": m["icon"], "price": m["price"],
 			"desc": "Material de aprimoramento (Ferreiro)."}
+	for lid in LAB_MATERIALS:
+		var lm: Dictionary = LAB_MATERIALS[lid]
+		ITEMS[lid] = {"id": lid, "name": lm["name"], "kind": "material", "tier": lm["tier"], "icon": lm["icon"], "price": lm["price"],
+			"desc": "Ingrediente de laboratório (Dr. Faísca)."}
+	for li in LAB_ITEMS:
+		var it3: Dictionary = LAB_ITEMS[li].duplicate()
+		it3["id"] = li
+		it3["tier"] = 1
+		ITEMS[li] = it3
 	ITEMS["erva_azul"] = {"id": "erva_azul", "name": "Erva Medicinal", "kind": "material", "tier": 0, "icon": "items/resource/Grass", "price": 4,
 		"desc": "Erva medicinal da floresta. As lojas compram."}
 	for cid in CONSUMABLES:

@@ -141,7 +141,7 @@ func _filtered_ids() -> Array:
 		var kind: String = it["kind"]
 		if filter == "equip" and kind != "equip":
 			continue
-		if filter == "use" and kind != "potion" and kind != "food":
+		if filter == "use" and kind not in ["potion", "food", "tonic", "book"]:
 			continue
 		if filter == "material" and kind != "material":
 			continue
@@ -203,7 +203,7 @@ func _build_details(dv: VBoxContainer) -> void:
 			var eqb := UI.button("Equipar", func() -> void: GameState.equip_item(selected), 50)
 			eqb.disabled = not Data.class_can_use(GameState.player_class, selected)
 			btns.add_child(eqb)
-	elif it["kind"] == "potion" or it["kind"] == "food":
+	elif it["kind"] in ["potion", "food", "tonic", "book"]:
 		btns.add_child(UI.button("Usar", func() -> void:
 			if GameState.use_item(selected):
 				Audio.sfx("heal", -4.0)

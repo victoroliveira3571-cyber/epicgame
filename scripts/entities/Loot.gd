@@ -25,6 +25,11 @@ static func drop_from_enemy(e: Enemy) -> void:
 			Pickup.spawn(world, pos, "item", 1, id)
 	if randf() < 0.09 + luck_bonus * 0.5:
 		Pickup.spawn(world, pos, "heart", 1)
+	# ingredientes do laboratório
+	if Data.LAB_DROP.has(e.def_id) and randf() < Data.LAB_DROP_CHANCE + luck_bonus:
+		Pickup.spawn(world, pos, "item", 1, str(Data.LAB_DROP[e.def_id]))
+	if randf() < (0.3 if e.is_elite else Data.LAB_CRYSTAL_CHANCE):
+		Pickup.spawn(world, pos, "item", 1, "cristal")
 
 
 static func spawn_gold(world: Node, pos: Vector2, total: int) -> void:

@@ -18,6 +18,7 @@ const PROFILES := {
 	"espelho": ["fem_mid", 1.12], "ferreiro": ["orc", 0.95], "armeiro": ["male", 0.95],
 	"costureira": ["fem_mid", 1.06], "estalajadeiro": ["male", 0.9], "mestre_cla": ["mage", 0.8],
 	"bibliotecaria": ["fem_mid", 0.92], "arena": ["fem_bright", 0.92],
+	"cientista": ["mage", 1.25], "pipeta": ["fem_bright", 1.15], "tonico": ["orc", 1.1],
 }
 const FALLBACK := [["male", 1.0], ["fem_mid", 1.0], ["mage", 1.0], ["fem_bright", 1.0], ["male", 0.85], ["orc", 1.0]]
 const BLIP_LEN := 0.085

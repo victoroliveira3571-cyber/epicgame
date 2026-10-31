@@ -72,12 +72,17 @@ static func fireflies(ci: CanvasItem, t: float, n: int, seed_v: float, area: Rec
 
 
 static func mist(ci: CanvasItem, t: float, y: float, col: Color, n: int, seed_v: float) -> void:
+	# nuvens largas e baixas, feitas de muitas camadas fracas (sem anéis)
 	for i in n:
 		var s := seed_v + float(i)
 		var x := fposmod(rn(s) * (W + 240.0) + t * (4.0 + rn(s + 2.0) * 6.0), W + 240.0) - 120.0
 		var w := 90.0 + rn(s + 4.0) * 140.0
-		for k in 4:
-			ci.draw_circle(Vector2(x, y + rn(s + 6.0) * 26.0 + k * 3.0), w * (0.5 - k * 0.08), Color(col.r, col.g, col.b, col.a * (0.25 + k * 0.1)))
+		var cy := y + rn(s + 6.0) * 26.0
+		for k in 14:
+			var f := float(k) / 14.0
+			ci.draw_set_transform(Vector2(x, cy), 0.0, Vector2(1.0, 0.35))
+			ci.draw_circle(Vector2.ZERO, w * (1.0 - f * 0.9), Color(col.r, col.g, col.b, col.a * 0.07))
+		ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 static func hills(ci: CanvasItem, base_y: float, amp: float, col: Color, seed_v: float, freq: float = 0.011) -> void:
@@ -269,6 +274,8 @@ static func paint(ci: CanvasItem, setting: String, t: float) -> void:
 			_arena(ci, t)
 		"jail":
 			_jail(ci, t)
+		"lab":
+			_lab(ci, t)
 		"gate_forest":
 			_forest(ci, "forest", t)
 			_gate(ci, t, true)
@@ -699,6 +706,53 @@ static func _jail(ci: CanvasItem, t: float) -> void:
 	ci.draw_rect(Rect2(540, 190, 90, 56), Color("4a4650"))
 	mist(ci, t, 262.0, Color(0.6, 0.65, 0.8, 0.3), 4, 51.0)
 	motes(ci, t, Color(0.85, 0.9, 1.0, 0.5), 20, 20.0, Rect2(300, 60, 300, 200), 3.0)
+
+
+static func _lab(ci: CanvasItem, t: float) -> void:
+	bricks(ci, Rect2(0, 0, W, 246), Color("5a6a62"), Color("1e2a26"), 31.0, 30.0, 15.0)
+	vgrad(ci, Rect2(0, 0, W, 246), Color(0, 0, 0, 0.45), Color(0, 0, 0, 0.05), 14)
+	# quadro de fórmulas
+	ci.draw_rect(Rect2(250, 40, 140, 84), Color("5a3a22"))
+	ci.draw_rect(Rect2(256, 46, 128, 72), Color("1e3a2e"))
+	for i in 5:
+		ci.draw_line(Vector2(264, 58.0 + float(i) * 12.0), Vector2(264.0 + 40.0 + rn(float(i)) * 60.0, 58.0 + float(i) * 12.0), Color(0.9, 0.95, 0.85, 0.8), 1.5)
+	ci.draw_arc(Vector2(356, 70), 12.0, 0.0, TAU, 20, Color(0.9, 0.95, 0.85, 0.8), 1.5)
+	# prateleiras de frascos coloridos que brilham
+	for side in [0, 1]:
+		var x0 := 30.0 if side == 0 else 440.0
+		for r in 3:
+			var y := 50.0 + float(r) * 52.0
+			ci.draw_rect(Rect2(x0, y + 34.0, 170, 6), Color("5a3a22"))
+			for k in 7:
+				var c := Color.from_hsv(rn(float(side * 50 + r * 7 + k)), 0.6, 0.95)
+				var fx := x0 + 10.0 + float(k) * 23.0
+				var bub := 0.5 + 0.5 * sin(t * 2.0 + float(k + r))
+				ci.draw_circle(Vector2(fx, y + 26.0), 8.0, Color(0.75, 0.9, 0.95, 0.6))
+				ci.draw_circle(Vector2(fx, y + 28.0), 6.0, c)
+				ci.draw_rect(Rect2(fx - 2.0, y + 10.0, 4, 10), Color(0.75, 0.9, 0.95, 0.6))
+				glow(ci, Vector2(fx, y + 26.0), 22.0, Color(c.r, c.g, c.b, 0.35 * bub), 3)
+	# caldeirão borbulhando no centro
+	glow(ci, Vector2(320, 210), 140.0, Color(0.3, 1.0, 0.45, 0.55), 8)
+	ci.draw_circle(Vector2(320, 236), 44.0, Color("2a2a34"))
+	ci.draw_set_transform(Vector2(320, 200), 0.0, Vector2(1.0, 0.3))
+	ci.draw_circle(Vector2.ZERO, 40.0, Color("6ae07a"))
+	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	for i in 8:
+		var life := fposmod(t * (0.4 + rn(float(i)) * 0.5) + rn(float(i) + 2.0), 1.0)
+		ci.draw_circle(Vector2(300.0 + rn(float(i) + 4.0) * 40.0, 196.0 - life * 70.0), 3.0 + life * 3.0, Color(0.7, 1.0, 0.75, 1.0 - life))
+	# bobina com faíscas
+	ci.draw_rect(Rect2(560, 120, 18, 120), Color("c8843a"))
+	ci.draw_circle(Vector2(569, 112), 16.0, Color("b8c0cc"))
+	if fposmod(t, 1.7) < 0.2:
+		for k in 4:
+			var a := Vector2(569, 112)
+			var b := a + Vector2(randf_range(-50, 50), randf_range(-40, 30))
+			ci.draw_line(a, b, Color(0.8, 0.95, 1.0), 2.0)
+		glow(ci, Vector2(569, 112), 80.0, Color(0.6, 0.85, 1.0, 0.8), 6)
+	vgrad(ci, Rect2(0, 246, W, 114), Color("3a4a44"), Color("141c1a"), 14)
+	for row in 5:
+		ci.draw_rect(Rect2(0, 252.0 + float(row) * float(row) * 4.0 + float(row) * 6.0, W, 1.5), Color(0, 0, 0, 0.3))
+	motes(ci, t, Color(0.7, 1.0, 0.8, 0.6), 26, 41.0, Rect2(0, 40, W, 220), 5.0)
 
 
 static func _gate(ci: CanvasItem, t: float, forest: bool) -> void:

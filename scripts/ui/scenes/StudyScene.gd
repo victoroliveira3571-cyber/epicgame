@@ -12,10 +12,12 @@ const SCENES := {
 	"natureza": {"name": "Na natureza", "desc": "Sob a árvore, perto do lago, numa manhã de sol."},
 	"livraria": {"name": "Biblioteca", "desc": "Estantes até o teto e luz dourada da tarde."},
 	"casa": {"name": "Minha casa", "desc": "Seu quarto: cama arrumada, estante e o pôr do sol na janela."},
+	"cela": {"name": "Cela da delegacia", "desc": "Pedra fria, grade e uma vela: cada minuto de foco abate a pena."},
 	"taverna": {"name": "Taverna", "desc": "Noite animada, lanternas acesas e garrafas atrás do balcão."},
 }
 const ORDER := ["casa", "estudo", "livraria", "cafeteria", "taverna", "natureza"]
 const HS := 1.6          # escala do herói nas cenas
+const HERO_K := 4.0 / 3.0   # herói LPC um pouco maior que 1 px de arte: fica na proporção da mesa e da cadeira (4 px de tela por pixel)
 
 # Pixel art (tools/gen_pomodoro_bg.py e gen_pomodoro_fx.py): fundo 400x208 em escala 3, subido 12 px.
 const ART_DIR := "res://assets/custom/pomodoro/"
@@ -30,6 +32,7 @@ const LAYOUT := {
 	"natureza": {"hip": Vector2(165, 177), "sit": "ground", "mug": Vector2(196, 182), "book": Vector2(213, 183)},
 	"casa": {"hip": Vector2(145, 150), "sit": "chair", "mug": Vector2(174, 142), "book": Vector2(190, 142)},
 	"taverna": {"hip": Vector2(145, 153), "sit": "chair", "mug": Vector2(174, 145), "book": Vector2(190, 145)},
+	"cela": {"hip": Vector2(145, 151), "sit": "chair", "mug": Vector2(174, 143), "book": Vector2(190, 143)},
 }
 # Animações sobre o fundo: [sprite, x_arte, y_arte (canto superior esquerdo), fase]
 const FX_SPOTS := {
@@ -41,6 +44,7 @@ const FX_SPOTS := {
 	"natureza": [["agua", 170, 136, 0.0], ["agua", 250, 141, 0.4], ["agua", 330, 137, 0.7]],
 	"casa": [],
 	"taverna": [["vela", 269, 117, 0.2]],
+	"cela": [["vela", 249, 117, 0.0]],
 }
 # Pose do herói LPC (pixels do quadro 64x64): mão no colo, ombro do braço que estica e boca.
 const POSE := {
@@ -214,6 +218,8 @@ func _draw_art() -> void:
 	for spot in FX_SPOTS.get(scene_id, []):
 		fx(spot[0], art_pos(spot[1], spot[2]), spot[3])
 	_ambient_fx(id)
+	if scene_id == "cela":
+		_cell_sign()
 	var lay: Dictionary = LAYOUT.get(scene_id, LAYOUT["cafeteria"])
 	var hero_pos: Vector2 = art_pos(lay["hip"].x, lay["hip"].y)
 	var sit: String = lay["sit"]
@@ -248,11 +254,11 @@ func _draw_lpc_hero(lay: Dictionary) -> void:
 	var kind: String = "ground" if lay["sit"] == "ground" else "chair"
 	var frame := Lpc.F_GROUND if kind == "ground" else Lpc.F_CHAIR
 	var blink := fmod(t + 1.3, 4.7) < 0.14
-	var top_art: Vector2 = (lay["hip"] - Lpc.anchor(kind)).round()
+	var top_art: Vector2 = lay["hip"] - Lpc.anchor(kind) * HERO_K
 	var pose: Dictionary = POSE[kind]
-	var lap: Vector2 = top_art + pose["lap"]
-	var shoulder: Vector2 = top_art + pose["shoulder"]
-	var mouth: Vector2 = top_art + pose["mouth"]
+	var lap: Vector2 = (top_art + pose["lap"] * HERO_K).round()
+	var shoulder: Vector2 = (top_art + pose["shoulder"] * HERO_K).round()
+	var mouth: Vector2 = (top_art + pose["mouth"] * HERO_K).round()
 	# onde está a mão de trás e o que ela carrega
 	var hand := lap
 	var carry := held                 # objeto que acompanha a mão
@@ -287,7 +293,7 @@ func _draw_lpc_hero(lay: Dictionary) -> void:
 			_px_closed_book(lay["book"])
 	if reaching:
 		_draw_arm(shoulder, hand)
-	Lpc.draw(self, art_pos(top_art.x, top_art.y), ART_SCALE, frame, Lpc.layers(look, blink))
+	Lpc.draw(self, art_pos(top_art.x, top_art.y), ART_SCALE * HERO_K, frame, Lpc.layers(look, blink))
 	# objeto na mão por cima do corpo
 	if carry == "mug":
 		_px_mug(hand, anim == "sip")
@@ -600,6 +606,17 @@ func _draw_bookstore() -> void:
 	_mug(Vector2(700, top - 8))
 	steam(Vector2(700, top - 24), 4, 40)
 	cat(Vector2(1000, top + 2), 0.9, Color("d98f4a"))
+
+
+## Placa da cela com os minutos de pena que faltam (o fundo vem de tools/gen_pomodoro_bg.py cela).
+func _cell_sign() -> void:
+	var left := Law.jail_left() if Story.started() else 0
+	_pa(98, 40, 76, 40, Color("4a3020"))
+	_pa(100, 42, 72, 36, Color("e8d9b0"))
+	_pa(100, 42, 72, 2, Color("fff4d8"))
+	var f := Pix.font(1)
+	draw_string(f, art_pos(106, 56), "PENA", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color("8a2f34"))
+	draw_string(f, art_pos(106, 73), ("%d min" % left) if left > 0 else "CUMPRIDA", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color("2a1d2e"))
 
 
 func _chair_back(p: Vector2) -> void:

@@ -26,6 +26,7 @@ const WINDOWS := {
 	"preocupacoes": "res://scripts/ui/windows/WorryWindow.gd",
 	"recall": "res://scripts/ui/windows/RecallWindow.gd",
 	"mapa": "res://scripts/ui/windows/MapWindow.gd",
+	"laboratorio": "res://scripts/ui/windows/LabWindow.gd",
 	"aparencia": "res://scripts/ui/windows/AppearanceWindow.gd",
 	"arena": "res://scripts/ui/windows/ArenaWindow.gd",
 	"arena_resultado": "res://scripts/ui/windows/ArenaResultWindow.gd",
@@ -361,7 +362,7 @@ func _build_hotbar() -> void:
 	_hot_skill.position = Vector2(68, 0)
 	_hot_skill.key_text = "Q"
 	_hotbar.add_child(_hot_skill)
-	for slot in ["skill2", "skill3"]:
+	for slot in ["skill2", "skill3", "skill_book"]:
 		var hs := HotSkill.new()
 		hs.key_text = Data.SKILL_KEYS[slot]
 		hs.visible = false
@@ -913,6 +914,8 @@ func _on_level_up(new_level: int) -> void:
 
 ## A cada 10 níveis: avisa a habilidade nova (ativa, passiva ou maestria).
 func _on_skill_unlocked(index: int) -> void:
+	if index == 0:
+		return   # a primeira magia já nasce com a classe
 	var prog := GameState.class_progression()
 	if index < 0 or index >= prog.size():
 		return

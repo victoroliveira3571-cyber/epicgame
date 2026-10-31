@@ -76,6 +76,8 @@ static func pick_setting(tree: SceneTree, who: String) -> String:
 				return "arena"
 			"delegacia":
 				return "jail"
+			"laboratorio":
+				return "lab"
 			_:
 				return "home"
 	if scene.is_in_group("dungeon"):
@@ -196,7 +198,7 @@ func _make_actor(who: String, vis_in: Dictionary = {}) -> Node2D:
 		lk.erase("scale")
 		holder.queue_free()
 		var a := LpcActor.make(self, lk, true)
-		a.scale = Vector2(SCALE, SCALE)
+		a.scale = Vector2(SCALE, SCALE) * (1.22 if who == "rei" else 1.0)
 		a.self_modulate = vis.get("tint", Color.WHITE)
 		return a
 	var boss_id: String = Looks.SPEAKER_BOSS.get(who, "")

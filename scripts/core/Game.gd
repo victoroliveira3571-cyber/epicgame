@@ -64,6 +64,7 @@ func _setup_input() -> void:
 	_add_action("skill", [KEY_Q, KEY_L])
 	_add_action("skill2", [KEY_R])      # habilidade do nível 10
 	_add_action("skill3", [KEY_X])      # habilidade do nível 30
+	_add_action("skill_book", [KEY_Z])  # magia do Livro de Magia (laboratório)
 	_add_action("interact", [KEY_E])
 	_add_action("eat", [KEY_F])
 	_add_action("potion", [KEY_H])

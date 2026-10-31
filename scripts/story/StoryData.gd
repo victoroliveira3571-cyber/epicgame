@@ -44,6 +44,9 @@ const SPEAKERS := {
 	"mestre_cla": {"name": "Mestre Daichi"},
 	"bibliotecaria": {"name": "Dona Celeste"},
 	"arena": {"name": "Bruna, mestra da Arena"},
+	"cientista": {"name": "Dr. Faísca"},
+	"pipeta": {"name": "Pipeta"},
+	"tonico": {"name": "Tonico"},
 }
 
 const CHAPTERS := {

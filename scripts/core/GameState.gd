@@ -293,7 +293,8 @@ func _check_level_up() -> void:
 # ======================================================= Habilidades por nível e promoção
 ## Quantos marcos de habilidade já foram alcançados (um a cada 10 níveis, até 10).
 func skill_milestones() -> int:
-	return clampi(level / 10, 0, Data.SKILL_LEVELS.size())
+	# toda classe nasce com a primeira magia (tecla R); as demais vêm a cada 10 níveis
+	return clampi(maxi(level / 10, 1 if has_chosen_class() else 0), 0, Data.SKILL_LEVELS.size())
 
 
 func class_progression() -> Array:
@@ -306,6 +307,8 @@ func slot_skill(slot: String) -> String:
 		return ""
 	if slot == "skill":
 		return str(Data.CLASSES[player_class]["skill"])
+	if slot == "skill_book":
+		return str(lab_data().get("book_spell", ""))
 	var prog := class_progression()
 	for i in mini(skill_milestones(), prog.size()):
 		var e: Dictionary = prog[i]
@@ -615,6 +618,13 @@ func upgrade_item(item_id: String) -> bool:
 
 
 # ================================================================== Consumíveis
+## Estado do laboratório (fica na história do save): magia do livro e bônus de foco do Tônico.
+func lab_data() -> Dictionary:
+	if not story.has("lab"):
+		story["lab"] = {"book_spell": "", "boost_sessions": 0, "boost_pct": 0.0}
+	return story["lab"]
+
+
 func use_item(item_id: String) -> bool:
 	var it: Dictionary = Data.get_item(item_id)
 	if it.is_empty() or count_item(item_id) <= 0:
@@ -627,6 +637,28 @@ func use_item(item_id: String) -> bool:
 				return false
 			var amount := maxi(int(it.get("heal", 0)), int(get_max_hp() * float(it.get("heal_pct", 0.0))))
 			heal(amount)
+			return true
+		"tonic":
+			if not remove_item(item_id, 1):
+				return false
+			if it.has("buff"):
+				add_buff(it["buff"], float(it.get("buff_time", 300.0)))
+			else:
+				var ld := lab_data()
+				ld["boost_sessions"] = int(ld.get("boost_sessions", 0)) + int(it.get("sessions", 3))
+				ld["boost_pct"] = float(it.get("pct", 0.25))
+				toast.emit("Tônico bebido: +%d%% de XP nas próximas %d sessões de foco." % [int(float(ld["boost_pct"]) * 100.0), int(ld["boost_sessions"])], Color("8fd4ff"))
+			mark_dirty()
+			stats_changed.emit()
+			return true
+		"book":
+			if not remove_item(item_id, 1):
+				return false
+			lab_data()["book_spell"] = str(it.get("spell", ""))
+			var sk: Dictionary = Data.SKILLS.get(str(it.get("spell", "")), {})
+			toast.emit("Magia aprendida: %s (tecla Z)." % sk.get("name", "?"), Color("c9a0ff"))
+			mark_dirty()
+			stats_changed.emit()
 			return true
 		"food":
 			if hunger >= 100 and not it.has("buff"):
@@ -912,7 +944,12 @@ func log_pomodoro(minutes: int, scene: String = "", early: bool = false) -> void
 ## `energy` < 0 = energia padrão; `count` = conta como sessão para missões e diárias.
 func complete_focus_session(xp_reward: int, gold_reward: int, minutes: int = 0, energy: int = -1, count: bool = true) -> Dictionary:
 	var mult := 0.5 if hunger <= 0 else 1.0
-	var xp_gain := int(round(float(xp_reward) * mult * (1.0 + stat("focus_xp_pct"))))
+	var boost := 0.0
+	var ld := lab_data()
+	if int(ld.get("boost_sessions", 0)) > 0 and minutes > 0:
+		boost = float(ld.get("boost_pct", 0.0))
+		ld["boost_sessions"] = int(ld["boost_sessions"]) - 1
+	var xp_gain := int(round(float(xp_reward) * mult * (1.0 + stat("focus_xp_pct") + boost)))
 	var gold_gain := int(round(float(gold_reward) * mult))
 	var cost := maxi(1, int(round(5.0 * stat("hunger_mult"))))
 	hunger = maxi(hunger - cost, 0)

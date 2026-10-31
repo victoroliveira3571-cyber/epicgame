@@ -115,7 +115,7 @@ func _skills() -> void:
 		mode = "atributos"
 		rebuild(), 90)
 	add_to_body(back, Vector2(450, 244))
-	add_to_body(UI.label("Uma habilidade nova a cada 10 níveis (automática)", UI.C_DIM), Vector2(0, 0))
+	add_to_body(UI.label("Magia inicial [R] + uma habilidade nova a cada 10 níveis", UI.C_DIM), Vector2(0, 0))
 	var col := scroll_column(Vector2(0, 16), Vector2(326, 246))
 	var prog := GameState.class_progression()
 	var got := GameState.skill_milestones()
@@ -149,7 +149,7 @@ func _skills() -> void:
 		var v := UI.vbox(0)
 		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h.add_child(v)
-		v.add_child(UI.label("Nv %d  %s" % [lv, title], UI.C_XP if have else UI.C_DIM))
+		v.add_child(UI.label(("Inicial  %s" % title) if i == 0 else "Nv %d  %s" % [lv, title], UI.C_XP if have else UI.C_DIM))
 		v.add_child(UI.wrap_label(desc, UI.C_TEXT if have else UI.C_DIM, 240))
 		var st := UI.label("Liberada" if have else "Nível %d" % lv, UI.C_GOOD if have else UI.C_DIM)
 		h.add_child(st)

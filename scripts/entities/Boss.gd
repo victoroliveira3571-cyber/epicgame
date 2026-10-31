@@ -69,7 +69,7 @@ func _setup_stats() -> void:
 
 ## Chefes humanos usam o personagem LPC (mesmo rosto dos diálogos); o sprite antigo fica
 ## invisível só para a lógica de animação/efeitos, e o LPC copia brilho, cor e escala dele.
-const LPC_BOSSES := {"NinjaBlue2": "ivo", "Knight": "aldric", "NinjaMageBlack": "bibliotecario"}
+const LPC_BOSSES := {"NinjaBlue2": "ivo", "Knight": "aldric", "NinjaMageBlack": "bibliotecario", "DemonRed": "rei_demonio"}
 const LPC_BOSS_SCALE := 1.3
 var lpc: LpcActor = null
 var _lpc_tint: Color = Color.WHITE

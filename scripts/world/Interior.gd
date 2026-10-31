@@ -30,6 +30,7 @@ const ROOMS := {
 	"casa_familia": [20, 12, "floor_wood", "wall_cream"], "casa_pai": [16, 10, "floor_wood_dark", "wall_stone"],
 	"forja": [18, 11, "floor_stone", "wall_stone"], "loja": [16, 10, "floor_wood", "wall_red"],
 	"arena": [30, 18, "floor_sand", "wall_stone"], "delegacia": [22, 13, "floor_stone", "wall_stone"],
+	"laboratorio": [24, 14, "floor_stone", "wall_cream"],
 }
 
 var id: String = "casa"
@@ -120,6 +121,8 @@ func _ready() -> void:
 		_build_arena()
 	elif id == "delegacia":
 		_build_jail()
+	elif id == "laboratorio":
+		_build_lab()
 	else:
 		_build_resident_house()
 	_spawn_player()
@@ -737,6 +740,54 @@ func _build_weapon_shop() -> void:
 	light(Vector2(cx, 100), Color(1.0, 0.82, 0.55), 1.6, 0.3)
 
 
+# ================================================================== Laboratório
+## Laboratório do Dr. Faísca: bancadas com frascos, caldeirão borbulhando, bobina que solta faíscas,
+## quadro de fórmulas. Dr. Faísca (dono, bancada de poções), Pipeta e Tonico (ajudantes cômicos).
+func _build_lab() -> void:
+	var w := cols * T
+	var cx := w / 2.0
+	wall("p_lab_quadro", cx, 30)
+	wall("p_janela", 60, 28)
+	wall("p_janela", w - 60, 28)
+	prop("p_lab_potes", Vector2(36, 72), false)
+	prop("p_lab_potes", Vector2(w - 36, 72), false)
+	prop("p_lab_bancada", Vector2(cx - 70, 104))
+	prop("p_lab_bancada", Vector2(cx + 70, 104))
+	prop("p_lab_caldeirao", Vector2(cx, 150))
+	light(Vector2(cx, 140), Color(0.4, 1.0, 0.5), 1.6, 0.9)
+	Audio.emitter(world, Vector2(cx, 150), "gota", -16.0, false, 4.0, 200.0)
+	var coil := prop("p_lab_bobina", Vector2(w - 40, 170))
+	light(Vector2(w - 40, 130), Color(0.6, 0.8, 1.0), 1.2, 0.8)
+	_spark_loop(coil)
+	prop("p_caixotes", Vector2(30, 180))
+	prop("i_barrel", Vector2(30, 206))
+	var doc := shop_owner("cientista", "cientista", "Dr. Faísca", Vector2(cx - 40, 132),
+		["Eureka! Ou quase.", "Traga ingredientes!", "Não toque no frasco rosa."], "static")
+	doc.set_meta("hammer", true)
+	spot("Bancada de preparos (laboratório)", Vector2(cx - 70, 118), func() -> void: HUD.open_window("laboratorio"), 24.0)
+	var pip := npc("pipeta", Vector2(cx + 70, 122), ["Anotando tudo, doutor!", "Isso era para borbulhar?", "Óculos de proteção salvam vidas."], "static")
+	pip.use_look("pipeta")
+	pip.set_meta("has_talker", true)
+	pip.add_to_group("speaker_pipeta")
+	pip.add_child(Spot.new("Falar com Pipeta", func() -> void: ShopTalk.talk("pipeta"), 22.0))
+	var ton := npc("tonico", Vector2(80, 160), ["Eu só carrego as coisas.", "Gosma não sai da roupa.", "O doutor me deixa provar tudo primeiro."], "wander", 40.0)
+	ton.use_look("tonico")
+	ton.set_meta("has_talker", true)
+	ton.add_to_group("speaker_tonico")
+	ton.add_child(Spot.new("Falar com Tonico", func() -> void: ShopTalk.talk("tonico"), 22.0))
+	light(Vector2(cx, 100), Color(0.85, 1.0, 0.9), 2.2, 0.35)
+
+
+## A bobina solta faíscas de tempos em tempos.
+func _spark_loop(coil: Node2D) -> void:
+	while is_instance_valid(coil) and is_inside_tree():
+		await get_tree().create_timer(randf_range(1.5, 3.5)).timeout
+		if not is_instance_valid(coil):
+			return
+		Fx.burst(world, coil.global_position + Vector2(0, -40), Color(0.7, 0.9, 1.0), 6, 40.0, 0.3)
+		Audio.sfx("magic2", -18.0)
+
+
 # ================================================================== Delegacia
 var _jail_gate: Node2D = null
 var _jail_was_free: bool = false
@@ -769,7 +820,7 @@ func _build_jail() -> void:
 	_jail_gate.add_child(gate_body)
 	prop("p_banco", Vector2(30, 180))             # cama de pedra da cela
 	prop("i_barrel", Vector2(80, 100))
-	study_spot("estudo", Vector2(60, 148)).text = "Estudar na cela (cumprir a pena)"
+	study_spot("cela", Vector2(60, 148)).text = "Estudar na cela (cumprir a pena)"
 	# mesa do guarda
 	prop("i_desk_paper", Vector2(w / 2.0 + 30, 96))
 	prop("i_counter", Vector2(w / 2.0 + 6, 104))
@@ -826,8 +877,6 @@ func _jail_talk() -> void:
 func _build_arena() -> void:
 	var w := cols * T
 	var cx := w / 2.0
-	for x in [70.0, cx, w - 70.0]:
-		prop("p_arquibancada", Vector2(x, 66), false)
 	wall("p_estandarte", 30, 34)
 	wall("p_estandarte_azul", w - 30, 34)
 	for x in [120.0, w - 120.0]:
@@ -835,17 +884,30 @@ func _build_arena() -> void:
 		light(Vector2(x, 20), Color(1.0, 0.6, 0.3), 0.8, 0.8)
 	prop("p_portao_arena", Vector2(22, 170), true)
 	prop("p_portao_arena", Vector2(w - 22, 170), true)
-	# torcida na arquibancada: cresce com o prestígio (Bronze ~6 pessoas, Lenda lotada)
-	var crowd := ["Villager", "Villager2", "OldMan", "Villager5", "Child", "aventureiro_cacador"]
+	# torcida em pé em volta do ringue (sem arquibancada): cresce com o prestígio (Bronze ~6, Lenda lotada)
+	var crowd := ["Villager", "Villager2", "OldMan", "Villager5", "Child", "aventureiro_cacador", "Woman", "aventureira_maga"]
 	var total := clampi(6 + Arena.prestige() / 22, 6, 40)
-	var per_row := int(ceil(total / 2.0))
-	for i in total:
-		var row := i % 2
-		var col := i / 2
-		var x := lerpf(34.0, w - 34.0, (float(col) + 0.5) / float(per_row))
-		var cn := sitter(crowd[(i * 5 + i / 3) % crowd.size()], Vector2(x, 50.0 + row * 9.0), "down",
-			["Vai! Vai!", "Que golpe!", "Rola, rola!", "Esse é dos bons!", "Mais um round!"])
-		cn.add_to_group("arena_crowd")
+	var ring_c := Vector2(cx, 160)
+	var placed_n := 0
+	var ring_i := 0
+	while placed_n < total and ring_i < 3:
+		var rx := 168.0 + float(ring_i) * 20.0
+		var ry := 88.0 + float(ring_i) * 16.0
+		var cap := 20 + ring_i * 6
+		var want := mini(total - placed_n, cap)
+		for k in want:
+			var ang := TAU * (float(k) + 0.5 * float(ring_i)) / float(want)
+			# sem gente na frente da entrada (embaixo): deixa a passagem até a mestra da arena
+			if sin(ang) > 0.55 and absf(cos(ang)) < 0.55:
+				continue
+			var pos := ring_c + Vector2(cos(ang) * rx, sin(ang) * ry)
+			pos.x = clampf(pos.x, 40.0, w - 40.0)
+			pos.y = clampf(pos.y, 56.0, rows * T - 40.0)
+			var cn := npc(crowd[(placed_n + k * 3) % crowd.size()], pos, ["Vai! Vai!", "Que golpe!", "Rola, rola!", "Esse é dos bons!", "Mais um round!"], "static")
+			cn.face(ring_c)
+			cn.add_to_group("arena_crowd")
+			placed_n += 1
+		ring_i += 1
 	# a mestra da arena perto da entrada
 	shop_owner("bruna", "arena", "Bruna", Vector2(cx - 60, rows * T - 52),
 		["Pronto para um duelo?", "Prestígio se conquista luta a luta.", "Rolar na hora certa vale ouro."])

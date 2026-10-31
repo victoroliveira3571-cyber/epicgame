@@ -44,8 +44,26 @@ const PERSONAS := [
 ]
 
 
-static func persona_index(key: String) -> int:
-	return absi(key.hash()) % PERSONAS.size()
+## Persona pelo visual: PERSONAS alterna masculino (índices pares) e feminino (ímpares); criança = Sofia (7).
+static func persona_index(key: String, female: bool = false, child: bool = false) -> int:
+	if child:
+		return 7
+	var pool: Array = []
+	for i in PERSONAS.size():
+		if (i % 2 == 1) == female and i != 7:
+			pool.append(i)
+	return pool[absi(key.hash()) % pool.size()]
+
+
+static func is_female(npc: Node2D) -> bool:
+	var sheet := str(npc.get("look_key")) if str(npc.get("look_key")) != "" else str(npc.get("sheet"))
+	if Looks.has(sheet):
+		return str(Looks.of(sheet).get("body", "male")) == "female"
+	return sheet in ["Woman", "Villager3", "Villager4", "Girl"]
+
+
+static func is_child(npc: Node2D) -> bool:
+	return str(npc.get("sheet")) == "Child"
 
 
 static func key_of(npc: Node2D) -> String:
@@ -66,7 +84,7 @@ static func talk(npc: Node2D) -> void:
 	if Story.is_busy() or HUD.is_dialogue_open():
 		return
 	var key := key_of(npc)
-	var idx := persona_index(key)
+	var idx := persona_index(key, is_female(npc), is_child(npc))
 	var p: Array = PERSONAS[idx]
 	var who := "rua_%d_%d" % [idx, absi(key.hash()) % 997]
 	npc.add_to_group("speaker_" + who)

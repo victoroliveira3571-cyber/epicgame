@@ -46,7 +46,7 @@ static func presets() -> Dictionary:
 		{"oculos": ["oc_meia_lua"], "wrinkles": true, "extras": [["npc_torso_aprons_apron_full", "rose"]]})
 	p["helena"] = _l("female", "human_female", "amber", "blue", "black", "cab_rabo_alto",
 		["camisa_social", "navy"], ["npc_legs_skirt_straight", "navy"], ["sapato_amarrar", "black"],
-		{"oculos": ["oc_redondo"], "extras": [["npc_torso_jacket_tabard", "blue"], ["npc_neck_amulet_star", ""]]})
+		{"oculos": ["oc_redondo"], "extras": [["npc_torso_jacket_tabard", "blue"]]})
 	p["osvaldo"] = _l("male", "plump", "taupe", "brown", "gray", "cab_careca",
 		["moletom", "bluegray"], ["calca", "walnut"], ["bota", "black"],
 		{"barba": ["bar_cheia"], "cabeca": ["capuz_saco", "maroon"], "wrinkles": true})
@@ -95,6 +95,22 @@ static func presets() -> Dictionary:
 		["manga_longa", "tan"], ["calca_larga", "charcoal"], ["sandalia", "black"],
 		{"weapon": "s_staff", "expr": "closed", "wrinkles": true,
 		"extras": [["npc_cape_tattered", "white"], ["npc_belt_robe", "tan"], ["npc_neck_scarf", "white"]]})
+	# ---- laboratório (aliados cômicos)
+	p["cientista"] = _l("male", "elderly_male", "light", "blue", "white", "cab_afro",
+		["camisa_social", "white"], ["calca_social", "slate"], ["sapato", "black"],
+		{"barba": ["npc_beards_bigstache", "white"], "oculos": ["oc_redondo"], "wrinkles": true,
+		"extras": [["npc_torso_jacket_trench", "white"], ["npc_belt_formal", "black"]]})
+	p["pipeta"] = _l("female", "human_female", "amber", "green", "pink", "cab_coque_alto",
+		["camiseta", "teal"], ["calca", "navy"], ["bota", "black"],
+		{"oculos": ["oc_nerd"], "extras": [["npc_torso_aprons_apron_full", "white"], ["npc_arms_gloves", "green"]]})
+	p["tonico"] = _l("male", "plump", "olive", "brown", "ginger", "cab_baguncado",
+		["camiseta", "orange"], ["calca_larga", "brown"], ["bota", "brown"],
+		{"barba": ["bar_por_fazer"], "oculos": ["oc_escuro"], "extras": [["npc_torso_aprons_overalls", "leather"]]})
+	p["rei_demonio"] = _l("muscular", "human_male", "lavender", "red", "black", "cab_raspado",
+		["regata", "black"], ["calca", "maroon"], ["bota", "black"],
+		{"weapon": "waraxe", "cabeca": ["coroa", "gold"],
+		"extras": [["npc_cape_tattered", "maroon"], ["npc_belt_leather", "black"]]})
+	p["rei_demonio"]["equip"]["fantasia"] = "fan_orc"     # rosto de presas na pele lilás: o demônio
 	p["bruna"] = _l("female", "human_female", "amber", "green", "carrot", "cab_rabo_alto",
 		["regata", "maroon"], ["calca", "leather"], ["bota", "black"],
 		{"weapon": "spear", "gear": {"armor": 1, "boots": 2}, "extras": [["npc_cape_trim", "red"], ["npc_belt_leather", "leather"]]})
@@ -158,7 +174,7 @@ const SPEAKER_LOOK := {
 	"pietro": "pietro", "ivo": "ivo", "lin": "lin", "aldric": "aldric", "vizinho": "vizinho",
 	"cavaleiro": "aldric", "ferreiro": "ferreiro", "armeiro": "armeiro", "costureira": "costureira",
 	"estalajadeiro": "estalajadeiro", "mestre_cla": "mestre_cla", "bibliotecaria": "bibliotecaria",
-	"recepcionista": "recepcionista", "guarda": "guarda", "arena": "bruna", "bibliotecario": "bibliotecario",
+	"recepcionista": "recepcionista", "rei": "rei_demonio", "cientista": "cientista", "pipeta": "pipeta", "tonico": "tonico", "guarda": "guarda", "arena": "bruna", "bibliotecario": "bibliotecario",
 }
 
 

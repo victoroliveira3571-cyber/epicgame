@@ -23,7 +23,7 @@ BOOK_PAL = [C("8c2f39"), C("2f5d62"), C("c7923e"), C("3d3a6b"), C("5b7a3a"), C("
 WOOD = [C("94603a"), C("b9814e"), C("6f4529"), C("4a2d1a")]   # tampo, brilho, frente, sombra
 # quadril do herói (x, y) em pixels de arte; cadeira em x-23, tampo da mesa de x+12 em diante
 HIP = {"livraria": (145, 148), "cafeteria": (145, 153), "estudo": (145, 151), "natureza": (165, 177),
-       "casa": (145, 150), "taverna": (145, 153)}
+       "casa": (145, 150), "taverna": (145, 153), "cela": (145, 151)}
 
 
 def prop(name):
@@ -691,6 +691,75 @@ def taverna():
     return bg, fg
 
 
+# ================================================================ CELA (cumprindo a pena estudando)
+def cela():
+    bg, fg = canvas(W, H), canvas(W, H)
+    # parede de pedra em blocos
+    rect(bg, 0, 0, W - 1, 160, C("3a3842"))
+    r = random.Random(9)
+    for row in range(0, 160, 12):
+        off = 0 if (row // 12) % 2 == 0 else 14
+        for x in range(-off, W, 28):
+            c = [C("4c4a56"), C("45434e"), C("524f5c"), C("403e48")][r.randint(0, 3)]
+            box(bg, max(0, x + 1), row + 1, min(W - 1, x + 26), row + 11, c, mix(c, C("ffffff"), 0.08), mix(c, C("000000"), 0.25), outline=C("26242c"))
+    # musgo e manchas de umidade
+    for i in range(14):
+        x, y = r.randint(0, W - 8), r.randint(100, 156)
+        rect(bg, x, y, x + r.randint(2, 6), y + 1, C("3e5a44"))
+    # janela gradeada no alto, com lua
+    wx0, wy0, wx1, wy1 = 238, 22, 302, 66
+    vgrad(bg, wx0, wy0, wx1, wy1, [C("0d1230"), C("1a2350"), C("2b3668")])
+    stars(bg, wx0 + 2, wy0 + 2, wx1 - 2, wy1 - 6, 14, 5, [C("ffffe8"), C("c8d8ff")])
+    glow_patch(bg, 286, 34, 16, C("c8d8ff"), 0.4)
+    ellipse(bg, 280, 28, 292, 40, C("f0f4ff"))
+    for k in range(5):
+        rect(bg, wx0 + 6 + k * 12, wy0, wx0 + 8 + k * 12, wy1, C("18181f"))
+    for (a, b, c, d) in ((wx0 - 3, wy0 - 3, wx1 + 3, wy0 - 1), (wx0 - 3, wy1 + 1, wx1 + 3, wy1 + 3),
+                         (wx0 - 3, wy0 - 3, wx0 - 1, wy1 + 3), (wx1 + 1, wy0 - 3, wx1 + 3, wy1 + 3)):
+        rect(bg, a, b, c, d, C("26242c"))
+    # tocha na parede
+    box(bg, 204, 84, 208, 104, C("3a2418"), None, C("1e140c"))
+    box(bg, 200, 80, 212, 84, C("5a5a64"), C("7a7a84"), C("3a3a44"))
+    poly(bg, [(201, 80), (211, 80), (206, 66)], C("ff9a2e"))
+    poly(bg, [(203, 80), (209, 80), (206, 72)], C("ffe08a"))
+    glow_patch(bg, 206, 76, 46, C("ffa040"), 0.32)
+    # correntes penduradas
+    for cx in (40, 52):
+        for k in range(7):
+            ellipse(bg, cx - 2, 20 + k * 6, cx + 2, 25 + k * 6, C("6a6a74"))
+    # catre de palha (direita)
+    box(bg, 318, 136, 392, 150, C("5a4630"), C("7a6040"), C("3a2a1a"))
+    for k in range(10):
+        line(bg, (322 + k * 7, 134), (319 + k * 7, 140), C("c8a85a"))
+    rect(bg, 318, 130, 392, 136, C("b89a52"))
+    box(bg, 322, 150, 326, 160, C("3a2a1a"))
+    box(bg, 384, 150, 388, 160, C("3a2a1a"))
+    # chão de pedra
+    vgrad(bg, 0, 160, W - 1, H - 1, [C("34323a"), C("2a2830"), C("1c1a22")])
+    hline(bg, 0, W - 1, 160, OUT)
+    for y in range(166, H, 9):
+        hline(bg, 0, W - 1, y, C("16141a"))
+        for x in range((y * 13) % 40, W, 40):
+            vline(bg, x, y + 1, min(H - 1, y + 8), C("16141a"))
+    # luar entrando pela janela
+    light_poly(bg, [(238, 66), (302, 66), (360, 190), (180, 190)], C("8aa0ff"), 0.10)
+    # grade da cela na frente, à esquerda (camada da frente: cobre só a borda, não o herói)
+    for k in range(5):
+        bx = 6 + k * 14
+        box(fg, bx, 0, bx + 4, H - 1, C("18181f"), C("4a4a56"), C("0c0c12"))
+    box(fg, 0, 40, 76, 44, C("18181f"), C("4a4a56"), C("0c0c12"))
+    box(fg, 0, 150, 76, 154, C("18181f"), C("4a4a56"), C("0c0c12"))
+    # cadeira e mesa rústica (mesma escala das outras cenas), vela e caneca de lata
+    hx, hy = HIP["cela"]
+    chair_back(bg, hx - 23, hy)
+    desk(bg, fg, hx + 12, hx + 120, hy - 8, 192, [C("6f5a48"), C("8a7660"), C("4a3a2c"), C("2a1e14")])
+    candle(bg, 252, 143, 12)
+    glow_patch(bg, 252, 128, 34, C("ffb860"), 0.3)
+    for k in range(2):
+        box(bg, 216 + k * 2, 138 - k * 4, 240 + k * 2, 143 - k * 4, C("d8ccb0"), C("efe3c2"), C("a89878"))
+    return bg, fg
+
+
 def limit_palette(im, n=32):
     """Reduz para no máximo n cores (sem pontilhado), mantendo a transparência."""
     alpha = im.getchannel("A")
@@ -710,7 +779,12 @@ def save(name, pair):
 
 
 if __name__ == "__main__":
+    import sys
     os.makedirs(OUTDIR, exist_ok=True)
+    if len(sys.argv) > 1:          # só as cenas pedidas: python3 tools/gen_pomodoro_bg.py cela
+        for name in sys.argv[1:]:
+            save(name, globals()[name]())
+        sys.exit(0)
     save("livraria", livraria())
     save("cafeteria", cafeteria())
     save("natureza", natureza())

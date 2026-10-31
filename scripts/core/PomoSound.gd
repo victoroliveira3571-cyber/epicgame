@@ -19,7 +19,7 @@ const GENRE_EXTRA := {
 }
 ## Gênero padrão de cada cenário (o Victor pode trocar na janela).
 const SCENE_GENRE := {"cafeteria": "lofi", "estudo": "motivacao", "livraria": "classica", "natureza": "classica",
-	"casa": "lofi", "taverna": "medieval"}
+	"casa": "lofi", "taverna": "medieval", "cela": "motivacao"}
 
 ## Sons de ambiente: nome, volume padrão (0..1) e arquivo alternativo já existente no jogo.
 const AMBIENTS := {
@@ -44,6 +44,7 @@ const SCENE_AMBIENTS := {
 	"natureza": [["campo", true], ["passaros", true], ["agua", true], ["vento", false], ["fogueira", false], ["acoes", true]],
 	"casa": [["chuva", "noite"], ["vento", false], ["lareira", false], ["escrita", false], ["acoes", true]],
 	"taverna": [["conversa", true], ["copos", true], ["lareira", true], ["chuva", false], ["acoes", true]],
+	"cela": [["escrita", true], ["vento", true], ["chuva", "noite"], ["acoes", true]],
 }
 ## Eventos curtos da cena (dentro de AMB_DIR, prefixo fx_).
 const EVENTS := ["xicara", "gole", "pagina", "livro"]

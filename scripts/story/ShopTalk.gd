@@ -70,6 +70,30 @@ const INTROS := {
 	],
 }
 
+const INTROS_LAB := {
+	"cientista": [
+		["narr", "Um estalo, uma nuvem verde e um cheiro de ovo queimado. No meio da fumaça, um senhor de cabelo arrepiado tosse e sorri."],
+		["cientista@happy", "Cof! Cof! Visitante! Bem-vind{o} ao Laboratório do Dr. Faísca! Não repare a explosão, ela é decorativa."],
+		["cientista", "Aqui eu transformo o que os monstros deixam para trás em coisas úteis: gosma, pelo, asa, osso, essência da Névoa e cristal arcano."],
+		["cientista", "Com eles eu faço poções de cura, tônicos que turbinam seu estudo e... meus favoritos... LIVROS DE MAGIA!"],
+		["cientista@happy", "O Tônico da Memória dá mais XP nas suas próximas sessões de foco. Mas atenção: só funciona se você ESTUDAR. Ciência não faz milagre!"],
+		["cientista", "E os livros só saem do forno se você tiver horas de foco suficientes. Magia de verdade se escreve com estudo de verdade."],
+		["tip:cientista", "Recuperação ativa: depois de estudar, feche o livro e tente explicar o assunto com as suas palavras. É o meu experimento favorito."],
+		["cientista@happy", "Use a bancada aqui do lado. E não toque no frasco rosa. Ninguém sabe o que ele faz. Nem ele."],
+	],
+	"pipeta": [
+		["pipeta@happy", "Oi! Eu sou a Pipeta, assistente oficial, anotadora oficial e apagadora de incêndios oficial."],
+		["pipeta", "O doutor é brilhante, mas esquece o que fez cinco minutos atrás. Por isso eu anoto TUDO."],
+		["tip:pipeta", "Anotar com as próprias palavras é metade do aprendizado. Copiar é só transferir tinta."],
+		["pipeta@happy", "Se precisar de ingredientes: slimes dão gosma, lobos dão pelo, morcegos dão asa e esqueletos dão osso. Cristal, só com sorte ou de monstro elite!"],
+	],
+	"tonico": [
+		["tonico@happy", "E aí! Tonico. Eu carrego caixas, mexo o caldeirão e provo as poções antes de todo mundo."],
+		["tonico", "Uma vez provei uma poção de invisibilidade. Ninguém me viu por três dias. Ou ninguém quis me ver, não sei."],
+		["tonico@happy", "Dica de quem já explodiu muita coisa: um passo de cada vez. Erva primeiro, gosma depois. Nunca o contrário."],
+	],
+}
+
 const CHATS := {
 	"ferreiro": ["Ferro frio não aceita forma. Esquente antes!", "Trouxe barras? O balcão é ali.", "Uma batida por dia. É assim com tudo."],
 	"armeiro": ["Chegou mercadoria nova, dá uma olhada.", "Quem compra escudo nunca se arrepende.", "Já subiu de nível? Talvez eu tenha liberado algo."],
@@ -78,6 +102,9 @@ const CHATS := {
 	"mestre_cla": ["Respire. Golpeie. Respire.", "A Arena espera quem treinou.", "Disciplina é fazer mesmo sem vontade."],
 	"bibliotecaria": ["Shhh. As mesas estão livres.", "Uma página por vez, querid{o}.", "Hoje uma letra voltou para o livro de geografia!"],
 	"arena": ["Pronto para mais um duelo?", "Seu prestígio está subindo, hein!", "Na Arena, quem hesita cai."],
+	"cientista": ["Eureka! Ah não, era só um soluço.", "Trouxe gosma? Eu amo gosma.", "Hoje nada explodiu. Ainda."],
+	"pipeta": ["Anotei sua última visita. E a anterior.", "O doutor está de bom humor: o cabelo ainda está em pé.", "Óculos no rosto, sempre!"],
+	"tonico": ["Quer provar algo? Eu já provei, tá seguro. Acho.", "Minha mão está verde há uma semana.", "Caixa pesada, coração leve!"],
 }
 
 
@@ -91,6 +118,9 @@ const MENU := {
 	"mestre_cla": ["Uma dica de treino", "tip"],
 	"bibliotecaria": ["Sentar para estudar", "study"],
 	"arena": ["Inscrever-me num duelo", "arena"],
+	"cientista": ["Usar a bancada de preparos", "laboratorio"],
+	"pipeta": ["Quais monstros dão cada ingrediente?", "tip_lab"],
+	"tonico": ["Usar a bancada de preparos", "laboratorio"],
 }
 const LORE := {
 	"ferreiro": ["Meu avô dizia que o ferro lembra cada martelada. Eu acredito.", "Um aprendiz me perguntou quanto tempo leva para ficar bom. Respondi: o mesmo que a lâmina leva para esfriar bem."],
@@ -99,6 +129,9 @@ const LORE := {
 	"estalajadeiro": ["Um viajante dormiu aqui três dias seguidos só para terminar um livro. Pagou com um mapa.", "No inverno passado, o Pântano soltou uma névoa que cheirava a tinta. Ninguém soube explicar."],
 	"mestre_cla": ["Já tive um aluno que lutava sem ler o adversário. Aprendeu a ler no pior dia da vida dele.", "O verdadeiro golpe secreto é voltar amanhã."],
 	"bibliotecaria": ["Alguém deixou um marcador de página com a letra 'Z' e a frase 'continuo amanhã'. Está lá até hoje.", "Já vi um estudante dormir em cima de um livro e acordar sabendo a primeira página. Lenda, claro."],
+	"cientista": ["Meu primeiro experimento transformou meu gato em... um gato mais bravo. Foi um começo.", "Inventei uma poção de lembrar onde deixei os óculos. Ela estava nos meus óculos."],
+	"pipeta": ["Uma vez o doutor tentou criar um livro que estuda sozinho. Ele dormiu em cima do livro.", "Meu caderno de anotações tem mais páginas que a biblioteca. Quase."],
+	"tonico": ["Eu era lenhador. Um dia um raio caiu no meu machado e o doutor me contratou na hora.", "Já fui sapo por dez minutos. Não recomendo, mas a vista é bonita."],
 	"arena": ["Já perdi um duelo por me achar invencível. O rival me ofereceu a mão depois. Foi a melhor lição.", "A torcida da Arena cresce com o prestígio. Dizem que na lenda lota até o telhado."],
 }
 
@@ -106,9 +139,10 @@ const LORE := {
 static func talk(id: String) -> void:
 	if Story.is_busy() or HUD.is_dialogue_open():
 		return
-	if not Story.flag("intro_" + id) and INTROS.has(id):
+	var intro: Array = INTROS.get(id, INTROS_LAB.get(id, []))
+	if not Story.flag("intro_" + id) and not intro.is_empty():
 		Story.set_flag("intro_" + id)
-		await Story.say(INTROS[id])
+		await Story.say(intro)
 		return
 	var greet: Array = CHATS.get(id, ["..."])
 	var service: Array = MENU.get(id, ["", ""])
@@ -137,6 +171,8 @@ static func _do_service(id: String, action: String) -> void:
 			await Story.say([[id, "Sente aí, esquente as mãos. Pronto: vida cheia."]])
 		"tip":
 			await Story.say([["tip:" + id, "Treino e estudo pedem o mesmo: começar pequeno, repetir e descansar. Dormir bem fixa o que você aprendeu."]])
+		"tip_lab":
+			await Story.say([[id, "Slimes, kappas e axolotes: gosma. Lobos, ursos e ratos: pelo. Morcegos e aranhas: asa. Esqueletos e crânios: osso. Névoa, sombra e chama: essência. Cristal: sorte ou elite!"]])
 		"study":
 			await Story.say([[id, "A mesa livre é a sua. Sente e abra o Pomodoro."]])
 			HUD.open_pomodoro_at("livraria")
