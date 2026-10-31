@@ -129,19 +129,19 @@ const DIALOGS := {
 		["narr", "Você recebeu o cartão Rank F da Guilda."],
 		["helena", "Sua primeira missão é simples: colha cinco ervas na Borda da Floresta."],
 		["heroi", "Só isso?"],
-		["helena", "Só isso para começar. Ah, e tem o pedágio: entrar na floresta custa 1 crédito de estudo. Crédito não é ouro. Cada hora de foco concluída no Pomodoro vale 1 crédito."],
+		["helena", "Só isso para começar. Ah, e tem o pedágio: entrar na floresta custa 1 crédito de estudo. Crédito não é ouro. Cada 45 minutos de foco concluídos no Pomodoro valem 1 crédito."],
 		["helena@happy", "Como é a sua primeira missão, a Guilda te deu 1 crédito de cortesia. Ele já está no seu cartão. Os próximos, você conquista estudando."],
-		["tip:helena", "Créditos de estudo: 1 hora de foco concluída = 1 crédito. Eles pagam o pedágio da floresta e da masmorra. Abra o Pomodoro com a tecla P."],
+		["tip:helena", "Créditos de estudo: 45 minutos de foco concluídos = 1 crédito. Cada entrada na floresta ou na masmorra custa 1, e morrer tira 1 (o saldo pode ficar negativo). Abra o Pomodoro com a tecla P."],
 		["helena", "A trilha fica no fim da avenida, a oeste. O Osvaldo cuida do portão."],
 	],
 	"c1_osvaldo_sem": [
 		["osvaldo", "Quem quer passar paga um crédito. Sem crédito, sem passagem."],
 		["osvaldo", "Ah, você ainda não estudou o bastante. Não se preocupe, todo mundo começa assim."],
 		["tip:osvaldo", "Espaçamento: estudar um pouco todo dia vale mais do que muito num dia só. O cérebro guarda melhor quando você volta ao assunto em dias diferentes."],
-		["osvaldo", "Volte com 1 crédito: uma hora de foco no Pomodoro (P). Pagou uma vez, passa o dia inteiro."],
+		["osvaldo", "Volte com 1 crédito: 45 minutos de foco no Pomodoro (P)."],
 	],
 	"c1_osvaldo_paga": [
-		["osvaldo", "Um crédito, certinho. Mas olhe: cada vez que voltar hoje, a passagem sai mais cara."],
+		["osvaldo", "Um crédito, certinho. Lembre: cada vez que entrar, é um crédito."],
 		["osvaldo", "Boa caminhada. E cuidado com os lobos jovens: são curiosos, mas mordem."],
 	],
 	"c1_pietro": [
@@ -275,7 +275,7 @@ const DIALOGS := {
 		["heroi", "Por que você não vai?"],
 		["lin", "A Névoa me reconhece e me apaga. Você ainda não."],
 		["tip:lin", "Caixa de preocupações: antes de um foco, escreva o que está pesando na cabeça e feche. Escrever sobre preocupações teve efeito pequeno, mas real, na ansiedade antes de provas. Fica no Pomodoro."],
-		["lin", "O pedágio da masmorra sobe por andar: o andar 1 custa 1 crédito, o andar 2 custa 2. Planeje seus focos."],
+		["lin", "Cada entrada na masmorra custa 1 crédito, e descer a escada também. Se cair lá dentro, perde um. Planeje seus focos."],
 	],
 	"c3_lin_volta": [
 		["lin", "As três páginas. Obrigado."],
@@ -358,7 +358,7 @@ const DIALOGS := {
 		["lin", "Eu senti a Névoa. Ela chegou ao último andar."],
 		["lin", "Antes de descer, sente-se. Respire. Depois escreva o que te preocupa e deixe no papel."],
 		["tip:lin", "Escrita para acalmar: escrever por alguns minutos, com honestidade, sobre o que preocupa teve efeito pequeno a moderado na ansiedade em estudos. Funciona melhor como hábito curto do que como solução única."],
-		["lin", "O Rei Demônio exige 8 horas de foco de quem quer enfrentá-lo. E o pedágio do andar 5 é de 5 créditos."],
+		["lin", "O Rei Demônio exige 8 horas de foco de quem quer enfrentá-lo. E lembre: cada andar que descer custa 1 crédito."],
 	],
 	# --------------------------------------------------------------------- Capítulo 5
 	"c5_escada": [

@@ -73,6 +73,9 @@ func run(dev: Node) -> void:
 	check(GameState.pomo_log.size() == logs0 + 1 and int(GameState.pomo_log[-1]["m"]) == 7 and GameState.pomo_log[-1].has("e"), "histórico com 7 min (finalizado antes)")
 	HUD.pomodoro_finish()
 	check(HUD.pomo_state == "idle", "finalizar na pausa encerra a pausa")
+	await dev.wait(0.2)
+	check(HUD.window_id == "recall", "fim do foco abre o recall obrigatório")
+	HUD.recall_submit("x".repeat(Data.RECALL_MIN_CHARS))
 	await dev.wait(1.8)
 	check(Audio.pomo_genre_playing() == "" and Audio._amb_players.is_empty(), "sem foco: playlist e ambiente param")
 	# menos de 1 minuto não conta

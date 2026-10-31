@@ -28,7 +28,7 @@ func build() -> void:
 		start_floor = 1
 	var v := UI.vbox(4)
 	add_to_body(v, Vector2(0, 0))
-	v.add_child(UI.label("Créditos de estudo: %d  (%s)    Horas de foco: %s h" % [Story.credits(), Story.regen_text(), Story._hours_text()], UI.C_ENERGY))
+	v.add_child(UI.label("Créditos de estudo: %d  (%s)    Horas de foco: %s h" % [Story.credits(), "1 por entrada", Story._hours_text()], UI.C_ENERGY))
 	v.add_child(UI.hline())
 	var col := scroll_column(Vector2(0, 22), Vector2(540, 150))
 	for f in floors:
@@ -38,7 +38,7 @@ func build() -> void:
 		if not unlocked:
 			sub = "Liberado no capítulo %d" % int(info.get("chapter", 6)) if f <= Data.STORY_LAST_FLOOR else "Chegue ao andar anterior"
 		else:
-			sub = "Entrada: " + Story.entry_text("andar_%d" % f, Data.floor_toll(f))
+			sub = "Entrada: 1 crédito"
 		if info.has("boss"):
 			var bd := Data.boss_def(info["boss"])
 			sub += "  -  Chefe: %s" % bd.get("name", "")
@@ -65,6 +65,6 @@ func build() -> void:
 	if not Story.floor_unlocked(1):
 		bottom.add_child(UI.wrap_label("A masmorra abre no capítulo 3. Siga o objetivo da história.", UI.C_BAD, 530))
 	elif not can:
-		bottom.add_child(UI.wrap_label("Faltam créditos: estude no Pomodoro (P), 1 crédito por hora de foco (faltam %d min), ou espere a recuperação: 1 crédito a cada %d min (%s)." % [Story.minutes_to_next_credit(), Data.CREDIT_REGEN_MIN, Story.regen_text()], UI.C_BAD, 530))
+		bottom.add_child(UI.wrap_label("Faltam créditos: estude no Pomodoro (P), 1 crédito a cada %d min de foco (faltam %d min)." % [Data.MINUTES_PER_CREDIT, Story.minutes_to_next_credit()], UI.C_BAD, 530))
 	else:
-		bottom.add_child(UI.wrap_label("Cada entrada no mesmo andar no mesmo dia fica mais cara (primeira: pedágio; segunda: x3; depois +2x a cada vez). Descer pela escada cobra a entrada do próximo andar.", UI.C_DIM, 530))
+		bottom.add_child(UI.wrap_label("Toda entrada custa 1 crédito, e descer pela escada também. Se você morrer, perde 1 crédito (o saldo pode ficar negativo).", UI.C_DIM, 530))

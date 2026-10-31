@@ -56,7 +56,7 @@ func start_new_game(hero: String, father: String, mother: String, gender: String
 	GameState.story = {
 		"started": true, "hero": hero, "father": father, "mother": mother, "gender": gender,
 		"chapter": 1, "step": "c1_casa", "flags": {}, "rank": 0, "pets": [], "pet": "",
-		"credits": 1, "credit_min": 0, "focus_min": 0, "entries": {}, "regen_t": int(Time.get_unix_time_from_system()),
+		"credits": 1, "credit_min": 0, "focus_min": 0, "entries": {},
 		"cards": [], "bank": {},
 		"worries": [], "herbs": 0, "pages": 0,
 	}
@@ -120,7 +120,7 @@ func credits() -> int:
 	return int(st().get("credits", 0))
 
 
-## Chamado ao concluir (ou finalizar) um foco: soma as horas e dá 1 crédito a cada 60 min.
+## Chamado ao concluir (ou finalizar) um foco: soma as horas e dá 1 crédito a cada 45 min (Data.MINUTES_PER_CREDIT).
 func add_focus_minutes(minutes: int) -> int:
 	if not started() or minutes <= 0:
 		return 0
@@ -173,64 +173,24 @@ func pay_entry(key: String, base: int) -> bool:
 	return true
 
 
-## Texto curto do custo: "1 crédito" / "3 créditos (já entrou 1x hoje)".
+## Texto curto do custo: "1 crédito".
 func entry_text(key: String, base: int) -> String:
 	var cost := entry_cost(key, base)
-	var n := entries_today(key)
-	var t := "%d crédito%s" % [cost, "s" if cost != 1 else ""]
-	if n > 0:
-		t += " (já entrou %dx hoje)" % n
-	return t
+	return "%d crédito%s" % [cost, "s" if cost != 1 else ""]
 
 
-# ------------------------------------------------------------------ Recuperação de créditos
-var _regen_check: float = 0.0
-
-
-func _process(delta: float) -> void:
-	_regen_check -= delta
-	if _regen_check > 0.0:
-		return
-	_regen_check = 1.0
-	tick_regen()
-
-
-## 1 crédito a cada Data.CREDIT_REGEN_MIN minutos de relógio, até Data.CREDIT_REGEN_CAP.
-func tick_regen() -> void:
+# ------------------------------------------------------------------ Morte
+## Morrer custa um crédito; sem saldo o jogador fica negativo até recuperar com foco.
+func lose_credit_on_death() -> void:
 	if not started():
 		return
-	var now := int(Time.get_unix_time_from_system())
-	var period := Data.CREDIT_REGEN_MIN * 60
-	var t := int(st().get("regen_t", 0))
-	if t <= 0 or t > now:
-		st()["regen_t"] = now
-		return
-	if credits() >= Data.CREDIT_REGEN_CAP:
-		st()["regen_t"] = now     # cheio: o relógio só volta a contar quando gastar
-		return
-	var gained := (now - t) / period
-	if gained <= 0:
-		return
-	var add := mini(gained, Data.CREDIT_REGEN_CAP - credits())
-	st()["credits"] = credits() + add
-	st()["regen_t"] = t + gained * period if credits() < Data.CREDIT_REGEN_CAP else now
-	HUD.show_toast("+%d crédito%s recuperado%s com o tempo (total %d)" % [add, "s" if add > 1 else "", "s" if add > 1 else "", credits()], UI.C_ENERGY)
+	st()["credits"] = credits() - Data.DEATH_CREDIT_LOSS
+	var c := credits()
+	var msg := "Você caiu: -%d crédito de estudo." % Data.DEATH_CREDIT_LOSS
+	if c < 0:
+		msg += " Saldo %d: estude %d min de foco por crédito para sair do vermelho." % [c, Data.MINUTES_PER_CREDIT]
+	HUD.show_toast(msg, UI.C_BAD)
 	_save()
-
-
-## Segundos até o próximo crédito recuperado (-1 = cheio, não recupera).
-func seconds_to_regen() -> int:
-	if credits() >= Data.CREDIT_REGEN_CAP:
-		return -1
-	var t := int(st().get("regen_t", int(Time.get_unix_time_from_system())))
-	return maxi(0, t + Data.CREDIT_REGEN_MIN * 60 - int(Time.get_unix_time_from_system()))
-
-
-func regen_text() -> String:
-	var s := seconds_to_regen()
-	if s < 0:
-		return "Recuperação cheia (%d)" % Data.CREDIT_REGEN_CAP
-	return "+1 em %d:%02d" % [s / 60, s % 60]
 
 
 # ================================================================== Rank e pets
@@ -402,28 +362,20 @@ func _talk_osvaldo() -> void:
 	if not GameState.has_chosen_class():
 		await say([["osvaldo", "Sem cartão da Guilda, sem floresta. Registre-se primeiro, jovem."]])
 		return
-	var n := entries_today("floresta")
-	var cost := entry_cost("floresta", 1)
-	if credits() < cost:
-		if n == 0:
+	if credits() < entry_cost("floresta", 1):
+		if credits() < 0:
+			await say([["osvaldo", "Você está devendo %d crédito%s à Guilda, jovem. Estude até quitar e a trilha se abre de novo." % [-credits(), "s" if credits() < -1 else ""]]])
+		else:
 			await say("c1_osvaldo_sem")
-		else:
-			await say([["osvaldo", "Voltar de novo hoje custa %d créditos, e você tem %d. A trilha não foge: amanhã sai por um." % [cost, credits()]]])
-		HUD.show_toast("Faltam créditos: %d min de foco para o próximo (ou %s)." % [minutes_to_next_credit(), regen_text()], UI.C_ENERGY)
+		HUD.show_toast("Faltam créditos: %d min de foco para o próximo." % minutes_to_next_credit(), UI.C_ENERGY)
 		return
-	if n == 0:
-		if flag("osvaldo_pago"):
-			await say([["osvaldo", "Um crédito, por favor. Na primeira entrada do dia é o preço justo."]])
-		else:
-			await say("c1_osvaldo_paga")
-			set_flag("osvaldo_pago")
-		pay_entry("floresta", 1)
-		Game.go_to_forest("town")
-		return
-	await say([["osvaldo", "De volta? Você já passou %d %s hoje, então agora custa %d créditos. Cada volta no mesmo dia sai mais cara." % [n, "vez" if n == 1 else "vezes", cost]]])
-	HUD.confirm("Pagar %d créditos para entrar na floresta de novo hoje?" % cost, func() -> void:
-		if pay_entry("floresta", 1):
-			Game.go_to_forest("town"))
+	if flag("osvaldo_pago"):
+		await say([["osvaldo", "Um crédito, por favor. Toda entrada custa um."]])
+	else:
+		await say("c1_osvaldo_paga")
+		set_flag("osvaldo_pago")
+	pay_entry("floresta", 1)
+	Game.go_to_forest("town")
 
 
 func _talk_pietro(s: String) -> void:
@@ -547,6 +499,5 @@ func dev_start() -> void:
 	st()["step"] = "fim"
 	st()["rank"] = 4
 	st()["credits"] = 99
-	st()["regen_t"] = int(Time.get_unix_time_from_system())
 	st()["focus_min"] = 600
 	_save()

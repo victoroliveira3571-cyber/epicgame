@@ -112,7 +112,7 @@ func _skip_dialogue() -> void:
 		await dev.wait(0.1)
 
 
-## Custo progressivo: 1, 3, 5... e recuperação de 1 crédito a cada 45 min.
+## v2.2: toda entrada custa 1 crédito; 45 min de foco = 1 crédito; morrer tira 1 e o saldo pode ficar negativo.
 func travel_costs() -> void:
 	Story.st()["credits"] = 20
 	Story.st()["entries"] = {}
@@ -120,34 +120,27 @@ func travel_costs() -> void:
 	for i in 4:
 		costs.append(Story.entry_cost("floresta", 1))
 		Story.pay_entry("floresta", 1)
-	print("[v21] floresta custos: ", costs, " créditos restantes: ", Story.credits())
-	if costs != [1, 3, 5, 7]:
-		printerr("[v21] FALHA custo progressivo da floresta: ", costs)
-	Story.st()["credits"] = 40
-	var floor3: Array = []
-	for i in 3:
-		floor3.append(Story.entry_cost("andar_3", 3))
-		Story.pay_entry("andar_3", 3)
-	print("[v21] andar 3 custos: ", floor3)
-	if floor3 != [3, 9, 15]:
-		printerr("[v21] FALHA custo progressivo do andar 3: ", floor3)
-	# ontem não conta
-	Story.st()["entries"]["floresta"] = {"d": "2000-01-01", "n": 9}
-	if Story.entry_cost("floresta", 1) != 1:
-		printerr("[v21] FALHA: entradas de outro dia deveriam zerar")
-	# recuperação: 2 períodos de 45 min = +2
-	Story.st()["credits"] = 0
-	Story.st()["regen_t"] = int(Time.get_unix_time_from_system()) - 2 * 45 * 60 - 30
-	Story.tick_regen()
-	print("[v21] recuperação: ", Story.credits(), " próximo em ", Story.seconds_to_regen(), " s")
-	if Story.credits() != 2:
-		printerr("[v21] FALHA recuperação de créditos: ", Story.credits())
-	Story.st()["regen_t"] = int(Time.get_unix_time_from_system()) - 100 * 45 * 60
-	Story.tick_regen()
-	if Story.credits() != Data.CREDIT_REGEN_CAP:
-		printerr("[v21] FALHA limite da recuperação: ", Story.credits())
+	if costs != [1, 1, 1, 1] or Story.credits() != 16:
+		printerr("[v21] FALHA custo fixo da floresta: ", costs, " saldo ", Story.credits())
+	Story.pay_entry("andar_5", Data.floor_toll(5))
+	if Story.credits() != 15:
+		printerr("[v21] FALHA andar 5 deveria custar 1: ", Story.credits())
+	# morte: 1 -> 0 -> -1 -> -2; entrar exige saldo >= 1
+	Story.st()["credits"] = 1
+	Story.lose_credit_on_death()
+	Story.lose_credit_on_death()
+	Story.lose_credit_on_death()
+	if Story.credits() != -2 or Game.can_enter_floor(1):
+		printerr("[v21] FALHA saldo negativo após mortes: ", Story.credits())
+	# 45 min de foco pagam: -2 +1 = -1 (ainda sem entrar), 90 min -> 0, mais 45 -> 1
+	Story.st()["credit_min"] = 0
+	Story.add_focus_minutes(45)
+	if Story.credits() != -1:
+		printerr("[v21] FALHA 45 min = 1 crédito: ", Story.credits())
+	Story.add_focus_minutes(90)
+	if Story.credits() != 1:
+		printerr("[v21] FALHA dívida paga: ", Story.credits())
 	Story.st()["credits"] = 4
-	Story.st()["regen_t"] = int(Time.get_unix_time_from_system())
 	Story.st()["chapter"] = 4
 	Story.st()["entries"] = {"andar_1": {"d": Time.get_date_string_from_system(), "n": 2}}
 	HUD.open_window("dungeon")

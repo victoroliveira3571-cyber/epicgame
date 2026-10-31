@@ -23,6 +23,9 @@ var _finish_btn: Button
 var _mixer: Control
 var _mixer_open: bool = false
 var _track_label: Label
+var _worry_panel: Control
+var _worry_edit: TextEdit
+var _worry_open: bool = false
 
 
 ## Botão liga/desliga com uma luz (verde = ligado), para o estado ficar claro.
@@ -71,12 +74,15 @@ func build() -> void:
 	_scene = null
 	_mixer = null
 	_track_label = null
+	_worry_panel = null
 	if HUD.pomo_state == "idle":
 		_build_settings()
 	else:
 		_build_running()
 	if _mixer_open:
 		_open_mixer()
+	if _worry_open and _view_key == "run":
+		_toggle_worry(true)
 
 
 func _current_key() -> String:
@@ -149,7 +155,7 @@ func _build_settings() -> void:
 	left.add_child(UI.spacer(4))
 	var xp := int(round(focus_min * 4.0))
 	var gold := int(round(focus_min * 2.0))
-	left.add_child(UI.wrap_label("Recompensa: %d XP, %d ouro, +%d fichas de estilo e +%d min para os créditos de estudo (1 crédito por hora)" % [xp, gold, focus_min * Lpc.CREDITS_PER_MINUTE, focus_min], UI.C_GOLD, 272))
+	left.add_child(UI.wrap_label("Recompensa: %d XP, %d ouro, +%d fichas de estilo e +%d min para os créditos de estudo (1 crédito a cada %d min)" % [xp, gold, focus_min * Lpc.CREDITS_PER_MINUTE, focus_min, Data.MINUTES_PER_CREDIT], UI.C_GOLD, 272))
 	left.add_child(UI.wrap_label("Pode finalizar antes: o tempo estudado conta (proporcional).", UI.C_DIM, 272))
 	left.add_child(UI.spacer(4))
 	var start_row := UI.hbox(4)
@@ -299,6 +305,9 @@ func _build_running() -> void:
 	if not locked:
 		btns.add_child(UI.button(">", func() -> void: _step_scene(1), 16))
 	btns.add_child(_sep())
+	var worry_btn := UI.button("Preocupações", func() -> void: _toggle_worry(not _worry_open), 78)
+	worry_btn.tooltip_text = "Anote o que está te distraindo sem sair do foco"
+	btns.add_child(worry_btn)
 	btns.add_child(UI.button("Sons", func() -> void: _toggle_mixer(), 40))
 	btns.add_child(UI.button("Histórico", func() -> void: HUD.open_window("historico"), 56))
 	btns.add_child(UI.button("Voltar ao jogo", func() -> void: HUD.close_window(), 78))
@@ -339,6 +348,51 @@ func _step_scene(d: int) -> void:
 
 
 # ------------------------------------------------------------------ painel de sons
+## Caixa rápida de preocupações sobre a cena: anota o que distrai e volta ao estudo sem pausar o foco.
+func _toggle_worry(open: bool) -> void:
+	_worry_open = open
+	if _worry_panel != null and is_instance_valid(_worry_panel):
+		_worry_panel.queue_free()
+		_worry_panel = null
+	if not open:
+		return
+	var card := UI.card(Color(0.06, 0.05, 0.07, 0.94), UI.C_ORANGE)
+	card.position = Vector2(8, 62)
+	body.add_child(card)
+	_worry_panel = card
+	var v := UI.vbox(4)
+	card.add_child(v)
+	v.add_child(UI.label("Caixa de preocupações", UI.C_ORANGE_L))
+	v.add_child(UI.wrap_label("Anotou, saiu da cabeça. Volte ao estudo.", UI.C_DIM, 230))
+	_worry_edit = TextEdit.new()
+	_worry_edit.custom_minimum_size = Vector2(230, 90)
+	_worry_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_worry_edit.placeholder_text = "Preciso lembrar de..."
+	_worry_edit.add_theme_font_override("font", Pix.font(1))
+	_worry_edit.add_theme_font_size_override("font_size", 12)
+	_worry_edit.add_theme_stylebox_override("normal", UI.flat(UI.C_BG, UI.C_ORANGE, 1, Vector4(5, 3, 5, 3)))
+	_worry_edit.add_theme_stylebox_override("focus", UI.flat(UI.C_BG, UI.C_ORANGE_L, 1, Vector4(5, 3, 5, 3)))
+	v.add_child(_worry_edit)
+	var row := UI.hbox(4)
+	v.add_child(row)
+	row.add_child(UI.button("Guardar e fechar", func() -> void: _save_worry(), 100))
+	row.add_child(UI.button("Fechar", func() -> void: _toggle_worry(false), 48))
+	_worry_edit.call_deferred("grab_focus")
+
+
+func _save_worry() -> void:
+	var text := _worry_edit.text.strip_edges()
+	if text != "":
+		var worries: Array = GameState.story.get("worries", [])
+		worries.append({"d": Time.get_date_string_from_system(), "t": text})
+		while worries.size() > 30:
+			worries.pop_front()
+		GameState.story["worries"] = worries
+		GameState.save_game()
+		HUD.show_toast("Preocupação guardada. De volta ao foco.", UI.C_GOOD)
+	_toggle_worry(false)
+
+
 func _toggle_mixer() -> void:
 	_mixer_open = not _mixer_open
 	if _mixer_open:

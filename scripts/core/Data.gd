@@ -576,7 +576,7 @@ func boss_def(boss_id: String) -> Dictionary:
 
 # ------------------------------------------------------------------- Ranks e créditos
 const RANKS := ["F", "E", "D", "C", "B", "A", "S"]
-const MINUTES_PER_CREDIT := 60     # 1 crédito de estudo = 1 hora de foco concluída
+const MINUTES_PER_CREDIT := 45     # 1 crédito de estudo = 45 min de foco concluído
 
 # ------------------------------------------------------------------- Masmorra da história
 # Os 5 andares da história. "power" = força dos monstros (equivale ao andar antigo).
@@ -610,28 +610,22 @@ func floor_info(floor_n: int) -> Dictionary:
 	return out
 
 
-## Pedágio para entrar no andar: o número do andar (no máximo MAX_TOLL).
-func floor_toll(floor_n: int) -> int:
-	return clampi(floor_n, 1, MAX_TOLL)
+## Pedágio para entrar no andar: sempre ENTRY_COST.
+func floor_toll(_floor_n: int) -> int:
+	return ENTRY_COST
 
 
-# ------------------------------------------------------------------- Viagens (custo progressivo)
-# Cada entrada no MESMO lugar no MESMO dia fica mais cara (vira o dia, zera):
-#   1ª entrada = pedágio base; 2ª = base x REENTRY_SECOND_MULT; da 3ª em diante soma base x REENTRY_STEP_MULT.
-#   Floresta (base 1): 1, 3, 5, 7...   Andar 3 (base 3): 3, 9, 15...
-const REENTRY_SECOND_MULT := 3
-const REENTRY_STEP_MULT := 2
-# Recuperação: 1 crédito a cada CREDIT_REGEN_MIN minutos de relógio (conta com o jogo fechado),
-# até CREDIT_REGEN_CAP. Créditos de foco somam acima do limite normalmente.
-const CREDIT_REGEN_MIN := 45
-const CREDIT_REGEN_CAP := 10
+# ------------------------------------------------------------------- Viagens
+# Toda entrada na floresta ou na masmorra (e cada escada) custa ENTRY_COST crédito, sempre.
+# Créditos só vêm de foco (MINUTES_PER_CREDIT). Morrer tira DEATH_CREDIT_LOSS; o saldo pode ficar
+# negativo e o foco seguinte paga a dívida antes de liberar novas entradas.
+const ENTRY_COST := 1
+const DEATH_CREDIT_LOSS := 1
 
 
-## Custo de uma viagem: `base` = pedágio do lugar, `entries_before` = entradas já feitas hoje.
-func travel_cost(base: int, entries_before: int) -> int:
-	if entries_before <= 0:
-		return base
-	return base * REENTRY_SECOND_MULT + base * REENTRY_STEP_MULT * (entries_before - 1)
+## Custo de uma viagem (fixo; os parâmetros ficam por compatibilidade com quem chama).
+func travel_cost(_base: int = 1, _entries_before: int = 0) -> int:
+	return ENTRY_COST
 
 
 # ------------------------------------------------------------------- Floresta
@@ -791,6 +785,7 @@ const FURNITURE_ORDER := ["cama", "mesa", "estante", "planta", "tapete", "lareir
 const ENERGY_MAX := 10
 const ENERGY_DAILY_MIN := 3
 const ENERGY_PER_FOCUS := 2
+const RECALL_MIN_CHARS := 120   # mínimo de caracteres do recall escrito no fim de cada foco
 const FOCUS_MIN_SESSION := 10   # foco finalizado antes da hora conta como sessão (missões) a partir daqui (min)
 const ENERGY_PER_HABIT := 1
 const ENERGY_PER_RUN := 1

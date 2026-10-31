@@ -425,6 +425,7 @@ func _on_player_died() -> void:
 	_ending = true
 	Audio.jingle("defeat", -4.0)
 	await get_tree().create_timer(2.2).timeout
+	Story.lose_credit_on_death()
 	Game.finish_run(true)
 
 

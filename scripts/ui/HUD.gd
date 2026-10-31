@@ -24,6 +24,7 @@ const WINDOWS := {
 	"criacao": "res://scripts/ui/windows/CreationWindow.gd",
 	"caderno": "res://scripts/ui/windows/NotebookWindow.gd",
 	"preocupacoes": "res://scripts/ui/windows/WorryWindow.gd",
+	"recall": "res://scripts/ui/windows/RecallWindow.gd",
 	"aparencia": "res://scripts/ui/windows/AppearanceWindow.gd",
 	"arena": "res://scripts/ui/windows/ArenaWindow.gd",
 }
@@ -567,7 +568,14 @@ func pomodoro_stop_prompt() -> void:
 		func() -> void: pomodoro_finish())
 
 
+var _recall_t: float = 0.0
+
+
 func _tick_pomodoro(delta: float) -> void:
+	_recall_t -= delta
+	if _recall_t <= 0.0:
+		_recall_t = 1.5
+		_check_recall()
 	if pomo_state == "focus" or pomo_state == "break":
 		pomo_left -= delta
 		if pomo_left <= 0.0:
@@ -589,6 +597,8 @@ func _reward_focus(minutes: int, early: bool) -> void:
 	var gold := int(round(minutes * 2.0))
 	var r := GameState.complete_focus_session(xp, gold, minutes, 0, (not early) or minutes >= Data.FOCUS_MIN_SESSION)
 	GameState.log_pomodoro(minutes, str(GameState.pomo_cfg.get("scene", "")), early)
+	GameState.pomo_cfg["recall_pending"] = {"idx": GameState.pomo_log.size() - 1, "minutes": minutes}
+	GameState.save_game()
 	Audio.jingle("pomo_done", -3.0)
 	var head := "Foco finalizado (%d min)!" % minutes if early else "Foco concluído!"
 	show_toast("%s +%d XP  +%d ouro  +%d fichas de estilo" % [head, r["xp"], r["gold"], r["credits"]], UI.C_GOLD)
@@ -599,6 +609,36 @@ func _reward_focus(minutes: int, early: bool) -> void:
 	pomo_left = pomo_total
 	Audio.pomo_update()
 	_refresh_pomodoro()
+	_check_recall.call_deferred()
+
+
+# ------------------------------------------------------------------ Recall do fim do foco
+func recall_pending() -> Dictionary:
+	var p: Variant = GameState.pomo_cfg.get("recall_pending", {})
+	return p if typeof(p) == TYPE_DICTIONARY else {}
+
+
+## Abre o recall se ele estiver pendente e nada mais ocupar a tela (também depois de reabrir o jogo).
+func _check_recall() -> void:
+	if recall_pending().is_empty() or not Story.started() or window_id == "recall":
+		return
+	if Game.input_locked and not is_window_open():
+		return   # diálogo ou cena em andamento
+	if _confirm_box != null and is_instance_valid(_confirm_box):
+		return
+	open_window("recall")
+
+
+func recall_submit(text: String) -> void:
+	var p := recall_pending()
+	var idx := int(p.get("idx", -1))
+	if idx >= 0 and idx < GameState.pomo_log.size():
+		GameState.pomo_log[idx]["r"] = text
+	GameState.pomo_cfg.erase("recall_pending")
+	GameState.save_game()
+	Audio.sfx("ui_ok")
+	show_toast("Recall guardado. Boa pausa!", UI.C_GOOD)
+	close_window()
 
 
 func _end_break(msg: String) -> void:
@@ -876,6 +916,8 @@ func is_window_open() -> bool:
 
 
 func open_window(id: String) -> void:
+	if window_id == "recall" and id != "recall":
+		return   # o recall do foco não se pula
 	if is_window_open():
 		if window_id == id:
 			return
@@ -908,6 +950,8 @@ func close_window() -> void:
 	if not is_window_open():
 		return
 	var closing_id := window_id
+	if closing_id == "recall" and not recall_pending().is_empty():
+		return
 	window.queue_free()
 	window = null
 	window_id = ""
@@ -969,7 +1013,7 @@ func _process(delta: float) -> void:
 	if _card.visible:
 		_tick_hotbar()
 		_tick_buff_labels()
-		_credit_label.tooltip_text = "Créditos de estudo: 1 por hora de foco.\nRecuperação: 1 a cada %d min (até %d). %s" % [Data.CREDIT_REGEN_MIN, Data.CREDIT_REGEN_CAP, Story.regen_text()]
+		_credit_label.tooltip_text = "Créditos de estudo: 1 a cada %d min de foco.\nFloresta e masmorra custam 1 por entrada. Morrer tira 1 (pode ficar negativo)." % Data.MINUTES_PER_CREDIT
 	if scene_kind == "dungeon":
 		if _minimap.dungeon == null or not is_instance_valid(_minimap.dungeon):
 			_minimap.bind(get_tree().get_first_node_in_group("dungeon"))

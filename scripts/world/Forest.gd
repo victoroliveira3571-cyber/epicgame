@@ -637,6 +637,7 @@ func _spawn_player() -> void:
 func _on_player_died() -> void:
 	Audio.jingle("defeat", -4.0)
 	await get_tree().create_timer(2.2).timeout
+	Story.lose_credit_on_death()
 	GameState.revive_after_defeat()
 	HUD.show_toast("Você desmaiou na floresta. Pietro te trouxe de volta para a cidade.", UI.C_BAD)
 	Game.go_to_town("forest")
