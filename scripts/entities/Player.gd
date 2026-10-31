@@ -130,6 +130,37 @@ func _refresh_equipment_visual() -> void:
 
 
 # ====================================================================== Loop
+var _step_t: float = 0.0
+
+
+## Som da magia de explosão: relâmpago, magia forte (várias explosões ou dano alto) ou fogo.
+func _blast_sound(sk: Dictionary) -> String:
+	if int(sk.get("repeat", 1)) > 1 or float(sk.get("mult", 1.0)) >= 3.0:
+		return "magia_forte"
+	return "magia_raio" if str(sk.get("fx", "")) == "thunder" else "magia_fogo"
+
+
+## Passos do herói (andando, não rolando): o som segue o lugar. Na floresta, a zona escolhe
+## entre grama e árvores (Audio.forest_step, ajustado por Forest._check_zone).
+func _footsteps(delta: float, speed_now: float) -> void:
+	if speed_now < 40.0:
+		_step_t = 0.0
+		return
+	_step_t -= delta
+	if _step_t > 0.0:
+		return
+	_step_t = 0.42 * (120.0 / maxf(speed_now, 60.0))
+	var id := "passos_heroi"
+	match HUD.scene_kind:
+		"dungeon":
+			id = "passos_masmorra"
+		"forest":
+			id = Audio.forest_step
+		"interior":
+			id = "passos_interior"
+	Audio.novo(id, -10.0, 0.06)
+
+
 func _physics_process(delta: float) -> void:
 	if state == State.DEAD:
 		velocity = Vector2.ZERO
@@ -151,6 +182,8 @@ func _physics_process(delta: float) -> void:
 			velocity = move_vel + knock
 			knock = knock.move_toward(Vector2.ZERO, 600.0 * delta)
 			move_and_slide()
+			# só anda quando há comando de movimento: a inércia (move_vel) ainda alta ao parar não conta
+			_footsteps(delta, move_vel.length() if input.length() > 0.1 else 0.0)
 			if not locked:
 				_handle_actions()
 		State.DODGE:
@@ -268,7 +301,11 @@ func _attack() -> void:
 	swing_time = 0.16
 	_play_attack_anim(family, heavy)
 	attacked.emit()
-	Audio.sfx("swing_combo" if heavy and not Data.CLASSES[GameState.player_class]["ranged"] else ("swing3" if heavy else ("swing1" if combo % 2 == 1 else "swing2")), -4.0)
+	if Data.CLASSES[GameState.player_class]["ranged"]:
+		Audio.sfx("swing3" if heavy else ("swing1" if combo % 2 == 1 else "swing2"), -4.0)
+	else:
+		Audio.novo("ataque_espada", -4.0)
+	Audio.voice.hero("attack_big" if heavy else "attack", 0.85 if heavy else 0.3, 0.9 if heavy else 1.4)
 	if Data.CLASSES[GameState.player_class]["ranged"]:
 		_shoot(heavy)
 	else:
@@ -380,7 +417,7 @@ func _shoot(heavy: bool) -> void:
 	p.knockback = 70.0
 	p.radius = 4.5
 	if is_mage:
-		Audio.sfx("magic1", -4.0)
+		Audio.novo("ataque_mago", -4.0)
 	else:
 		Audio.sfx("launch", -2.0)
 	knock -= dir * 25.0
@@ -396,6 +433,7 @@ func _start_dodge() -> void:
 	dodge_time_left = DODGE_TIME
 	dodge_cd_left = DODGE_COOLDOWN
 	invuln = DODGE_TIME + 0.06
+	Audio.voice.hero("roll", 0.45, 1.2)
 	_ghost_timer = 0.0
 	knock = Vector2.ZERO
 	Audio.sfx2("whoosh", -6.0, 0.12)
@@ -447,7 +485,7 @@ func _cast_skill() -> void:
 			Fx.shake_camera(camera, 2.0, 0.15)
 			invuln = maxf(invuln, 0.15)
 		"luz":
-			Audio.sfx("heal")
+			Audio.novo("magia_cura", -3.0)
 			Fx.fx(world, "aura", center + Vector2(0, -2), 1.8, 0.0, Color(1, 0.95, 0.6))
 			Fx.ring(world, center, 42.0, Color(1, 0.95, 0.6), 0.4)
 			GameState.heal(int(GameState.get_max_hp() * 0.3))
@@ -524,14 +562,14 @@ func _cast_slot(slot: String) -> void:
 		"blast":
 			var t := _best_target(190.0, 70.0)
 			var aim: Vector2 = (t.global_position + Vector2(0, -4)) if t != null else (center + facing.normalized() * float(sk.get("dist", 60.0)))
-			Audio.sfx("magic3")
+			Audio.novo(_blast_sound(sk), -3.0)
 			for i in int(sk.get("repeat", 1)):
 				var at := aim + (Vector2(randf_range(-28.0, 28.0), randf_range(-18.0, 18.0)) if i > 0 else Vector2.ZERO)
 				Fx.fx(world, "circle_o", at, 1.2, 0.0, Color(col, 0.9))
 				await get_tree().create_timer(float(sk.get("delay", 0.2))).timeout
 				if state == State.DEAD or not is_inside_tree():
 					return
-				Audio.sfx("explosion", -4.0)
+				Audio.sfx("explosion", -9.0)
 				Fx.fx(world, str(sk.get("fx", "explosion")), at + Vector2(0, -6), 1.5, 0.0, col)
 				Fx.shake_camera(camera, 2.5, 0.15)
 				_area_damage(at, float(sk["radius"]), mult, float(sk.get("kb", 100.0)))
@@ -564,7 +602,10 @@ func _cast_slot(slot: String) -> void:
 				p.knockback = 60.0
 			_swing_visual(base_dir, false)
 		"buff":
-			Audio.sfx("heal" if sk.has("heal_pct") else "magic2")
+			if sk.has("heal_pct"):
+				Audio.novo("magia_cura", -3.0)
+			else:
+				Audio.sfx("magic2")
 			Fx.fx(world, str(sk.get("fx", "aura")), center, 1.5, 0.0, col)
 			Fx.ring(world, center, 36.0, col, 0.35)
 			if sk.has("heal_pct"):
@@ -620,11 +661,11 @@ func _use_quick(kind: String) -> void:
 	if GameState.use_item(item_id):
 		var it: Dictionary = Data.get_item(item_id)
 		if kind == "potion":
-			Audio.sfx("heal", -2.0)
+			Audio.novo("pocao", -2.0)
 			Fx.fx(world, "aura", global_position + Vector2(0, -14), 1.2, 0.0, Color(0.6, 1, 0.7))
 			Fx.float_text(world, "+%d" % (GameState.hp - before), global_position + Vector2(0, -36), Color("7ef08a"), 8)
 		else:
-			Audio.sfx("powerup", -4.0)
+			Audio.novo("comida", -4.0)
 			Fx.fx(world, "boost", global_position + Vector2(0, -16), 0.9, 0.0, Color(1, 0.9, 0.6))
 			Fx.float_text(world, "Fome +%d" % int(it.get("hunger", 0)), global_position + Vector2(0, -36), Color("ffcf6a"), 8)
 			if it.has("buff"):
@@ -649,6 +690,7 @@ func hurt(raw_damage: float, from_pos: Vector2, knockback_strength: float = 90.0
 	Fx.float_text(world, "-%d" % amount, global_position + Vector2(0, -36), Color("ff6a5a"), 8)
 	Fx.burst(world, global_position + Vector2(0, -14), Color(1, 0.35, 0.3), 5, 34.0, 0.3)
 	Audio.sfx("hurt", -2.0)
+	Audio.voice.hero("hurt", 0.8, 0.5)
 	Game.hit_stop(0.05)
 	return true
 
@@ -664,6 +706,7 @@ func _on_died() -> void:
 	sprite.play("hurt_down", true)
 	sprite.modulate = Color.WHITE
 	Audio.sfx("die")
+	Audio.voice.hero("death")
 	var tw := create_tween()
 	tw.tween_property(sprite, "modulate", Color(0.6, 0.6, 0.7, 0.9), 0.5)
 

@@ -41,6 +41,7 @@ NPC_DEFS = [
     "legs_skirt_overskirt", "legs_widepants", "legs_hose", "neck_necklace_simple", "neck_scarf", "neck_amulet_star",
     "neck_amulet_cross", "neck_capeclip", "beards_winter", "beards_bigstache", "beards_french", "quiver",
     "hat_helmet_horned", "hat_helmet_barbarian", "arms_gloves",
+    "head_horns_demon", "wings_bat", "tail_lizard",   # Rei Demônio
 ]
 
 # Equipamento visível por slot e tier (0..5). Cada entrada: (definições, material, paleta de metal/cor)

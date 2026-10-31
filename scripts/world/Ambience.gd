@@ -12,6 +12,7 @@ var _night: bool = false
 var _check: float = 0.0
 var _bird_t: float = 4.0
 var _owl_t: float = 12.0
+var _last_hour: int = -1
 
 
 func _ready() -> void:
@@ -25,6 +26,7 @@ func _ready() -> void:
 		st.loop_end = int(st.get_length() * st.mix_rate)
 		_crickets.stream = st
 	_crickets.volume_db = -60.0
+	_crickets.add_to_group("world_amb")
 	add_child(_crickets)
 	_update(true)
 
@@ -43,7 +45,7 @@ func _process(delta: float) -> void:
 		_check = 5.0
 		_update(false)
 	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if player == null:
+	if player == null or Audio._world_ducked:
 		return
 	if _night:
 		_owl_t -= delta
@@ -59,6 +61,12 @@ func _process(delta: float) -> void:
 
 func _update(instant: bool) -> void:
 	var n := is_night()
+	var hour := int(forced_hour if forced_hour >= 0.0 else float(Time.get_time_dict_from_system()["hour"]))
+	# sino da cidade às 6h, 12h e 18h (só quando a hora vira, não ao entrar na cena)
+	if hour != _last_hour:
+		if _last_hour >= 0 and hour in [6, 12, 18] and HUD.pomo_state == "idle":
+			Audio.novo("sino_6_12_18", -6.0)
+		_last_hour = hour
 	if n == _night and not instant:
 		return
 	_night = n
@@ -74,7 +82,7 @@ func _one_shot(name: String, pos: Vector2, db: float) -> void:
 	var p := AudioStreamPlayer2D.new()
 	p.stream = load(Audio.SFX2_DIR + name + ".wav")
 	p.position = pos
-	p.volume_db = db
+	p.volume_db = db + Audio.sfx_gain_db()
 	p.pitch_scale = randf_range(0.9, 1.1)
 	p.max_distance = 300.0
 	get_parent().add_child(p)

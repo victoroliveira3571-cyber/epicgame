@@ -111,7 +111,7 @@ func _try_on(id: String) -> void:
 
 func _buy(id: String) -> void:
 	if GameState.buy_item(id, 1):
-		Audio.sfx2("moedas", -6.0)
+		Audio.novo("compra", -4.0)
 	else:
 		Audio.sfx("ui_error")
 

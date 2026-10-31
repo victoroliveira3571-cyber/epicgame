@@ -396,7 +396,7 @@ func show_emote(index: int) -> void:
 
 
 func _say(text: String) -> void:
-	Audio.sfx("talk", -8.0, 0.2)
+	Audio.novo("npc_som", -8.0, 0.1, 0.8)
 	if bubble != null and is_instance_valid(bubble):
 		bubble.queue_free()
 	var l := Label.new()

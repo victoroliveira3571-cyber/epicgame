@@ -8,6 +8,9 @@ const SECTIONS := [
 		"Ninja Adventure Asset Pack - pixel-boy e AAA (CC0): cidade, masmorra, monstros, itens, UI e efeitos.",
 		"Cenários do Pomodoro, interiores e paisagens: arte própria gerada por scripts (tools/).",
 		"Herói com roupas: Universal LPC Spritesheet Character Generator (autores abaixo).",
+		"Ícones do laboratório: 496 RPG icons (OpenGameArt, CC0).",
+		"Móveis da casa: LPC House Interior (Tuomo Untinen, Lanea Zimmerman e outros; CC-BY-SA 3.0 / GPL), LPC Upholstery (OpenGameArt) e Tables & Stools (Jordan Irwin; CC-BY 3.0 / OGA-BY 3.0), reduzidos e recoloridos.",
+		"Rei Demônio: chifres e cauda de Nila122 (bluecarrot16, JaidynReiman), asas de morcego de ElizaWy (JaidynReiman); OGA-BY 3.0 / CC-BY-SA 3.0 / GPL 3.0.",
 	]],
 	["Músicas do Pomodoro (Pixabay)", [
 		"Lo-fi: soundsurfer \"lofi\", Leberch \"differently (slowed + reverb)\", the_mountain \"study session\", sub_clair \"background music instrumental\".",
@@ -20,6 +23,12 @@ const SECTIONS := [
 	["Sons", [
 		"freesound_community, freesound_gamestudio, coghezzi, composiia, benvibrant, kaazoom, 666herohero e Ninja Adventure.",
 		"Sons de ambiente provisórios do Pomodoro: sintetizados (tools/gen_pomodoro_sfx.py).",
+	]],
+	["Vozes", [
+		"Herói masculino: RPG Male Adventurer voice clips (Brandon Song, OpenGameArt, CC0).",
+		"Vozes masculinas: RPG Male Vocal (konakuma, itch.io; crédito pedido pelo autor).",
+		"Vozes femininas: Female RPG Character voice pack (RiddlesYouThis, OpenGameArt; CC-BY 3.0, conferir na página).",
+		"Também: Mage e Orc Voice Pack (John Carroll) e Vocal Asset 01 - Female Mid Tone (witpop).",
 	]],
 ]
 

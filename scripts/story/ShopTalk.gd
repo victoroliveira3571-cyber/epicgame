@@ -167,7 +167,7 @@ static func _do_service(id: String, action: String) -> void:
 	match action:
 		"heal":
 			GameState.full_heal()
-			Audio.sfx("sleep", -4.0)
+			Audio.wake_up()
 			await Story.say([[id, "Sente aí, esquente as mãos. Pronto: vida cheia."]])
 		"tip":
 			await Story.say([["tip:" + id, "Treino e estudo pedem o mesmo: começar pequeno, repetir e descansar. Dormir bem fixa o que você aprendeu."]])

@@ -8,23 +8,28 @@ extends Node
 
 const PROFILES := {
 	# who: [voz, tom]  (tom < 1 grave/velho, > 1 agudo/pequeno)
-	"heroi_m": ["male", 1.0], "heroi_f": ["fem_bright", 1.0],
-	"mae": ["fem_mid", 1.0], "pai": ["male", 0.82],
-	"marta": ["fem_mid", 0.88], "helena": ["fem_bright", 1.0], "osvaldo": ["male", 0.78],
-	"pietro": ["male", 1.12], "ivo": ["male", 1.05], "lin": ["mage", 0.9], "aldric": ["orc", 0.85],
-	"vizinho": ["male", 0.92], "espirito": ["mage", 0.6], "sentinela": ["orc", 0.55],
+	"heroi_m": ["adv", 1.0], "heroi_f": ["fem_rpg", 1.0],
+	"mae": ["fem_mid", 1.0], "pai": ["male2", 0.82],
+	"marta": ["fem_mid", 0.88], "helena": ["fem_rpg", 1.0], "osvaldo": ["male2", 0.78],
+	"pietro": ["male2", 1.12], "ivo": ["male2", 1.05], "lin": ["mage", 0.9], "aldric": ["orc", 0.85],
+	"vizinho": ["male2", 0.92], "espirito": ["mage", 0.6], "sentinela": ["orc", 0.55],
 	"bibliotecario": ["mage", 0.7], "cavaleiro": ["orc", 0.8], "rei": ["orc", 0.62],
-	"corvin": ["fem_bright", 1.75], "brisa": ["fem_mid", 1.45], "lumen": ["fem_bright", 1.55], "airevis": ["mage", 1.35],
-	"espelho": ["fem_mid", 1.12], "ferreiro": ["orc", 0.95], "armeiro": ["male", 0.95],
-	"costureira": ["fem_mid", 1.06], "estalajadeiro": ["male", 0.9], "mestre_cla": ["mage", 0.8],
-	"bibliotecaria": ["fem_mid", 0.92], "arena": ["fem_bright", 0.92],
-	"cientista": ["mage", 1.25], "pipeta": ["fem_bright", 1.15], "tonico": ["orc", 1.1],
+	"corvin": ["fem_rpg", 1.75], "brisa": ["fem_mid", 1.45], "lumen": ["fem_rpg", 1.55], "airevis": ["mage", 1.35],
+	"espelho": ["fem_mid", 1.12], "ferreiro": ["orc", 0.95], "armeiro": ["male2", 0.95],
+	"costureira": ["fem_mid", 1.06], "estalajadeiro": ["male2", 0.9], "mestre_cla": ["mage", 0.8],
+	"bibliotecaria": ["fem_mid", 0.92], "arena": ["fem_rpg", 0.92],
+	"cientista": ["mage", 1.25], "pipeta": ["fem_rpg", 1.15], "tonico": ["orc", 1.1],
 }
-const FALLBACK := [["male", 1.0], ["fem_mid", 1.0], ["mage", 1.0], ["fem_bright", 1.0], ["male", 0.85], ["orc", 1.0]]
+const FALLBACK := [["male2", 1.0], ["fem_mid", 1.0], ["mage", 1.0], ["fem_rpg", 1.0], ["male2", 0.85], ["orc", 1.0]]
+const CAT_FALLBACK := {"greet": ["happy", "yes", "ask"], "yes": ["happy", "ask"], "bye": ["greet", "happy", "yes"],
+	"no": ["angry", "sad"], "angry": ["attack", "hurt", "no"], "sad": ["gameover", "death", "ask"],
+	"hurt": ["angry", "sad"], "laugh": ["happy", "yes"], "happy": ["victory", "yes", "ask"], "ask": ["happy", "yes"]}
 const BLIP_LEN := 0.085
 const BLIP_PLAYERS := 3
 
 var _reaction: AudioStreamPlayer
+var _combat: AudioStreamPlayer          # grito de ataque, dor, morte do herói
+var _combat_cd: Dictionary = {}         # evento -> instante (ms) em que pode soar de novo
 var _blips: Array[AudioStreamPlayer] = []
 var _blip_stop: Array[int] = []
 var _blip_i: int = 0
@@ -46,6 +51,9 @@ func _ready() -> void:
 	_reaction = AudioStreamPlayer.new()
 	_reaction.bus = "Master"
 	add_child(_reaction)
+	_combat = AudioStreamPlayer.new()
+	_combat.bus = "Master"
+	add_child(_combat)
 	for i in BLIP_PLAYERS:
 		var p := AudioStreamPlayer.new()
 		p.bus = "Master"
@@ -67,12 +75,32 @@ func profile(who: String) -> Array:
 		who = "heroi_f" if String(Story.st().get("gender", "m")) == "f" else "heroi_m"
 	if PROFILES.has(who):
 		return PROFILES[who]
+	var parts := who.split("_")
+	if who.begins_with("rua_") and parts.size() > 1:
+		# gente de rua: a voz segue o gênero da persona (índice ímpar = feminina, Street.PERSONAS)
+		var h := absi(who.hash())
+		var fem := int(parts[1]) % 2 == 1
+		var pool := ["fem_mid", "fem_rpg"] if fem else ["male2", "orc"]
+		return [pool[h % pool.size()], [0.95, 1.0, 1.1][h % 3]]
 	return FALLBACK[absi(who.hash()) % FALLBACK.size()]
 
 
+## Clipes de uma categoria. Se a voz não tem essa categoria, usa uma reação próxima da MESMA voz
+## (um personagem nunca troca de pessoa no meio da conversa).
 func _clips(voice: String, cat: String) -> Array:
 	var v: Dictionary = VoiceCatalog.CLIPS.get(voice, {})
-	return v.get(cat, [])
+	var clips: Array = v.get(cat, [])
+	for alt in CAT_FALLBACK.get(cat, []):
+		if not clips.is_empty():
+			break
+		clips = v.get(alt, [])
+	return clips
+
+
+## Volume das vozes (regulador do menu de pausa), em dB.
+func _gain_db() -> float:
+	var v := GameState.voice_volume
+	return linear_to_db(v) if v > 0.001 else -80.0
 
 
 func _stream(path: String) -> AudioStream:
@@ -97,6 +125,7 @@ func line_start(who: String, expr: String, text: String) -> void:
 			cat = "sad"
 		"shock":
 			cat = "ask"
+			Audio.novo("surpresa", -6.0)
 		_:
 			if who != _last_who and _starts_greeting(t):
 				cat = "greet"
@@ -115,7 +144,7 @@ func line_start(who: String, expr: String, text: String) -> void:
 		return
 	_reaction.stream = s
 	_reaction.pitch_scale = clampf(float(prof[1]), 0.5, 2.0)
-	_reaction.volume_db = -7.0
+	_reaction.volume_db = -7.0 + _gain_db()
 	_reaction.play()
 
 
@@ -142,7 +171,7 @@ func blip(who: String) -> void:
 	var p := _blips[_blip_i]
 	p.stream = s
 	p.pitch_scale = clampf(float(prof[1]) * randf_range(0.93, 1.1), 0.4, 2.2)
-	p.volume_db = -15.0
+	p.volume_db = -15.0 + _gain_db()
 	var from := randf_range(0.02, maxf(0.03, len_s - BLIP_LEN * 2.0))
 	p.play(from)
 	_blip_stop[_blip_i] = Time.get_ticks_msec() + int(BLIP_LEN * 1000.0 / p.pitch_scale)
@@ -151,3 +180,30 @@ func blip(who: String) -> void:
 
 func reset_speaker() -> void:
 	_last_who = ""
+
+
+## Voz do herói em combate (ataque, dor, morte, rolar, vitória). Masculino = pack do aventureiro,
+## feminino = pack feminino RPG (que só tem gritos de ataque ocasionais). Categorias sem clipe ficam em silêncio.
+## `chance` evita gritar a cada golpe; `cooldown` (s) é o intervalo mínimo entre dois do mesmo evento.
+func hero(event: String, chance: float = 1.0, cooldown: float = 0.0) -> void:
+	if not enabled:
+		return
+	var prof := profile("heroi")
+	if prof[0] == "fem_rpg" and event in ["attack", "attack_big"]:
+		chance *= 0.3
+	if randf() > chance:
+		return
+	var now := Time.get_ticks_msec()
+	if now < int(_combat_cd.get(event, 0)):
+		return
+	var clips: Array = VoiceCatalog.CLIPS.get(prof[0], {}).get(event, [])
+	if clips.is_empty():
+		return
+	var s := _stream(clips[randi() % clips.size()])
+	if s == null:
+		return
+	_combat_cd[event] = now + int(cooldown * 1000.0)
+	_combat.stream = s
+	_combat.pitch_scale = clampf(float(prof[1]) * randf_range(0.97, 1.03), 0.5, 2.0)
+	_combat.volume_db = -5.0 + _gain_db()
+	_combat.play()

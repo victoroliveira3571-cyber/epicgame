@@ -177,6 +177,11 @@ func sfx(name: String, volume_db: float = 0.0, pitch_var: float = 0.06) -> void:
 
 ## Sons enviados pelo Victor (assets/audio/sfx2/): ações e ambiente. Ver ASSETS.md.
 const SFX2_DIR := "res://assets/audio/sfx2/"
+## Sons enviados pelo Victor depois (assets/audio/novos/), nomeados pelo uso no jogo. Ver ASSETS.md.
+const NOVOS_DIR := "res://assets/audio/novos/"
+var _places: Dictionary = {}          # id -> AudioStreamPlayer (som de lugar em loop)
+var forest_step: String = "passos_grama"  # passos na floresta: grama ou árvores (zona)
+var _world_ducked: bool = false          # som do mundo pausado enquanto o Pomodoro toca o seu
 
 
 func sfx2(name: String, volume_db: float = 0.0, pitch_var: float = 0.05) -> void:
@@ -189,6 +194,54 @@ func sfx2(name: String, volume_db: float = 0.0, pitch_var: float = 0.05) -> void
 		_play_on_pool(stream, volume_db, pitch_var)
 
 
+## Efeito de "assets/audio/novos/<id>.mp3" (one-shot).
+func novo(id: String, volume_db: float = 0.0, pitch_var: float = 0.04, gap: float = 0.0) -> void:
+	var now := Time.get_ticks_msec()
+	if _last_played.has("n:" + id) and now - int(_last_played["n:" + id]) < maxi(60, int(gap * 1000.0)):
+		return
+	_last_played["n:" + id] = now
+	var stream := _load_stream(NOVOS_DIR + id + ".mp3")
+	if stream != null:
+		_play_on_pool(stream, volume_db, pitch_var)
+
+
+## Som de fundo em loop de um lugar (floresta, masmorra, biblioteca, casa com lareira, forja).
+## Troca com fade; "" tira o som do lugar. Com o regulador de efeitos no menu de pausa.
+func set_place_loop(id: String, volume_db: float = -10.0) -> void:
+	for old in _places.keys():
+		if old != id:
+			var p: AudioStreamPlayer = _places[old]
+			_places.erase(old)
+			var tw := create_tween()
+			tw.tween_property(p, "volume_db", -60.0, 0.8)
+			tw.tween_callback(p.queue_free)
+	if id == "" or _places.has(id):
+		return
+	var stream := _load_stream(NOVOS_DIR + id + ".mp3", true)
+	if stream == null:
+		return
+	var p := _make_player()
+	p.stream = stream
+	p.volume_db = -60.0
+	p.play(randf() * maxf(stream.get_length() - 1.0, 0.0))
+	_places[id] = p
+	p.stream_paused = _world_ducked
+	create_tween().tween_property(p, "volume_db", volume_db + sfx_gain_db(), 1.2)
+
+
+## Descansar: som de sono e, ao acordar, a voz do herói (só existe a masculina).
+func wake_up() -> void:
+	sfx("sleep", -4.0)
+	if String(Story.st().get("gender", "m")) != "f":
+		get_tree().create_timer(1.2).timeout.connect(func() -> void: novo("heroi_acorda", -4.0))
+
+
+## Volume dos efeitos (regulador do menu de pausa), em dB.
+func sfx_gain_db() -> float:
+	var v := GameState.sfx_volume
+	return linear_to_db(v) if v > 0.001 else -80.0
+
+
 ## Som de ambiente preso a um ponto do mundo (rio, bigorna, relógio, goteira). `loop` = contínuo;
 ## senão toca de vez em quando (a cada `every` segundos, com variação). Some com a distância.
 func emitter(parent: Node, pos: Vector2, name: String, volume_db: float = -8.0, loop: bool = true,
@@ -196,11 +249,13 @@ func emitter(parent: Node, pos: Vector2, name: String, volume_db: float = -8.0, 
 	var p := AudioStreamPlayer2D.new()
 	p.position = pos
 	p.stream = _load_stream(SFX2_DIR + name + ".wav", loop)
-	p.volume_db = volume_db
+	p.volume_db = volume_db + sfx_gain_db()
 	p.max_distance = max_dist
 	p.attenuation = 1.6
 	p.bus = "Master"
+	p.add_to_group("world_amb")
 	parent.add_child(p)
+	p.stream_paused = _world_ducked
 	if p.stream == null:
 		return p
 	if loop:
@@ -266,7 +321,7 @@ func _play_on_pool(stream: AudioStream, volume_db: float, pitch_var: float) -> v
 	var p := _pool[_pool_index]
 	_pool_index = (_pool_index + 1) % POOL_SIZE
 	p.stream = stream
-	p.volume_db = volume_db - 3.0
+	p.volume_db = volume_db - 3.0 + sfx_gain_db()
 	p.pitch_scale = 1.0 + randf_range(-pitch_var, pitch_var)
 	p.play()
 
@@ -282,6 +337,7 @@ func ui_click() -> void:
 func pomo_update(fade: float = 1.5) -> void:
 	var active := HUD.pomo_state != "idle" and HUD.scene_kind != "dungeon"
 	var scene := str(GameState.pomo_cfg.get("scene", "cafeteria"))
+	_duck_world(active)
 	var genre := PomoSound.scene_genre(scene) if active else ""
 	if genre == "jogo" or (genre != "" and PomoSound.tracks(genre).is_empty()):
 		genre = ""
@@ -302,6 +358,19 @@ func pomo_update(fade: float = 1.5) -> void:
 		_active_music.stream_paused = hold
 	for id in _amb_players:
 		(_amb_players[id] as AudioStreamPlayer).stream_paused = HUD.pomo_state == "paused"
+
+
+## Durante o Pomodoro (fora da masmorra) só tocam a música e o ambiente do foco: o som do mundo
+## (loops de lugar, rio, grilos) pausa junto, para não misturar com o do Pomodoro.
+func _duck_world(on: bool) -> void:
+	_world_ducked = on
+	for p in _places.values():
+		(p as AudioStreamPlayer).stream_paused = on
+	for n in get_tree().get_nodes_in_group("world_amb"):
+		if n is AudioStreamPlayer2D:
+			(n as AudioStreamPlayer2D).stream_paused = on
+		elif n is AudioStreamPlayer:
+			(n as AudioStreamPlayer).stream_paused = on
 
 
 func _play_track(fade: float) -> void:

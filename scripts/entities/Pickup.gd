@@ -54,6 +54,8 @@ func _ready() -> void:
 			var s2 := Sprite2D.new()
 			s2.texture = Pix.item_icon(item_id)
 			var it: Dictionary = Data.get_item(item_id)
+			if it.get("kind", "") != "equip" and s2.texture != null and s2.texture.get_width() > 24:
+				s2.scale = Vector2(0.5, 0.5)   # ícones de 32 px (pack CC0 do laboratório) caem no mundo do tamanho dos de 16 px
 			s2.modulate = it.get("tint", Color.WHITE) if it.get("kind", "") == "equip" else Color.WHITE
 			rarity = int(it.get("rarity", 0))
 			sprite = s2

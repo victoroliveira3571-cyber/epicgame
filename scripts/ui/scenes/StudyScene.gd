@@ -139,7 +139,8 @@ func _anim_events() -> void:
 	for m in marks:
 		if anim_t >= m[0] and not _fired.has(m[1] + str(m[0])):
 			_fired[m[1] + str(m[0])] = true
-			if sounds:
+			# na pausa a animação roda 4x mais devagar: sem som, para não ficar fora de compasso
+			if sounds and state != "paused":
 				Audio.pomo_event(m[1])
 
 

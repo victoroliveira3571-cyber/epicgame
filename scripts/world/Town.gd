@@ -86,6 +86,7 @@ func _ready() -> void:
 	add_child(canvas_mod)
 	_update_daylight()
 	Audio.play_music("town")
+	Audio.set_place_loop("")
 	HUD.on_scene_ready("town")
 	GameState.check_daily_reset()
 	# o jogo foi fechado no prólogo: volta para a casa da família

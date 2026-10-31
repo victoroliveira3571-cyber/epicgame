@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-"""Copia clipes dos packs de voz do Victor (raw_assets/audio) para assets/audio/voice/<voz>/<categoria>_<n>.wav
-e gera scripts/core/VoiceCatalog.gd. Categorias: greet, laugh, angry, sad, ask, yes, no, bye, happy, hurt.
+"""Copia clipes dos packs de voz do Victor (raw_assets/audio) para assets/audio/voice/<voz>/<categoria>_<n>.(wav|ogg)
+e gera scripts/core/VoiceCatalog.gd.
+Categorias de diálogo: greet, laugh, angry, sad, ask, yes, no, bye, happy, hurt.
+Categorias de combate do herói: attack, attack_big, death, victory, roll, gameover.
+Contextos especiais: guard (guarda prende), cast (lança magia).
+Cada personagem usa UMA voz (um pack = uma pessoa), para não misturar gente diferente no mesmo personagem.
 Uso: python3 tools/build_voices.py"""
 import os, re, shutil, glob
 
@@ -8,6 +12,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(os.path.dirname(ROOT), "raw_assets", "audio")
 OUT = os.path.join(ROOT, "assets", "audio", "voice")
 MAX_PER_CAT = 4
+MAX_BY_CAT = {"attack": 9, "attack_big": 6, "hurt": 10, "death": 3, "victory": 2, "roll": 2}
 
 
 def base(path):
@@ -15,24 +20,12 @@ def base(path):
 
 
 def mage_orc(name):
+    # sem as falas em inglês (welcome, hello, goodbye, "yes commander", "here yes", thankful, no)
     b = re.sub(r"\d+$", "", base(name))
-    return {"welcome": "greet", "hello": "greet", "hereyes": "greet", "amused": "laugh", "laugh": "laugh",
+    return {"amused": "laugh", "laugh": "laugh",
             "irritated": "angry", "angry": "angry", "tired": "sad", "sleep": "sad", "sleepy": "sad",
-            "satisfied": "happy", "thankful": "happy", "yescommand": "yes", "hit": "hurt", "damaged": "hurt",
-            "inquisitive": "ask", "sceptical": "ask", "surprised": "ask", "no": "no", "goodbye": "bye"}.get(b)
-
-
-def bright(name):
-    b = base(name)
-    t = re.sub(r"^\d+-", "", b)
-    if any(k in t for k in ["hello", "hey", "good morning", "good afternoon", "good evening"]): return "greet"
-    if "laughter" in t: return "laugh"
-    if t in ("why", "what", "actually") or "how are you" in t or "is this what" in t: return "ask"
-    if t in ("okay",) or "thank you" in t or "good thank" in t: return "yes"
-    if "goodbye" in t or "see ya" in t: return "bye"
-    if "rejection" in t or "don't wanna" in t or "feel the same" in t: return "no"
-    if "love you" in t or "under the weather" in t: return "sad"
-    return None
+            "satisfied": "happy", "hit": "hurt", "damaged": "hurt",
+            "inquisitive": "ask", "sceptical": "ask", "surprised": "ask"}.get(b)
 
 
 def mid(name):
@@ -47,37 +40,55 @@ def mid(name):
     return None
 
 
-def male(name):
-    b = base(name)
-    m = re.match(r"gmorkh-simpledialogue - \d+ - (\w+) - (.*)", b)
-    if not m:
-        return None
-    grp, rest = m.group(1), m.group(2)
-    if grp == "greetings": return "ask" if rest.startswith("hmm") else "greet"
-    if grp == "confirmation": return "yes"
-    if grp == "refusal": return "no"
-    if grp == "farewell": return "bye"
-    if grp == "completion": return "happy"
-    if grp == "miscellaneous":
-        if rest.startswith(("hmm", "uh")): return "ask"
-        if rest.startswith(("woo", "wow", "new high")): return "happy"
-        if rest.startswith(("game over", "low on")): return "sad"
-        if rest.startswith(("we're under", "enemy")): return "angry"
+def adventurer(name):
+    """RPG Male Adventurer (voz do herói): attack0-8, attackbig0-5, hurt0-9, death, victory, jump, yes, no, greet."""
+    b = re.sub(r"\d+$", "", base(name))
+    return {"attack": "attack", "attackbig": "attack_big", "hurt": "hurt", "death": "death", "victory": "victory",
+            "jump": "roll", "yes": "yes", "no": "no", "greet": "greet", "gameover": "gameover"}.get(b)
+
+
+def male_protagonist(name):
+    """RPG Male Vocal (konakuma): cumprimentos, despedidas, grunhidos. Os JP_* e frases soltas ficam de fora."""
+    b = re.sub(r"\s*\d+$", "", base(name))
+    if b.startswith(("hello", "hey", "hi", "howdy", "oh hel", "now then")): return "greet"
+    if b.startswith(("bye", "good bye", "fair well", "see ya", "see you", "when we next", "another time")): return "bye"
+    if b in ("ok", "alrighty then"): return "yes"
+    if b.startswith("no"): return "no"
+    if b.startswith("thank"): return "happy"
+    if b.startswith(("is that so", "what should", "what to")): return "ask"
+    if b in ("ouch", "ow", "grunt oof"): return "hurt"
+    if b.startswith("hiyah"): return "attack"
+    if b.startswith("pained death"): return "death"
+    if b in ("grunt gr", "grunt ra", "stupid monster death"): return "angry"
+    if b in ("grunt oh", "grunt ehh"): return "ask"
+    if b in ("grunt uhuhh", "grunt uoe"): return "sad"
+    if b.startswith("jump"): return "roll"
     return None
+
+
+def female_rpg(name):
+    """Female RPG Character voice pack: frases curtas, usadas só onde combinam com o contexto."""
+    return {"hello": "greet", "howdareyou": "angry", "colourmeunimpressed": "angry", "whodidthis": "ask",
+            "areyouhurt": "ask", "letmehelp": "yes", "stop": "no", "dramaticno": "no", "imsorry": "sad",
+            "ihavefailedyou": "sad", "wearealltired": "sad", "oww": "hurt", "gah": "hurt",
+            "comeandgetme": "attack", "takeaim": "attack", "fire": "cast", "arrestthosepeople": "guard",
+            "helpme": "hurt"}.get(base(name))
 
 
 VOICES = {
     "mage": ("johncarroll-mage-voice", mage_orc),
     "orc": ("johncarroll-orc-voice", mage_orc),
-    "fem_bright": ("cicifyre-voice-clips-bright-female", bright),
     "fem_mid": ("witpop-vocal-female-mid", mid),
-    "male": ("gmorkh-simple-dialogue-voice", male),
+    "adv": ("brandon-male-adventurer", adventurer),
+    "male2": ("konakuma-male-protagonist", male_protagonist),
+    "fem_rpg": ("riddles-female-rpg-voice", female_rpg),
 }
 
 shutil.rmtree(OUT, ignore_errors=True)
 catalog = {}
 for vid, (folder, fn) in VOICES.items():
-    files = sorted(glob.glob(os.path.join(RAW, folder, "**", "*.wav"), recursive=True))
+    files = sorted(glob.glob(os.path.join(RAW, folder, "**", "*.wav"), recursive=True)
+                   + glob.glob(os.path.join(RAW, folder, "**", "*.ogg"), recursive=True))
     cats = {}
     for f in files:
         try:
@@ -89,9 +100,10 @@ for vid, (folder, fn) in VOICES.items():
     os.makedirs(os.path.join(OUT, vid), exist_ok=True)
     catalog[vid] = {}
     for c, lst in sorted(cats.items()):
-        step = max(1, len(lst) // MAX_PER_CAT)
-        for i, f in enumerate(lst[::step][:MAX_PER_CAT]):
-            dest = "%s_%d.wav" % (c, i + 1)
+        cap = MAX_BY_CAT.get(c, MAX_PER_CAT)
+        step = max(1, len(lst) // cap)
+        for i, f in enumerate(lst[::step][:cap]):
+            dest = "%s_%d%s" % (c, i + 1, os.path.splitext(f)[1].lower())
             shutil.copy(f, os.path.join(OUT, vid, dest))
             catalog[vid].setdefault(c, []).append("res://assets/audio/voice/%s/%s" % (vid, dest))
     print(vid, {c: len(v) for c, v in catalog[vid].items()})

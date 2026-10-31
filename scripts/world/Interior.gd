@@ -129,7 +129,8 @@ func _ready() -> void:
 	var mod := CanvasModulate.new()
 	mod.color = Color(0.72, 0.7, 0.76) if id == "casa_pai" else Color(1.0, 0.94, 0.86)
 	add_child(mod)
-	Audio.play_music("interior_taverna" if id in ["restaurante", "casa_npc_1"] else ("home" if id == "casa_familia" else "interior_manor"))
+	Audio.play_music("musica_laboratorio" if id == "laboratorio" else ("interior_taverna" if id in ["restaurante", "casa_npc_1"] else ("home" if id == "casa_familia" else "interior_manor")))
+	Audio.set_place_loop("biblioteca_escrita" if id == "biblioteca" else ("ferraria_ambiente" if id == "forja" else ("lareira_casa" if id.begins_with("casa") else "")))
 	HUD.on_scene_ready("interior")
 	if id == "casa_familia" and Story.step() == "c1_casa":
 		await get_tree().create_timer(0.8).timeout
@@ -994,6 +995,7 @@ func start_duel(opp: Dictionary) -> void:
 			return
 	HUD.floor_banner("LUTEM!", Arena.rank_name() + "  -  " + str(Arena.DIFFS[int(opp["diff"])][0]))
 	Audio.sfx2("impacto", -6.0)
+	Audio.set_place_loop("arena_batalha", -12.0)
 	Game.input_locked = false
 	_duel.begin()
 	while not _duel_over and is_inside_tree():
@@ -1024,6 +1026,7 @@ func _on_duel_lost() -> void:
 
 
 func _end_duel(won: bool) -> void:
+	Audio.set_place_loop("")
 	GameState.no_death = false
 	Game.input_locked = true
 	HUD.hide_boss()

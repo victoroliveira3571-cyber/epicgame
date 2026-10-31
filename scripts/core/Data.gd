@@ -332,12 +332,12 @@ const MATERIALS := {
 # ------------------------------------------------------------------- Laboratório (Dr. Faísca)
 # Ingredientes que os monstros soltam (Loot.drop_from_enemy) e receitas da bancada (LabWindow).
 const LAB_MATERIALS := {
-	"gosma": {"name": "Gosma Viscosa", "icon": "items/resource/Water", "price": 6, "tier": 0},
-	"pelo": {"name": "Pelo de Fera", "icon": "items/resource/Branch", "price": 7, "tier": 0},
-	"asa": {"name": "Asa de Morcego", "icon": "items/resource/feather", "price": 9, "tier": 0},
-	"osso": {"name": "Fragmento de Osso", "icon": "items/resource/Rock", "price": 9, "tier": 0},
-	"essencia": {"name": "Essência da Névoa", "icon": "items/resource/BarPurple", "price": 14, "tier": 1},
-	"cristal": {"name": "Cristal Arcano", "icon": "items/resource/GemPurple", "price": 40, "tier": 2},
+	"gosma": {"name": "Gosma Viscosa", "icon": "res://assets/custom/icons/gosma.png", "price": 6, "tier": 0},
+	"pelo": {"name": "Pelo de Fera", "icon": "res://assets/custom/icons/pelo.png", "price": 7, "tier": 0},
+	"asa": {"name": "Asa de Morcego", "icon": "res://assets/custom/icons/asa.png", "price": 9, "tier": 0},
+	"osso": {"name": "Fragmento de Osso", "icon": "res://assets/custom/icons/osso.png", "price": 9, "tier": 0},
+	"essencia": {"name": "Essência da Névoa", "icon": "res://assets/custom/icons/essencia.png", "price": 14, "tier": 1},
+	"cristal": {"name": "Cristal Arcano", "icon": "res://assets/custom/icons/cristal.png", "price": 40, "tier": 2},
 }
 const LAB_DROP := {
 	"slime": "gosma", "slime_verde": "gosma", "kappa": "gosma", "axolote": "gosma", "polvo": "gosma", "polvo_vermelho": "gosma",
@@ -351,17 +351,17 @@ const LAB_DROP_CHANCE := 0.4
 const LAB_CRYSTAL_CHANCE := 0.04       # elites: 0.3
 # Itens novos do laboratório. kind tonic = efeito no estudo; book = ensina uma magia (tecla Z).
 const LAB_ITEMS := {
-	"tonico_memoria": {"name": "Tônico da Memória", "icon": "items/potion/WaterPot", "price": 60, "kind": "tonic", "sessions": 3, "pct": 0.25,
+	"tonico_memoria": {"name": "Tônico da Memória", "icon": "res://assets/custom/icons/tonico_memoria.png", "price": 60, "kind": "tonic", "sessions": 3, "pct": 0.25,
 		"desc": "+25% de XP nas próximas 3 sessões de foco do Pomodoro."},
-	"elixir_sabedoria": {"name": "Elixir da Sabedoria", "icon": "items/potion/MilkPot", "price": 45, "kind": "tonic", "buff": "sabedoria", "buff_time": 600.0,
+	"elixir_sabedoria": {"name": "Elixir da Sabedoria", "icon": "res://assets/custom/icons/elixir_sabedoria.png", "price": 45, "kind": "tonic", "buff": "sabedoria", "buff_time": 600.0,
 		"desc": "Buff Sabedoria (+20% de XP) por 10 min."},
-	"livro_chamas": {"name": "Livro de Magia: Chamas", "icon": "items/scroll/ScrollFire", "price": 150, "kind": "book", "spell": "chamas",
+	"livro_chamas": {"name": "Livro de Magia: Chamas", "icon": "res://assets/custom/icons/livro_chamas.png", "price": 150, "kind": "book", "spell": "chamas",
 		"desc": "Ensina Bola de Fogo (tecla Z)."},
-	"livro_gelo": {"name": "Livro de Magia: Gelo", "icon": "items/scroll/ScrollIce", "price": 150, "kind": "book", "spell": "gelo",
+	"livro_gelo": {"name": "Livro de Magia: Gelo", "icon": "res://assets/custom/icons/livro_gelo.png", "price": 150, "kind": "book", "spell": "gelo",
 		"desc": "Ensina Lanças de Gelo (tecla Z)."},
-	"livro_raio": {"name": "Livro de Magia: Raio", "icon": "items/scroll/ScrollThunder", "price": 220, "kind": "book", "spell": "raio",
+	"livro_raio": {"name": "Livro de Magia: Raio", "icon": "res://assets/custom/icons/livro_raio.png", "price": 220, "kind": "book", "spell": "raio",
 		"desc": "Ensina Relâmpago (tecla Z)."},
-	"livro_cura": {"name": "Livro de Magia: Cura", "icon": "items/scroll/ScrollPlant", "price": 180, "kind": "book", "spell": "cura",
+	"livro_cura": {"name": "Livro de Magia: Cura", "icon": "res://assets/custom/icons/livro_cura.png", "price": 180, "kind": "book", "spell": "cura",
 		"desc": "Ensina Bênção Curativa (tecla Z)."},
 }
 ## [resultado, quantidade, {ingrediente: qtd}, horas de foco exigidas (livros: estudo de verdade), fala do Dr. Faísca]
@@ -383,11 +383,11 @@ const UPGRADE_MATERIAL_QTY := [1, 2, 3, 3, 4]
 
 # Poções e comidas. heal_pct = % da vida máxima; heal = valor fixo mínimo.
 const CONSUMABLES := {
-	"pocao_vida": {"name": "Poção de Vida Pequena", "icon": "items/potion/LifePot", "price": 20, "heal_pct": 0.30, "heal": 35,
+	"pocao_vida": {"name": "Poção de Vida Pequena", "icon": "res://assets/custom/icons/pocao_vida.png", "price": 20, "heal_pct": 0.30, "heal": 35,
 		"desc": "Recupera 30% da vida máxima (mín. 35)."},
-	"pocao_media": {"name": "Poção de Vida", "icon": "items/potion/Medipack", "price": 70, "heal_pct": 0.60, "heal": 90,
+	"pocao_media": {"name": "Poção de Vida", "icon": "res://assets/custom/icons/pocao_media.png", "price": 70, "heal_pct": 0.60, "heal": 90,
 		"desc": "Recupera 60% da vida máxima (mín. 90).", "shop_level": 8},
-	"pocao_grande": {"name": "Elixir Vital", "icon": "items/potion/Heart", "price": 180, "heal_pct": 1.0, "heal": 200,
+	"pocao_grande": {"name": "Elixir Vital", "icon": "res://assets/custom/icons/pocao_grande.png", "price": 180, "heal_pct": 1.0, "heal": 200,
 		"desc": "Recupera toda a vida.", "shop_level": 20},
 	"pao": {"name": "Pão", "icon": "items/food/Honey", "price": 8, "hunger": 35, "desc": "Mata a fome (+35)."},
 	"onigiri": {"name": "Onigiri", "icon": "items/food/Onigiri", "price": 6, "hunger": 25, "desc": "Lanche simples (+25 de fome)."},
@@ -461,7 +461,7 @@ func _build_items() -> void:
 		it3["id"] = li
 		it3["tier"] = 1
 		ITEMS[li] = it3
-	ITEMS["erva_azul"] = {"id": "erva_azul", "name": "Erva Medicinal", "kind": "material", "tier": 0, "icon": "items/resource/Grass", "price": 4,
+	ITEMS["erva_azul"] = {"id": "erva_azul", "name": "Erva Medicinal", "kind": "material", "tier": 0, "icon": "res://assets/custom/icons/erva_azul.png", "price": 4,
 		"desc": "Erva medicinal da floresta. As lojas compram."}
 	for cid in CONSUMABLES:
 		var c: Dictionary = CONSUMABLES[cid].duplicate()
@@ -840,17 +840,33 @@ const FURNITURE := {
 	"trofeu": {"name": "Armário de Troféus", "price": 250, "desc": "+3% de crítico.", "stat": {"crit": 3.0}, "icon": "furn_trofeu", "wall": true},
 	"relogio": {"name": "Relógio Antigo", "price": 300, "desc": "+10% de XP nas sessões de foco.", "stat": {"focus_xp_pct": 0.10}, "icon": "furn_relogio", "wall": true},
 	# só decoração (sem bônus): para montar a casa do seu jeito no modo Decorar
-	"poltrona": {"name": "Poltrona de Leitura", "price": 70, "desc": "Decoração.", "stat": {}, "icon": "i_armchair"},
-	"sofa": {"name": "Sofá", "price": 110, "desc": "Decoração.", "stat": {}, "icon": "i_sofa"},
-	"comoda": {"name": "Cômoda", "price": 90, "desc": "Decoração.", "stat": {}, "icon": "i_dresser", "wall": true},
+	"poltrona": {"name": "Poltrona de Leitura", "price": 70, "desc": "Decoração.", "stat": {}, "icon": "lpc_poltrona"},
+	"sofa": {"name": "Sofá", "price": 110, "desc": "Decoração.", "stat": {}, "icon": "lpc_sofa"},
+	"comoda": {"name": "Cômoda", "price": 90, "desc": "Decoração.", "stat": {}, "icon": "lpc_comoda", "wall": true},
 	"tapete_azul": {"name": "Tapete Azul", "price": 60, "desc": "Decoração (fica no chão, gira).", "stat": {}, "icon": "p_tapete_azul", "flat": true},
 	"tatame": {"name": "Tatame", "price": 50, "desc": "Decoração (fica no chão, gira).", "stat": {}, "icon": "p_tatame", "flat": true},
 	"vaso_flores": {"name": "Vaso de Flores", "price": 30, "desc": "Decoração.", "stat": {}, "icon": "p_vaso_flores"},
 	"planta_pequena": {"name": "Planta Pequena", "price": 25, "desc": "Decoração.", "stat": {}, "icon": "p_planta_pequena"},
 	"lampiao": {"name": "Lampião", "price": 45, "desc": "Decoração (ilumina).", "stat": {}, "icon": "lampiao", "light": true},
+	# pacotes LPC de móveis (31/10/2026), reduzidos à metade por tools/build_lpc_furniture.py
+	"sofa_veludo": {"name": "Sofá de Veludo", "price": 130, "desc": "Decoração.", "stat": {}, "icon": "lpc_sofa_veludo"},
+	"sofa_imperial": {"name": "Sofá Imperial", "price": 180, "desc": "Decoração.", "stat": {}, "icon": "lpc_sofa_imperial"},
+	"banco_estofado": {"name": "Banco Estofado", "price": 60, "desc": "Decoração.", "stat": {}, "icon": "lpc_banco_estofado"},
+	"cadeira": {"name": "Cadeira Entalhada", "price": 45, "desc": "Decoração.", "stat": {}, "icon": "lpc_cadeira"},
+	"pufe": {"name": "Pufe", "price": 30, "desc": "Decoração.", "stat": {}, "icon": "lpc_pufe"},
+	"abajur": {"name": "Abajur", "price": 55, "desc": "Decoração (ilumina).", "stat": {}, "icon": "lpc_abajur", "light": true},
+	"armario": {"name": "Armário Vermelho", "price": 100, "desc": "Decoração.", "stat": {}, "icon": "lpc_armario", "wall": true},
+	"louceiro": {"name": "Louceiro", "price": 110, "desc": "Decoração.", "stat": {}, "icon": "lpc_louceiro", "wall": true},
+	"lareira_tijolos": {"name": "Lareira de Tijolos", "price": 140, "desc": "Decoração (ilumina).", "stat": {}, "icon": "lpc_lareira_tijolos", "wall": true, "light": true},
+	"barris": {"name": "Pilha de Barris", "price": 70, "desc": "Decoração.", "stat": {}, "icon": "lpc_barris"},
+	"mesa_toalha": {"name": "Mesa com Toalha", "price": 90, "desc": "Decoração.", "stat": {}, "icon": "lpc_mesa_toalha"},
+	"mesa_redonda": {"name": "Mesa Redonda", "price": 80, "desc": "Decoração.", "stat": {}, "icon": "lpc_mesa_redonda"},
+	"mesa_centro": {"name": "Mesa de Centro", "price": 40, "desc": "Decoração.", "stat": {}, "icon": "lpc_mesa_centro"},
 }
 const FURNITURE_ORDER := ["cama", "mesa", "estante", "planta", "tapete", "lareira", "trofeu", "relogio",
-	"poltrona", "sofa", "comoda", "tapete_azul", "tatame", "vaso_flores", "planta_pequena", "lampiao"]
+	"poltrona", "sofa", "comoda", "tapete_azul", "tatame", "vaso_flores", "planta_pequena", "lampiao",
+	"sofa_veludo", "sofa_imperial", "banco_estofado", "cadeira", "pufe", "abajur", "armario", "louceiro", "lareira_tijolos",
+	"barris", "mesa_toalha", "mesa_redonda", "mesa_centro"]
 
 # ---------------------------------------------------------------------- Energia
 const ENERGY_MAX := 10

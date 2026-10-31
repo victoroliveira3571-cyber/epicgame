@@ -109,8 +109,8 @@ static func presets() -> Dictionary:
 	p["rei_demonio"] = _l("muscular", "human_male", "lavender", "red", "black", "cab_raspado",
 		["regata", "black"], ["calca", "maroon"], ["bota", "black"],
 		{"weapon": "waraxe", "cabeca": ["coroa", "gold"],
-		"extras": [["npc_cape_tattered", "maroon"], ["npc_belt_leather", "black"]]})
-	p["rei_demonio"]["equip"]["fantasia"] = "fan_orc"     # rosto de presas na pele lilás: o demônio
+		"extras": [["npc_cape_tattered", "maroon"], ["npc_belt_leather", "black"], ["npc_head_horns_demon"],
+		["npc_wings_bat", "maroon"], ["npc_tail_lizard"]]})   # chifres, asas e cauda (pacotes LPC de 31/10/2026)
 	p["bruna"] = _l("female", "human_female", "amber", "green", "carrot", "cab_rabo_alto",
 		["regata", "maroon"], ["calca", "leather"], ["bota", "black"],
 		{"weapon": "spear", "gear": {"armor": 1, "boots": 2}, "extras": [["npc_cape_trim", "red"], ["npc_belt_leather", "leather"]]})

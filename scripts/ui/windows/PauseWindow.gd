@@ -5,7 +5,7 @@ extends UIWindow
 
 func _init() -> void:
 	win_title = "Pausa  -  Focus Town v3"
-	win_size = Vector2(440, 290)
+	win_size = Vector2(440, 330)
 
 
 func build() -> void:
@@ -39,6 +39,8 @@ func build() -> void:
 	v.add_child(UI.hline())
 	v.add_child(_slider("Volume geral", GameState.audio_volume, func(x: float) -> void: GameState.set_audio_volume(x)))
 	v.add_child(_slider("Volume da música", GameState.music_volume, func(x: float) -> void: GameState.set_music_volume(x)))
+	v.add_child(_slider("Efeitos", GameState.sfx_volume, func(x: float) -> void: GameState.set_sfx_volume(x)))
+	v.add_child(_slider("Vozes", GameState.voice_volume, func(x: float) -> void: GameState.set_voice_volume(x)))
 	# o botão é criado antes do clique ser ligado: a função precisa enxergar o botão já pronto
 	var mute := UI.button("Som: ligado" if not GameState.audio_muted else "Som: desligado", Callable(), 100)
 	mute.pressed.connect(func() -> void:

@@ -13,7 +13,7 @@ func build() -> void:
 	add_to_body(UI.label("Ouro: %s" % UI.fmt_int(GameState.gold), UI.C_GOLD), Vector2(0, 0))
 	var rest := UI.button("Descansar (vida cheia)", func() -> void:
 		GameState.full_heal()
-		Audio.sfx("heal")
+		Audio.wake_up()
 		HUD.show_toast("Você descansou.", UI.C_GOOD), 0)
 	rest.disabled = GameState.hp >= GameState.get_max_hp()
 	rest.position = Vector2(350, -2)

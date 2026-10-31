@@ -572,6 +572,7 @@ func _show_choice(entry: Dictionary) -> void:
 		c.queue_free()
 	var opts: Array = entry["choice"]
 	var key := String(entry.get("key", ""))
+	Audio.novo("voce_decide", -6.0)
 	for i in opts.size():
 		var b := UI.button(Story.fmt(String(opts[i])), Callable(), 220)
 		b.pressed.connect(func() -> void:

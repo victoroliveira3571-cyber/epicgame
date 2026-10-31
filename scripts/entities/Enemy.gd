@@ -301,6 +301,19 @@ func _wander_idle(delta: float) -> void:
 		facing = move_dir
 
 
+## Som ao notar o herói: elite (corrente/evolução), gosma, grandes e humanoides; os outros mantêm o rosnado antigo.
+func _aggro_sound() -> String:
+	if is_elite:
+		return "monstro_correntes"
+	if def_id in ["slime", "slime_verde", "polvo", "polvo_vermelho", "axolote", "kappa"]:
+		return "slime"
+	if def_id in ["urso", "fera", "ciclope", "reptil"]:
+		return "monstro_grande"
+	if def_id in ["esqueleto", "guardiao"]:
+		return "monstro_humanoide"
+	return ""
+
+
 func _try_aggro(dist: float, pp: Vector2) -> bool:
 	if dist > aggro_radius:
 		return false
@@ -310,7 +323,11 @@ func _try_aggro(dist: float, pp: Vector2) -> bool:
 	if _has_los or dist < 40.0:
 		state = State.CHASE
 		_alert()
-		Audio.sfx("growl" if (behavior == "melee" or behavior == "charger") and randf() < 0.5 else "alert", -10.0 if behavior == "melee" else -12.0, 0.1)
+		var snd := _aggro_sound()
+		if snd != "":
+			Audio.novo(snd, -8.0, 0.06, 1.5)
+		else:
+			Audio.sfx("growl" if (behavior == "melee" or behavior == "charger") and randf() < 0.5 else "alert", -10.0 if behavior == "melee" else -12.0, 0.1)
 		_wake_nearby()
 		return true
 	return false
@@ -583,7 +600,10 @@ func take_hit(amount: float, kb: Vector2, crit: bool, _from: Vector2 = Vector2.Z
 		Color("ffd84a") if crit else Color("ffffff"), 2 if crit else 1, 16.0 if crit else 12.0)
 	Fx.flash(sprite, Color(2.6, 1.0, 1.0) if not crit else Color(3, 2.2, 0.8), 0.1)
 	Fx.fx(w, "spark", global_position + Vector2(0, -7), 0.6 if not crit else 1.0)
-	Audio.sfx("hit_crit" if crit else ["hit1", "hit2", "hit3"][randi() % 3], -3.0 if crit else -5.0)
+	if crit:
+		Audio.sfx("hit_crit", -3.0)
+	else:
+		Audio.novo("golpe_desarmado" if str(GameState.equipped.get("weapon", "")) == "" else "golpe_arma", -5.0, 0.1)
 	if crit:
 		Audio.sfx2("impacto", -10.0, 0.1)
 	if hp <= 0.0:

@@ -23,6 +23,7 @@ func _ready() -> void:
 		return
 	HUD.on_scene_ready("")
 	Audio.play_music("title")
+	Audio.set_place_loop("")
 	root = Control.new()
 	root.size = UI.SIZE
 	root.theme = UI.theme()

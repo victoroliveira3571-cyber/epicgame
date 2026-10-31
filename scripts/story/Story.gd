@@ -41,7 +41,7 @@ func set_flag(key: String, value: Variant = true) -> void:
 func set_step(s: String) -> void:
 	st()["step"] = s
 	_save()
-	Audio.sfx2("ding", -8.0, 0.0)
+	Audio.novo("npc_atribuir", -6.0)
 	HUD.show_toast("Novo objetivo: " + objective_text(), UI.C_ORANGE_L)
 
 

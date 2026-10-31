@@ -102,6 +102,8 @@ func _physics_process(delta: float) -> void:
 			if global_position.distance_to(e.global_position + Vector2(0, -4)) <= reach:
 				_hit_ids[e.get_instance_id()] = true
 				e.take_hit(damage, dir * knockback, crit, global_position)
+				if kind == Kind.ARROW:
+					Audio.novo("flecha_alvo", -6.0, 0.08)
 				if pierce <= 0:
 					_impact_enemy()
 					return

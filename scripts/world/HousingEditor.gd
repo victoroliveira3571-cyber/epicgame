@@ -79,7 +79,7 @@ func _spawn(fid: String, pos: Vector2, rot: int) -> Node2D:
 		"cama":
 			var bed := Interior.Spot.new("Descansar", func() -> void:
 				GameState.full_heal()
-				Audio.sfx("sleep", -4.0)
+				Audio.wake_up()
 				HUD.show_toast("Você descansou. Vida cheia!", UI.C_GOOD), 22.0)
 			bed.position = Vector2(0, 8)
 			node.add_child(bed)
@@ -223,7 +223,7 @@ func _drop() -> void:
 	GameState.set_furniture_pos(held, node.position, held_rot)
 	node.modulate = Color.WHITE
 	held = ""
-	Audio.sfx("ui_ok", -3.0)
+	Audio.novo("movel", -3.0)
 	_refresh_box()
 
 

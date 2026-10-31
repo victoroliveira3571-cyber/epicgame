@@ -535,7 +535,7 @@ func pomodoro_start(focus_min: int, break_min: int) -> void:
 	pomo_state = "focus"
 	pomo_total = pomo_minutes * 60.0
 	pomo_left = pomo_total
-	Audio.jingle("pomo_start", -6.0)
+	Audio.novo("pomodoro_inicio", -6.0)
 	show_toast("Foco iniciado: %d minutos" % pomo_minutes, UI.C_GOOD)
 	Audio.pomo_update()
 	_refresh_pomodoro()
@@ -906,7 +906,8 @@ func show_toast(text: String, color: Color = Color.WHITE) -> void:
 
 
 func _on_level_up(new_level: int) -> void:
-	Audio.jingle("levelup")
+	Audio.novo("lvl_up", -2.0)
+	Audio.voice.hero("victory", 1.0, 2.0)
 	Audio.sfx("star", -6.0)
 	show_toast("Nível %d! Você ganhou pontos de talento (C)." % new_level, UI.C_GOLD)
 	_refresh_hotbar()

@@ -78,6 +78,9 @@ func _ready() -> void:
 	add_child(canvas_mod)
 	_update_daylight()
 	Audio.play_music("ambience_nature")
+	Audio.set_place_loop("floresta")
+	if GameState.player_class == "arqueiro":
+		Audio.novo("arqueiro_entra", -6.0)
 	HUD.on_scene_ready("forest")
 
 
@@ -666,6 +669,9 @@ func _check_zone() -> void:
 			var info: Dictionary = Data.FOREST_ZONES[z]
 			HUD.floor_banner(info["name"], "Monstros nível %d a %d" % [int(info["power"]), int(info["power"]) + 1])
 		Audio.play_music("dungeon3" if z == "pantano" else ("dungeon2" if z == "ruinas" else "ambience_nature"))
+		# mata e pântano = parte escura da floresta; ruínas = como a masmorra; borda e clareira = dia
+		Audio.set_place_loop("masmorra_ambiente" if z == "ruinas" else ("floresta_escura" if z in ["mata", "pantano"] else "floresta"))
+		Audio.forest_step = "passos_arvores" if z == "mata" else "passos_grama"
 
 
 # ================================================================== Jogador

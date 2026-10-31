@@ -72,8 +72,8 @@ func build() -> void:
 	v.add_child(UI.label("Ouro: %s" % UI.fmt_int(int(cost["gold"])), UI.C_GOOD if GameState.gold >= int(cost["gold"]) else UI.C_BAD))
 	var up := UI.button("Aprimorar", func() -> void:
 		if GameState.upgrade_item(selected):
-			Audio.sfx("powerup")
-			Audio.sfx("hit3", -4.0)
+			Audio.novo("ferraria_criar", -4.0)
+			Audio.sfx("hit3", -8.0)
 		else:
 			Audio.sfx("ui_error"), 80)
 	up.disabled = not GameState.can_upgrade(selected)

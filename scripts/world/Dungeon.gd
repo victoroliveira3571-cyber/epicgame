@@ -87,6 +87,10 @@ func _ready() -> void:
 	mod.color = AMBIENT[style]
 	add_child(mod)
 	Audio.play_music(biome["music"])
+	Audio.set_place_loop("masmorra_ambiente")
+	Audio.novo("masmorra_entrada", -4.0)
+	if GameState.player_class == "arqueiro":
+		Audio.novo("arqueiro_entra", -6.0)
 	HUD.on_scene_ready("dungeon")
 	if duel_boss != "":
 		HUD.floor_banner("Torneio das Guildas", "Duelo contra Ivo")

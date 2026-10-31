@@ -5002,6 +5002,89 @@
      }
     ]
    }
+  },
+  "npc_head_horns_demon": {
+   "name": "head_horns_demon",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "head_horns_curled_dark_adult.png",
+      "z": 126,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "head_horns_curled_dark_adult.png",
+      "z": 126,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "npc_wings_bat": {
+   "name": "wings_bat",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "body_wings_bat_adult_fg.png",
+      "z": 105,
+      "ramp": "cloth:maroon"
+     },
+     {
+      "file": "body_wings_bat_adult_bg.png",
+      "z": 5,
+      "ramp": "cloth:maroon"
+     }
+    ],
+    "female": [
+     {
+      "file": "body_wings_bat_adult_fg.png",
+      "z": 105,
+      "ramp": "cloth:maroon"
+     },
+     {
+      "file": "body_wings_bat_adult_bg.png",
+      "z": 5,
+      "ramp": "cloth:maroon"
+     }
+    ]
+   }
+  },
+  "npc_tail_lizard": {
+   "name": "tail_lizard",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "body_tail_lizard_adult_fg.png",
+      "z": 85,
+      "ramp": "skin"
+     },
+     {
+      "file": "body_tail_lizard_adult_bg.png",
+      "z": 5,
+      "ramp": "skin"
+     }
+    ],
+    "female": [
+     {
+      "file": "body_tail_lizard_adult_fg.png",
+      "z": 85,
+      "ramp": "skin"
+     },
+     {
+      "file": "body_tail_lizard_adult_bg.png",
+      "z": 5,
+      "ramp": "skin"
+     }
+    ]
+   }
   }
  },
  "equip": {

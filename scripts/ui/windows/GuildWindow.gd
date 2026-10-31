@@ -12,6 +12,7 @@ func _init() -> void:
 
 
 func build() -> void:
+	Audio.novo("guilda_npc", -6.0, 0.04, 2.0)
 	var promo_name := "Promoção" + (" !" if GameState.can_promote() else "")
 	tab_bar(["Diárias", "Missões", promo_name], tab, func(i: int) -> void:
 		tab = i

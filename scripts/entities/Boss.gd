@@ -454,6 +454,7 @@ func _die() -> void:
 			(m as Enemy).take_hit(99999.0, Vector2.ZERO, false)
 	var w := get_parent()
 	Audio.jingle("victory_flute", -2.0)
+	Audio.voice.hero("victory", 1.0, 2.0)
 	for i in 5:
 		var off := Vector2(randf_range(-18, 18), randf_range(-frame_h, 0))
 		Fx.fx(w, "explosion", global_position + off, 1.3)

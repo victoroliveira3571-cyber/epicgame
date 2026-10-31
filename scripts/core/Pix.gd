@@ -15,7 +15,7 @@ static var _fonts: Dictionary = {}
 static func tex(rel: String) -> Texture2D:
 	if _tex_cache.has(rel):
 		return _tex_cache[rel]
-	var path := BASE + rel
+	var path := rel if rel.begins_with("res://") else BASE + rel
 	if not path.ends_with(".png") and not path.ends_with(".ogg") and not path.ends_with(".wav"):
 		path += ".png"
 	var t: Texture2D = null
