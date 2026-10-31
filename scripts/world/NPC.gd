@@ -4,7 +4,10 @@ extends CharacterBody2D
 ## Aldeões e animais da cidade. Modos:
 ##  static : fica parado, vira para o jogador e solta falas/emotes quando ele chega perto
 ##  wander : passeia entre pontos da estrada
+##  sit    : sentado (taverna, biblioteca); vira a cabeça e gesticula
 ##  animal : bichinho de 2 quadros (galinha, gato, cachorro...) que anda e para
+## Pessoas usam o personagem LPC (Looks.of(sheet)); quem não tem look usa a folha antiga.
+## Parados respiram, olham em volta e gesticulam; nos diálogos a DialogueBox os anima.
 
 var sheet: String = "Villager"
 var mode: String = "static"
@@ -15,7 +18,11 @@ var lines: Array = []
 var greet_emotes: Array = [8, 11, 18, 27, 21]
 var animal_flip_right: bool = true  # a folha original olha para a esquerda
 
-var sprite: AnimatedSprite2D
+var sprite: Node2D               # LpcActor (pessoas) ou AnimatedSprite2D (animais)
+var actor: LpcActor = null
+var look_key: String = ""
+var sit_dir: String = "down"
+var _fidget: float = 4.0
 var home: Vector2
 var target: Vector2
 var moving: bool = false
@@ -27,9 +34,10 @@ var bubble: Control = null
 var emote: Sprite2D = null
 
 
-static func create(parent: Node, sheet_name: String, pos: Vector2, npc_mode: String = "static") -> NPC:
+static func create(parent: Node, sheet_name: String, pos: Vector2, npc_mode: String = "static", look_id: String = "") -> NPC:
 	var n := NPC.new()
 	n.sheet = sheet_name
+	n.look_key = look_id
 	n.mode = npc_mode
 	n.position = pos
 	parent.add_child(n)
@@ -47,28 +55,94 @@ func _ready() -> void:
 	col.shape = shape
 	col.position = Vector2(0, -2)
 	add_child(col)
-	sprite = AnimatedSprite2D.new()
 	if mode == "animal":
-		sprite.sprite_frames = Pix.animal_frames(sheet)
-		sprite.position = Vector2(0, -8)
+		var anim := AnimatedSprite2D.new()
+		anim.sprite_frames = Pix.animal_frames(sheet)
+		anim.position = Vector2(0, -8)
 		Fx.make_shadow(self, 9.0, 0.0)
-		sprite.play("idle")
-	else:
-		sprite.sprite_frames = Pix.actor_frames("chars/%s.png" % sheet)
-		sprite.position = Vector2(0, -9)
+		anim.play("idle")
+		sprite = anim
+		add_child(sprite)
+	elif Looks.has(look_key if look_key != "" else sheet):
 		Fx.make_shadow(self, 11.0, 0.0)
-		sprite.play("idle_down")
-	add_child(sprite)
+		actor = LpcActor.make(self, Looks.of(look_key if look_key != "" else sheet))
+		sprite = actor
+		if mode == "sit":
+			actor.hold_last = true
+			actor.play("sit_" + sit_dir)
+		else:
+			actor.play("idle_down")
+	else:
+		var anim2 := AnimatedSprite2D.new()
+		anim2.sprite_frames = Pix.actor_frames("chars/%s.png" % sheet)
+		anim2.position = Vector2(0, -9)
+		Fx.make_shadow(self, 11.0, 0.0)
+		anim2.play("idle_down")
+		sprite = anim2
+		add_child(sprite)
 	wait_time = randf_range(0.5, 3.0)
 	talk_cd = randf_range(1.0, 4.0)
 
 
 func _physics_process(delta: float) -> void:
+	if talking:
+		return
 	if mode == "static":
 		_face_player_if_near()
+		_idle_life(delta)
+	elif mode == "sit":
+		_idle_life(delta)
 	else:
 		_wander(delta)
 	_social(delta)
+
+
+## Vida quando parado: olha para os lados, gesticula de vez em quando.
+func _idle_life(delta: float) -> void:
+	if actor == null:
+		return
+	_fidget -= delta
+	if _fidget > 0.0:
+		return
+	_fidget = randf_range(4.0, 9.0)
+	if mode == "sit":
+		return
+	var r := randf()
+	if r < 0.35:
+		actor.gesture()
+	elif r < 0.7:
+		var old := dir_name
+		var side: String = ["left", "right"][randi() % 2]
+		play_anim("idle_" + side)
+		get_tree().create_timer(randf_range(0.8, 1.6)).timeout.connect(func() -> void:
+			if is_instance_valid(self) and not talking:
+				play_anim("idle_" + old))
+	else:
+		actor.nod()
+
+
+## Durante uma conversa da história a DialogueBox controla o NPC (não anda nem vira sozinho).
+var talking: bool = false
+
+
+func play_anim(name: String) -> void:
+	if actor != null:
+		if mode == "sit" and not name.begins_with("sit"):
+			return
+		actor.play(name)
+		dir_name = name.get_slice("_", 1) if name.contains("_") else dir_name
+	elif sprite is AnimatedSprite2D:
+		var a := sprite as AnimatedSprite2D
+		if a.sprite_frames.has_animation(name):
+			a.play(name)
+
+
+func face(target: Vector2) -> void:
+	var dn := Pix.dir_name(target - global_position)
+	dir_name = dn
+	if mode == "sit":
+		return
+	play_anim("idle_" + dn)
 
 
 func _face_player_if_near() -> void:
@@ -80,7 +154,7 @@ func _face_player_if_near() -> void:
 		var dn := Pix.dir_name(v)
 		if dn != dir_name:
 			dir_name = dn
-			sprite.play("idle_" + dn)
+			play_anim("idle_" + dn)
 
 
 func _wander(delta: float) -> void:
@@ -124,23 +198,22 @@ func _pick_target() -> void:
 
 func _play_walk(v: Vector2) -> void:
 	if mode == "animal":
-		if sprite.animation != "walk":
-			sprite.play("walk")
+		var a := sprite as AnimatedSprite2D
+		if a.animation != "walk":
+			a.play("walk")
 		if absf(v.x) > 0.5:
-			sprite.flip_h = v.x > 0.0 if animal_flip_right else v.x < 0.0
+			a.flip_h = v.x > 0.0 if animal_flip_right else v.x < 0.0
 	else:
 		var dn := Pix.dir_name(v)
-		var anim := "walk_" + dn
-		if sprite.animation != anim:
-			sprite.play(anim)
+		play_anim("walk_" + dn)
 		dir_name = dn
 
 
 func _play_idle() -> void:
 	if mode == "animal":
-		sprite.play("idle")
+		(sprite as AnimatedSprite2D).play("idle")
 	else:
-		sprite.play("idle_" + dir_name)
+		play_anim("idle_" + dir_name)
 
 
 # --- fala e emotes quando o jogador chega perto
@@ -159,11 +232,15 @@ func _social(delta: float) -> void:
 
 
 func _show_emote(index: int) -> void:
+	show_emote(index)
+
+
+func show_emote(index: int) -> void:
 	if emote != null and is_instance_valid(emote):
 		emote.queue_free()
 	emote = Sprite2D.new()
 	emote.texture = Pix.tex("ui/emote/emote%d.png" % index)
-	emote.position = Vector2(0, -24)
+	emote.position = Vector2(0, -34 if actor != null else -24)
 	emote.z_index = 100
 	emote.scale = Vector2(0.2, 0.2)
 	add_child(emote)
@@ -191,7 +268,7 @@ func _say(text: String) -> void:
 	sb.set_content_margin_all(2)
 	l.add_theme_stylebox_override("normal", sb)
 	l.z_index = 120
-	l.position = Vector2(-text.length() * 3.0, -38)
+	l.position = Vector2(-text.length() * 3.0, -46 if actor != null else -38)
 	add_child(l)
 	bubble = l
 	var tw := l.create_tween()

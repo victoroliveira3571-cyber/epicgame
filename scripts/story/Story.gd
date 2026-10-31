@@ -41,7 +41,7 @@ func set_flag(key: String, value: Variant = true) -> void:
 func set_step(s: String) -> void:
 	st()["step"] = s
 	_save()
-	Audio.sfx("ui_ok", -6.0)
+	Audio.sfx2("ding", -8.0, 0.0)
 	HUD.show_toast("Novo objetivo: " + objective_text(), UI.C_ORANGE_L)
 
 
@@ -363,13 +363,13 @@ func _talk_lin(s: String) -> void:
 	match s:
 		"c2_lin":
 			await say("c2_lin")
-			if (st().get("cards", []) as Array).is_empty():
+			if not flag("caderno_escrito"):
 				set_step("c2_carta")
 			else:
 				await say("c2_lin_ok")
 				set_step("c2_ruinas")
 		"c2_carta":
-			await say([["lin", "Abra o Caderno com a tecla N e escreva uma pergunta do que você estuda de verdade."]])
+			await say([["lin", "Abra o Caderno com a tecla N e escreva o que estiver na sua cabeça. Ninguém vai ler."]])
 		"c3_lin":
 			await say("c3_lin")
 			set_step("c3_paginas")
@@ -390,9 +390,17 @@ func _talk_lin(s: String) -> void:
 
 # ================================================================== Eventos do mundo
 func on_card_created() -> void:
+	on_notebook_written()
+
+
+## O jogador escreveu no Caderno (escrita livre). Conta só para a história, o texto não é guardado.
+func on_notebook_written() -> void:
+	if flag("caderno_escrito"):
+		return
+	set_flag("caderno_escrito")
 	if step() == "c2_carta":
 		set_step("c2_ruinas")
-		HUD.show_toast("Mestre Lin aprovaria essa carta.", UI.C_GOOD)
+		HUD.show_toast("Cabeça mais leve. Mestre Lin aprovaria.", UI.C_GOOD)
 
 
 func on_herb() -> void:

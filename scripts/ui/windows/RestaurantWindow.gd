@@ -29,7 +29,8 @@ func build() -> void:
 		var h := row.get_child(0) as HBoxContainer
 		var take := UI.button("Levar", func() -> void:
 			if GameState.buy_item(id, 1):
-				Audio.sfx("coin")
+				Audio.sfx2("moedas", -8.0)
+				Audio.sfx2("servir_agua", -10.0)
 			else:
 				Audio.sfx("ui_error"), 44)
 		take.disabled = locked or GameState.gold < price

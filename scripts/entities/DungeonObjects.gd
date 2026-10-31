@@ -78,6 +78,7 @@ class Chest extends Interactable:
 		opened = true
 		enabled = false
 		sprite.texture = tex_open
+		Audio.sfx2("chaves", -8.0)
 		Audio.sfx("chest")
 		GameState.bump("chests")
 		Game.run_add("chests")

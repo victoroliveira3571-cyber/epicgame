@@ -37,6 +37,13 @@ const SPEAKERS := {
 	"lumen": {"name": "Lúmen", "face": "monsters/Owl2_face.png"},
 	"airevis": {"name": "Airevis", "face": "monsters/Spirit2_face.png"},
 	"espelho": {"name": "Espelho", "face": "hero"},
+	"ferreiro": {"name": "Brás, o ferreiro", "face": ""},
+	"armeiro": {"name": "Otávio, o armeiro", "face": ""},
+	"costureira": {"name": "Rosa, a costureira", "face": ""},
+	"estalajadeiro": {"name": "Bento", "face": ""},
+	"mestre_cla": {"name": "Mestre Daichi", "face": ""},
+	"bibliotecaria": {"name": "Dona Celeste", "face": ""},
+	"arena": {"name": "Bruna, mestra da Arena", "face": ""},
 }
 
 const CHAPTERS := {
@@ -63,7 +70,7 @@ const OBJECTIVES := {
 	"c2_pietro": "Encontre Pietro no acampamento da Clareira",
 	"c2_brisa": "Siga a trilha da loba ao sul da Clareira",
 	"c2_lin": "Encontre Mestre Lin na ponte da Mata Profunda",
-	"c2_carta": "Crie sua primeira carta no Caderno (tecla N)",
+	"c2_carta": "Escreva o que pesa na cabeça no Caderno (tecla N)",
 	"c2_ruinas": "Entre nas Ruínas sob as Raízes (oeste da Mata)",
 	"c2_sentinela": "Derrote a Sentinela de Pedra ({horas}/2 h de foco)",
 	"c2_marta": "Volte à Pousada Pão Quente",
@@ -228,12 +235,12 @@ const DIALOGS := {
 		["heroi", "Você conhecia meu pai?"],
 		["lin", "Estudamos juntos. Ele achava que a Névoa não era só um clima ruim. Ela come páginas, e às vezes as lembranças de quem chega perto demais."],
 		["heroi", "Como se protege disso?"],
-		["lin", "Lembrando de propósito. Por isso eu te dou isto: um Caderno. Escreva perguntas e respostas do que você estuda de verdade. Os guardiões da Névoa vão te testar."],
-		["tip:lin", "Caderno (tecla N): crie cartas com uma pergunta curta, a resposta e palavras-chave. Os chefes sorteiam perguntas do seu Caderno, e as cartas erradas voltam para revisão em dias diferentes."],
-		["lin", "Crie sua primeira carta agora. Depois encontre as ruínas sob a árvore gigante, a oeste da Mata."],
+		["lin", "Cabeça cheia não guarda nada. Por isso eu te dou isto: um Caderno. Não é para estudar, é para esvaziar a mente."],
+		["tip:lin", "Caderno (tecla N): escreva livremente o que te preocupa, irrita ou cansa. Nada fica salvo. Escrever antes de estudar ajuda a tirar a preocupação da cabeça e liberar atenção."],
+		["lin", "Escreva alguma coisa agora, qualquer coisa. Depois encontre as ruínas sob a árvore gigante, a oeste da Mata."],
 	],
 	"c2_lin_ok": [
-		["lin", "Ótimo. Pergunta curta, uma ideia por carta. Assim a lembrança fica forte."],
+		["lin", "Ótimo. Mais leve, não? Quando a cabeça encher de novo, volte ao Caderno."],
 		["lin", "As ruínas ficam a oeste, sob a árvore gigante. A Sentinela de Pedra guarda a porta. Ela só luta com quem já estudou 2 horas."],
 	],
 	"c2_ruinas": [
@@ -330,7 +337,7 @@ const DIALOGS := {
 		["pietro", "Você venceu. Bom. Eu tenho notícias."],
 		["heroi", "Que notícias?"],
 		["pietro", "Um cavaleiro sem nome foi visto nas correntes do andar 4. Tinha uma marca de corrente no pulso. E perguntou pelo {pai}."],
-		["tip:marta", "Elaboração: explique com suas palavras por que a resposta está certa. Perguntar \"por quê?\" tem evidência moderada e combina com as cartas do Caderno."],
+		["tip:marta", "Elaboração: explique com suas palavras por que a resposta está certa. Perguntar \"por quê?\" tem evidência moderada."],
 		["pietro", "Vá com cuidado. E estude antes de descer: não é só a força que faz alguém voltar."],
 	],
 	"c4_espelhos": [
@@ -430,13 +437,13 @@ const MARTA_TIPS := [
 	"Intercalar dentro da mesma matéria ajuda a escolher o método certo. Misturar matérias diferentes não tem esse efeito.",
 	"Elaboração: pergunte \"por que isso é verdade?\" e explique com suas palavras.",
 	"Dormir ajuda a fixar o que você estudou. Cortar o sono para estudar mais costuma sair caro.",
-	"Reler e destacar dão sensação de aprender, mas fixam pouco. Use as cartas do Caderno.",
+	"Reler e destacar dão sensação de aprender, mas fixam pouco. Feche o livro e tente lembrar.",
 ]
 const LIN_TIPS := [
 	"Respire três vezes, devagar, soltando o ar mais longo do que o puxou. Começar calmo ajuda a prestar atenção.",
 	"Mindfulness: observe a respiração e os pensamentos sem julgar. A pesquisa mostra efeito pequeno a moderado no estresse.",
 	"Escreva o que te preocupa na caixa de preocupações do Pomodoro e feche. Depois volte ao estudo.",
-	"Uma carta, uma ideia. Perguntas curtas viram lembranças fortes.",
+	"Cabeça cheia? Escreva tudo no Caderno, solte a página e volte ao foco.",
 	"Se a cabeça fugir durante o foco, perceba e volte. Voltar é o treino, não o fracasso.",
 ]
 
@@ -452,7 +459,7 @@ const CARDS_BANK := [   # Sentinela: lacuna com banco de palavras
 	{"q": "Explicar com suas palavras por que algo é verdade se chama ____.", "a": "elaboração", "opts": ["elaboração", "decoreba", "sorte"]},
 	{"q": "Antes de estudar, respirar devagar ajuda a ____ o corpo.", "a": "acalmar", "opts": ["acalmar", "cansar", "apressar"]},
 	{"q": "Testar-se é a técnica de estudo com mais ____ entre as comparadas.", "a": "evidência", "opts": ["evidência", "cores", "páginas"]},
-	{"q": "Errar uma carta mostra o que você precisa ____ de novo.", "a": "revisar", "opts": ["revisar", "esconder", "apagar"]},
+	{"q": "Errar uma pergunta mostra o que você precisa ____ de novo.", "a": "revisar", "opts": ["revisar", "esconder", "apagar"]},
 ]
 const CARDS_TYPE := [   # Bibliotecário: completar a lacuna digitando
 	{"q": "Distribuir o estudo em vários dias se chama ____.", "a": "espaçamento", "k": ["espacamento|espacar|espacado"]},
@@ -463,15 +470,15 @@ const CARDS_TYPE := [   # Bibliotecário: completar a lacuna digitando
 	{"q": "Escrever o que preocupa antes de estudar ajuda a acalmar a ____.", "a": "mente", "k": ["mente|cabeca"]},
 	{"q": "Foco em blocos com pausas curtas é a técnica ____.", "a": "pomodoro", "k": ["pomodoro"]},
 	{"q": "Explicar algo com as próprias palavras é fazer uma ____.", "a": "elaboração", "k": ["elabora"]},
-	{"q": "Uma carta errada volta para a caixa número ____.", "a": "um", "k": ["um|1|uma"]},
+	{"q": "Escrever no Caderno ajuda a esvaziar a ____ antes de estudar.", "a": "mente", "k": ["mente|cabeca"]},
 	{"q": "O Rei Demônio espera no ____ Sem Luz.", "a": "trono", "k": ["trono"]},
 ]
-const CARDS_FREE := [   # Cavaleiro e Rei, quando o Caderno do jogador estiver vazio
+const CARDS_FREE := [   # Cavaleiro e Rei (perguntas livres)
 	{"q": "Por que testar-se funciona melhor do que reler?", "a": "Porque o esforço de lembrar fortalece a memória.", "k": ["lembr|memoria|recuper"]},
 	{"q": "O que é espaçamento?", "a": "Estudar o mesmo assunto em dias diferentes.", "k": ["dia|tempo|espac"]},
 	{"q": "Intercalar funciona melhor dentro da mesma matéria ou entre matérias diferentes?", "a": "Dentro da mesma matéria.", "k": ["mesma"]},
 	{"q": "Por que dormir ajuda no estudo?", "a": "O sono ajuda a fixar (consolidar) a memória.", "k": ["fix|consolid|memoria|guard"]},
-	{"q": "O que fazer quando errar uma carta?", "a": "Ver a resposta certa e revisar de novo depois.", "k": ["revis|rever|estud|repet"]},
+	{"q": "O que fazer quando errar uma pergunta de estudo?", "a": "Ver a resposta certa e revisar de novo depois.", "k": ["revis|rever|estud|repet"]},
 	{"q": "Qual era o juramento do pai e de Aldric?", "a": "Guardar o saber juntos.", "k": ["guard|proteg", "junt"]},
 	{"q": "O que a Névoa faz com as páginas?", "a": "Apaga.", "k": ["apag"]},
 	{"q": "O que é elaboração?", "a": "Explicar com suas palavras por que algo é verdade.", "k": ["explic|palavra|porque|por que"]},
@@ -480,6 +487,6 @@ const CARDS_FREE := [   # Cavaleiro e Rei, quando o Caderno do jogador estiver v
 	{"q": "Cite uma técnica para acalmar antes de estudar.", "a": "Respirar devagar, meditar ou escrever o que preocupa.", "k": ["respir|medit|escrev|mindful"]},
 	{"q": "Por que reler não basta?", "a": "Porque reconhecer o texto não é o mesmo que lembrar.", "k": ["lembr|reconhec|memoria"]},
 	{"q": "O que Lúmen carrega?", "a": "O que é esquecido.", "k": ["esquec"]},
-	{"q": "Quantas caixas de revisão tem o Caderno?", "a": "Cinco.", "k": ["cinco|5"]},
+	{"q": "Para que serve o Caderno do herói?", "a": "Escrever livremente e esvaziar a cabeça.", "k": ["escrev|desabaf|cabeca|mente|esvazi"]},
 	{"q": "O que o Rei Demônio diz que fez com o saber da cidade?", "a": "Guardou (roubou) o conhecimento.", "k": ["guard|roub|tir"]},
 ]

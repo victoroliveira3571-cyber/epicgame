@@ -119,7 +119,7 @@ func _item_row(id: String) -> Control:
 	if not owned:
 		act = UI.button("Comprar", func() -> void:
 			if GameState.buy_look(id):
-				Audio.sfx("coin")
+				Audio.sfx2("moedas", -6.0)
 				selected = id
 				GameState.toggle_look(id)
 				HUD.show_toast("Comprado: %s" % it["name"], UI.C_GOLD), 54)

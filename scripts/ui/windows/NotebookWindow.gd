@@ -1,152 +1,108 @@
 extends UIWindow
 
-## Caderno do herói (tecla N): cartas de lembrança (pergunta, resposta, palavras-chave), a
-## revisão do dia (caixas 1 a 5) e o formulário de carta nova. Os chefes sorteiam perguntas
-## daqui (Recall.gd / MECANICAS_RECUPERACAO.md).
+## Caderno do herói (tecla N): só uma folha em branco para escrever livremente e desabafar.
+## Nada vai para o save nem fica histórico: o texto vive só enquanto o jogo está aberto, e
+## "Soltar a página" apaga na hora (a folha voa). Sugestões de escrita ajudam a começar.
 
-var tab: int = 0
-var _q: LineEdit
-var _a: LineEdit
-var _k: LineEdit
-var _msg: Label
-# revisão
-var _review: Array = []
-var _review_i: int = 0
-var _review_shown: bool = false
+const PROMPTS := [
+	"O que está pesando na sua cabeça agora?",
+	"Do que você tem medo nesta semana? Escreva sem filtro.",
+	"O que te irritou hoje? Pode reclamar à vontade.",
+	"Escreva tudo o que você precisa lembrar e tire da cabeça.",
+	"Uma coisa pequena que deu certo hoje.",
+	"Se você pudesse dizer algo para alguém agora, o que seria?",
+	"Como está o seu corpo neste momento? Cansado, tenso, tranquilo?",
+	"O que você faria se não tivesse medo de errar?",
+]
+
+static var _text: String = ""      # só durante esta sessão do jogo (não vai para o save)
+
+var _edit: TextEdit
+var _count: Label
+var _prompt: Label
+var _paper: Panel
 
 
 func _init() -> void:
-	win_title = "Caderno do herói"
-	win_size = Vector2(540, 300)
+	win_title = "Caderno  -  escrita livre"
+	win_size = Vector2(520, 300)
 
 
 func refresh() -> void:
-	pass  # os campos de texto não podem ser recriados enquanto o jogador digita
+	pass  # o texto não pode ser recriado enquanto o jogador digita
 
 
 func build() -> void:
-	var due := Recall.due_user_cards().size()
-	tab_bar(["Cartas", "Nova carta", "Revisar (%d)" % due], tab, func(i: int) -> void:
-		tab = i
-		_review = []
-		rebuild(), Vector2(0, 0), 100)
-	match tab:
-		0:
-			_list()
-		1:
-			_new_card()
-		2:
-			_review_tab()
+	_prompt = UI.label(PROMPTS[randi() % PROMPTS.size()], UI.C_ORANGE_L)
+	add_to_body(_prompt, Vector2(2, 0))
+	add_to_body(UI.button("Outra ideia", func() -> void:
+		_prompt.text = PROMPTS[randi() % PROMPTS.size()]
+		Audio.sfx2("ui_pack5", -10.0), 80), Vector2(410, -2))
+	_paper = Panel.new()
+	var ps := UI.flat(Color("f3ead2"), Color("8a6a4a"), 1)
+	ps.set_corner_radius_all(2)
+	_paper.add_theme_stylebox_override("panel", ps)
+	_paper.position = Vector2(0, 18)
+	_paper.size = Vector2(500, 196)
+	body.add_child(_paper)
+	var lines := Lines.new()
+	lines.size = _paper.size
+	lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_paper.add_child(lines)
+	_edit = TextEdit.new()
+	_edit.position = Vector2(24, 4)
+	_edit.size = Vector2(470, 188)
+	_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_edit.placeholder_text = "Escreva aqui. Ninguém vai ler, e nada fica salvo."
+	_edit.add_theme_color_override("font_color", Color("2a1d2e"))
+	_edit.add_theme_color_override("font_placeholder_color", Color(0.35, 0.28, 0.25, 0.55))
+	_edit.add_theme_color_override("caret_color", Color("8f5545"))
+	_edit.add_theme_constant_override("line_spacing", 3)
+	var empty := StyleBoxEmpty.new()
+	_edit.add_theme_stylebox_override("normal", empty)
+	_edit.add_theme_stylebox_override("focus", empty)
+	_edit.text = _text
+	_edit.text_changed.connect(_on_changed)
+	_paper.add_child(_edit)
+	_count = UI.label("", UI.C_DIM)
+	add_to_body(_count, Vector2(2, 220))
+	add_to_body(UI.wrap_label("Só fica aqui enquanto o jogo está aberto.", UI.C_DIM, 220), Vector2(2, 236))
+	add_to_body(UI.button("Soltar a página", func() -> void: _release(), 120), Vector2(380, 222))
+	_on_changed()
+	_edit.call_deferred("grab_focus")
 
 
-func _list() -> void:
-	var cards: Array = GameState.story.get("cards", [])
-	var info := UI.label("%d cartas. Os chefes sorteiam perguntas daqui; as de caixa baixa aparecem primeiro." % cards.size(), UI.C_DIM)
-	add_to_body(info, Vector2(0, 22))
-	var col := scroll_column(Vector2(0, 38), Vector2(520, 224))
-	if cards.is_empty():
-		col.add_child(UI.wrap_label("Seu Caderno está vazio. Crie cartas na aba \"Nova carta\" com perguntas do que você estuda de verdade: uma ideia por carta, pergunta curta.", UI.C_TEXT, 500))
+## Linhas de caderno e margem vermelha.
+class Lines extends Control:
+	func _draw() -> void:
+		for y in range(20, int(size.y), 15):
+			draw_line(Vector2(4, y), Vector2(size.x - 4, y), Color(0.55, 0.65, 0.8, 0.35), 1.0)
+		draw_line(Vector2(18, 2), Vector2(18, size.y - 2), Color(0.85, 0.35, 0.35, 0.5), 1.0)
+
+
+func _on_changed() -> void:
+	_text = _edit.text
+	var words := _edit.text.split(" ", false).size() if _edit.text.strip_edges() != "" else 0
+	_count.text = "%d palavras" % words
+	if words >= 3:
+		Story.on_notebook_written()
+
+
+## Apaga a folha: ela sobe e some (o texto não é guardado em lugar nenhum).
+func _release() -> void:
+	if _edit.text.strip_edges() == "":
 		return
-	for c in cards:
-		var card: Dictionary = c
-		var row := UI.card(UI.C_PANEL, UI.C_LINE)
-		row.custom_minimum_size = Vector2(504, 28)
-		var h := UI.hbox(6)
-		row.add_child(h)
-		var box := UI.label("Cx %d" % int(card.get("box", 1)), UI.C_ORANGE_L)
-		box.custom_minimum_size.x = 34
-		h.add_child(box)
-		var v := UI.vbox(0)
-		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		h.add_child(v)
-		v.add_child(UI.wrap_label(String(card.get("q", "")), UI.C_TEXT, 380))
-		var keys := ", ".join(card.get("k", []))
-		v.add_child(UI.wrap_label("R: %s%s" % [card.get("a", ""), ("   [%s]" % keys) if keys != "" else ""], UI.C_DIM, 380))
-		var cid := String(card.get("id", ""))
-		h.add_child(UI.button("Apagar", func() -> void:
-			HUD.confirm("Apagar esta carta?", func() -> void:
-				Recall.remove_card(cid)
-				rebuild()), 50))
-		col.add_child(row)
-
-
-func _new_card() -> void:
-	var v := UI.vbox(5)
-	add_to_body(v, Vector2(0, 24))
-	v.add_child(UI.wrap_label("Escreva uma pergunta do que você está estudando. Na batalha, você responde de memória.", UI.C_DIM, 510))
-	_q = _field(v, "Pergunta", "Ex.: O que é mitose?")
-	_a = _field(v, "Resposta", "Ex.: Divisão que gera duas células iguais")
-	_k = _field(v, "Palavras-chave", "Ex.: duas, iguais  (separe por vírgula; opcional)")
-	v.add_child(UI.wrap_label("As palavras-chave decidem o acerto: todas = acerto, metade ou mais = acerto parcial. Sem palavras-chave, valem as palavras longas da resposta. Acentos e maiúsculas não importam.", UI.C_DIM, 510))
-	_msg = UI.label("", UI.C_GOOD)
-	v.add_child(_msg)
-	v.add_child(UI.button("Guardar carta", func() -> void: _save_card(), 110))
-	_q.call_deferred("grab_focus")
-
-
-func _field(parent: Control, title: String, hint: String) -> LineEdit:
-	var h := UI.hbox(6)
-	parent.add_child(h)
-	var l := UI.label(title, UI.C_TEXT)
-	l.custom_minimum_size.x = 96
-	h.add_child(l)
-	var e := LineEdit.new()
-	e.custom_minimum_size = Vector2(400, 18)
-	e.placeholder_text = hint
-	e.max_length = 140
-	h.add_child(e)
-	return e
-
-
-func _save_card() -> void:
-	if _q.text.strip_edges() == "" or _a.text.strip_edges() == "":
-		_msg.text = "Escreva a pergunta e a resposta."
-		_msg.add_theme_color_override("font_color", UI.C_BAD)
-		Audio.sfx("ui_error", -4.0)
-		return
-	Recall.add_card(_q.text, _a.text, _k.text)
-	Audio.sfx("ui_ok", -2.0)
-	_q.text = ""
-	_a.text = ""
-	_k.text = ""
-	_msg.text = "Carta guardada! (%d no Caderno)" % (GameState.story.get("cards", []) as Array).size()
-	_msg.add_theme_color_override("font_color", UI.C_GOOD)
-	_q.grab_focus()
-	Story.on_card_created()
-
-
-func _review_tab() -> void:
-	if _review.is_empty():
-		_review = Recall.due_user_cards()
-		_review_i = 0
-		_review_shown = false
-	var v := UI.vbox(6)
-	add_to_body(v, Vector2(0, 26))
-	if _review_i >= _review.size():
-		v.add_child(UI.wrap_label("Nada para revisar agora. Cartas erradas voltam depois do próximo foco; as certas voltam em 2, 4, 8 e 16 dias.", UI.C_TEXT, 510))
-		return
-	var card: Dictionary = _review[_review_i]
-	v.add_child(UI.label("Carta %d de %d  -  caixa %d" % [_review_i + 1, _review.size(), Recall.box_of(card)], UI.C_ORANGE_L))
-	v.add_child(UI.wrap_label(String(card.get("q", "")), UI.C_TEXT, 510))
-	if not _review_shown:
-		v.add_child(UI.label("Tente lembrar a resposta antes de mostrar.", UI.C_DIM))
-		v.add_child(UI.button("Mostrar resposta", func() -> void:
-			_review_shown = true
-			rebuild(), 120))
-		return
-	v.add_child(UI.wrap_label("Resposta: " + String(card.get("a", "")), UI.C_GOOD, 510))
-	v.add_child(UI.label("Você lembrou?", UI.C_DIM))
-	var h := UI.hbox(6)
-	v.add_child(h)
-	h.add_child(UI.button("Lembrei", func() -> void: _rate(card, "full"), 80))
-	h.add_child(UI.button("Mais ou menos", func() -> void: _rate(card, "partial"), 100))
-	h.add_child(UI.button("Não lembrei", func() -> void: _rate(card, "wrong"), 90))
-
-
-func _rate(card: Dictionary, result: String) -> void:
-	Recall.record(card, result)
-	if result == "full":
-		GameState.add_xp(3, false)
-	_review_i += 1
-	_review_shown = false
-	rebuild()
+	Audio.sfx2("gota", -6.0)
+	Audio.sfx2("whoosh", -8.0)
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_paper, "position:y", _paper.position.y - 40.0, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_property(_paper, "modulate:a", 0.0, 0.45)
+	tw.tween_property(_paper, "rotation", -0.06, 0.45)
+	await tw.finished
+	_text = ""
+	_edit.text = ""
+	_on_changed()
+	_paper.position.y = 18.0
+	_paper.rotation = 0.0
+	create_tween().tween_property(_paper, "modulate:a", 1.0, 0.25)
+	HUD.show_toast("Página solta. Respire e siga em frente.", UI.C_GOOD)

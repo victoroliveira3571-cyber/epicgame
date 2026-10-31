@@ -62,6 +62,17 @@ func _ready() -> void:
 	world = Node2D.new()
 	world.y_sort_enabled = true
 	add_child(world)
+	# goteira ecoando nas salas de pedra (som do Victor)
+	var drip := AudioStreamPlayer.new()
+	var st: AudioStream = load(Audio.SFX2_DIR + "amb_goteira.wav")
+	if st is AudioStreamWAV:
+		st = (st as AudioStreamWAV).duplicate()
+		st.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		st.loop_end = int(st.get_length() * st.mix_rate)
+	drip.stream = st
+	drip.volume_db = -18.0
+	add_child(drip)
+	drip.play()
 	_build_colliders()
 	_build_astar()
 	_place_start()

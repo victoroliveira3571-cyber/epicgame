@@ -2,3 +2,5 @@
 .DS_Store
 *.tmp
 _shots/
+# cópias criadas pela sincronização da Mesa (iCloud)
+* 2.*

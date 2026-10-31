@@ -8,6 +8,7 @@ signal stats_changed
 signal damage_taken(amount: int)
 signal leveled_up(new_level: int)
 signal player_died
+signal knocked_out                     # vida chegou a 0 com no_death (duelos da Arena)
 signal toast(text: String, color: Color)
 signal item_gained(item_id: String, amount: int)
 signal buffs_changed
@@ -41,7 +42,9 @@ var furniture_layout: Dictionary = {} # id do móvel -> [x, y] na casa (px)
 # --- aparência do herói (LPC): moeda própria ganha estudando, peças compradas e o visual em uso
 var study_credits: int = 0             # créditos de estudo: 1 por minuto de foco concluído
 var looks_owned: Array = []            # ids de peças compradas (as de preço 0 são de graça)
-var look: Dictionary = {}              # ver Lpc.default_look()
+var look: Dictionary = {}
+var no_death: bool = false             # Arena: a vida para em 1 e emite knocked_out
+var arena: Dictionary = {}             # {prestige, wins, losses, streak, best}              # ver Lpc.default_look()
 var story: Dictionary = {}             # história (ver Story.gd): nomes, capítulo, passo, rank, pets, créditos, Caderno
 var pomo_log: Array = []              # histórico de focos concluídos: {d: "AAAA-MM-DD", t: unix, m: minutos, s: cenário}
 
@@ -387,6 +390,7 @@ func equip_item(item_id: String) -> bool:
 		return false
 	var slot: String = Data.slot_of(item_id)
 	equipped[slot] = item_id
+	Audio.sfx2("metal_tinir" if slot in ["armor", "helmet", "shield", "weapon"] else "gaveta", -10.0)
 	mark_dirty()
 	hp = mini(hp, get_max_hp())
 	_queue_save()
@@ -447,6 +451,7 @@ func upgrade_item(item_id: String) -> bool:
 	spend_gold(int(c["gold"]))
 	remove_item(c["material"], int(c["qty"]))
 	upgrades[item_id] = upgrade_level(item_id) + 1
+	Audio.sfx2("bigorna1" if randf() < 0.5 else "bigorna2", -4.0)
 	counters["upgrades"] = int(counters.get("upgrades", 0)) + 1
 	mark_dirty()
 	_queue_save()
@@ -536,6 +541,9 @@ func take_damage(raw: float) -> int:
 	var reduction: float = float(st["def"]) / (float(st["def"]) + 40.0)
 	var amount := maxi(1, int(round(raw * (1.0 - reduction) * float(st["dmg_taken_mult"]))))
 	hp = maxi(hp - amount, 0)
+	if no_death and hp <= 0:
+		hp = 1
+		knocked_out.emit()
 	damage_taken.emit(amount)
 	stats_changed.emit()
 	_queue_save()
@@ -820,6 +828,33 @@ func set_look_color(item_id: String, hex: String) -> void:
 	stats_changed.emit()
 
 
+## Aparência do herói (corpo, pele, olhos, cabelo, barba), mantendo as roupas do guarda-roupa.
+func set_appearance(new_look: Dictionary) -> void:
+	var base := Lpc.resolve(look)
+	for k in ["body", "head", "skin", "eyes", "hair_pal", "brows"]:
+		if new_look.has(k):
+			base[k] = new_look[k]
+	var eq: Dictionary = (base.get("equip", {}) as Dictionary).duplicate()
+	var ne: Dictionary = new_look.get("equip", {})
+	# jogo novo: leva também as roupas iniciais do corpo escolhido
+	if look.is_empty():
+		eq = ne.duplicate()
+		base["colors"] = (new_look.get("colors", {}) as Dictionary).duplicate()
+	for slot in ["cabelo", "barba"]:
+		if ne.has(slot):
+			eq[slot] = ne[slot]
+		else:
+			eq.erase(slot)
+	base["equip"] = eq
+	# o herói antigo das cenas do Pomodoro usa uma cor hex para o cabelo
+	var hp: Array = LpcW.palettes("hair").get(str(base.get("hair_pal", "")), [])
+	if hp.size() > 3:
+		base["hair_color"] = str(hp[3])
+	look = base
+	_queue_save()
+	stats_changed.emit()
+
+
 func set_look_value(key: String, value: Variant) -> void:
 	look = Lpc.resolve(look)
 	look[key] = value
@@ -973,7 +1008,7 @@ func save_now() -> void:
 		"player_class": player_class, "talent_points": talent_points, "talents": talents,
 		"energy": energy, "energy_day": energy_day, "best_floor": best_floor, "playtime": playtime,
 		"inventory": inventory, "equipped": equipped, "upgrades": upgrades, "furniture": furniture, "furniture_layout": furniture_layout, "pomo_log": pomo_log,
-		"study_credits": study_credits, "looks_owned": looks_owned, "look": look, "story": story,
+		"study_credits": study_credits, "looks_owned": looks_owned, "look": look, "story": story, "arena": arena,
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
 		"music_volume": music_volume, "music_on": music_on, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
@@ -1057,6 +1092,7 @@ func load_game() -> void:
 		study_credits = int(d.get("study_credits", 0))
 		looks_owned = d.get("looks_owned", []) if typeof(d.get("looks_owned", [])) == TYPE_ARRAY else []
 		look = _dict_of(d.get("look", {}))
+		arena = _dict_of(d.get("arena", {}))
 		story = _dict_of(d.get("story", {}))
 		pomo_log = d.get("pomo_log", []) if typeof(d.get("pomo_log", [])) == TYPE_ARRAY else []
 		counters = _dict_of(d.get("counters", {}))
@@ -1133,6 +1169,8 @@ func debug_reset() -> void:
 	study_credits = 0
 	looks_owned = []
 	look = {}
+	arena = {}
+	no_death = false
 	story = {}
 	pomo_log = []
 	counters = {}

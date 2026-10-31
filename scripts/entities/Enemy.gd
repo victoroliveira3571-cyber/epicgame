@@ -581,6 +581,8 @@ func take_hit(amount: float, kb: Vector2, crit: bool, _from: Vector2 = Vector2.Z
 	Fx.flash(sprite, Color(2.6, 1.0, 1.0) if not crit else Color(3, 2.2, 0.8), 0.1)
 	Fx.fx(w, "spark", global_position + Vector2(0, -7), 0.6 if not crit else 1.0)
 	Audio.sfx("hit_crit" if crit else ["hit1", "hit2", "hit3"][randi() % 3], -3.0 if crit else -5.0)
+	if crit:
+		Audio.sfx2("impacto", -10.0, 0.1)
 	if hp <= 0.0:
 		_die()
 

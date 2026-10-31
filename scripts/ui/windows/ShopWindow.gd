@@ -4,6 +4,8 @@ extends UIWindow
 
 var tab: int = 0
 var _scroll_keep: float = 0.0
+var _preview: AppearanceEditor.Preview
+var _preview_name: Label
 
 
 func _init() -> void:
@@ -16,7 +18,19 @@ func build() -> void:
 		tab = i
 		rebuild(), Vector2(0, 0), 90)
 	add_to_body(UI.label("Ouro: %s" % UI.fmt_int(GameState.gold), UI.C_GOLD), Vector2(400, 3))
-	var col := scroll_column(Vector2(0, 22), Vector2(520, 250))
+	var col := scroll_column(Vector2(0, 22), Vector2(520 if tab != 0 else 384, 250))
+	if tab == 0:
+		# provador: o herói com a peça escolhida (passe o mouse num item)
+		_preview = AppearanceEditor.Preview.new()
+		_preview.custom_minimum_size = Vector2(128, 200)
+		_preview.size = Vector2(128, 200)
+		_preview.px = 2.0
+		add_to_body(_preview, Vector2(392, 22))
+		_preview.set_look(Looks.hero())
+		_preview_name = UI.label("Provador", UI.C_DIM)
+		_preview_name.size = Vector2(128, 14)
+		_preview_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		add_to_body(_preview_name, Vector2(392, 226))
 	match tab:
 		0:
 			_equipment(col)
@@ -33,10 +47,12 @@ func _equipment(col: VBoxContainer) -> void:
 			var it: Dictionary = Data.get_item(id)
 			var price := int(it["price"])
 			var owned := GameState.count_item(id)
-			col.add_child(list_row(Pix.item_icon(id), it["name"], UI.item_color(id),
+			var row := list_row(Pix.item_icon(id), it["name"], UI.item_color(id),
 				"%s - %s" % [Data.SLOT_NAMES.get(it["slot"], ""), it["desc"]],
 				"%s" % UI.fmt_int(price), UI.C_GOLD if GameState.gold >= price else UI.C_BAD,
-				"Comprar" if owned == 0 else "Mais um (%d)" % owned, func() -> void: _buy(id), GameState.gold < price, 500))
+				"Comprar" if owned == 0 else "Mais um (%d)" % owned, func() -> void: _buy(id), GameState.gold < price, 370)
+			row.mouse_entered.connect(func() -> void: _try_on(id))
+			col.add_child(row)
 	if max_tier < Data.TIER_UNLOCK_LEVEL.size() - 1:
 		col.add_child(UI.label("Próximo tier de equipamentos no nível %d." % Data.TIER_UNLOCK_LEVEL[max_tier + 1], UI.C_DIM))
 
@@ -74,9 +90,28 @@ func _sell(col: VBoxContainer) -> void:
 		col.add_child(UI.label("Nada para vender.", UI.C_DIM))
 
 
+## Mostra o herói vestindo a peça (sem comprar).
+func _try_on(id: String) -> void:
+	if _preview == null:
+		return
+	var it: Dictionary = Data.get_item(id)
+	var lk := Looks.hero()
+	var slot := str(it.get("slot", ""))
+	if slot == "weapon":
+		var v: Array = Looks.WEAPON_VISUALS.get(id, ["", ""])
+		lk["weapon"] = v[0]
+		lk["weapon_pal"] = v[1]
+	elif slot in ["armor", "helmet", "boots", "shield"]:
+		var g: Dictionary = (lk.get("gear", {}) as Dictionary).duplicate()
+		g[slot] = int(it.get("tier", 0))
+		lk["gear"] = g
+	_preview.set_look(lk)
+	_preview_name.text = str(it["name"])
+
+
 func _buy(id: String) -> void:
 	if GameState.buy_item(id, 1):
-		Audio.sfx("coin")
+		Audio.sfx2("moedas", -6.0)
 	else:
 		Audio.sfx("ui_error")
 

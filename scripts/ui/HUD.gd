@@ -24,6 +24,8 @@ const WINDOWS := {
 	"criacao": "res://scripts/ui/windows/CreationWindow.gd",
 	"caderno": "res://scripts/ui/windows/NotebookWindow.gd",
 	"preocupacoes": "res://scripts/ui/windows/WorryWindow.gd",
+	"aparencia": "res://scripts/ui/windows/AppearanceWindow.gd",
+	"arena": "res://scripts/ui/windows/ArenaWindow.gd",
 }
 
 var root: Control
@@ -40,7 +42,7 @@ var _pomo_prev_state: String = "focus"
 
 var _prompt: Label
 var _card: Control
-var _card_face: TextureRect
+var _card_face: LpcPortrait
 var _card_name: Label
 var _hp_bar: UI.Bar
 var _xp_bar: UI.Bar
@@ -142,7 +144,7 @@ const DEFAULT_HINT := "I Inventário  C Personagem  N Caderno  T Hábitos  G Mis
 ## Texto pequeno no canto de baixo; vazio volta ao padrão.
 func set_hint(text: String) -> void:
 	if _hint != null:
-		_hint.text = text if text != "" else DEFAULT_HINT
+		_hint.text = text
 
 
 func set_scene_kind(which: String) -> void:
@@ -152,6 +154,7 @@ func set_scene_kind(which: String) -> void:
 	_pomo_panel.visible = playing
 	_minimap.visible = which == "dungeon" or which == "town" or which == "forest"
 	_hint.visible = playing
+	_keys.visible = playing
 	_objective.visible = playing and Story.started()
 
 
@@ -171,8 +174,12 @@ func _build_card() -> void:
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	frame.add_theme_stylebox_override("panel", UI.box_tex("nine_path_panel", 5, Vector4(0, 0, 0, 0), false))
 	_card.add_child(frame)
-	_card_face = UI.icon(null, 32)
+	_card_face = LpcPortrait.new()
+	_card_face.crop = Rect2(16, 8, 32, 32)
+	_card_face.px_scale = 1.0
 	_card_face.position = Vector2(7, 7)
+	_card_face.size = Vector2(32, 32)
+	_card_face.clip_contents = true
 	_card.add_child(_card_face)
 	var face_frame := Panel.new()
 	face_frame.position = Vector2(6, 6)
@@ -209,13 +216,12 @@ func _build_card() -> void:
 func _refresh_card() -> void:
 	if _card == null or not Story.started():
 		return
-	var has_class := GameState.has_chosen_class()
-	var sheet: String = Data.CLASSES[GameState.player_class]["sheet"] if has_class else "Villager5"
-	if _face_class != sheet:
-		_face_class = sheet
-		_card_face.texture = Pix.atlas("chars/%s.png" % sheet, Rect2(0, 0, 16, 16))
-		_card_face.custom_minimum_size = Vector2(32, 32)
-		_card_face.size = Vector2(32, 32)
+	var lk := Looks.hero()
+	var key := LpcW.look_key(lk, "portrait")
+	if _face_class != key:
+		_face_class = key
+		_card_face.set_look(lk)
+	_card_face.set_expr("sad" if GameState.hp < GameState.get_max_hp() * 0.3 else "neutral")
 	_card_name.text = "%s  Nv %d" % [Story.hero_name(), GameState.level]
 	_credit_label.text = "Créd. %d   %s" % [Story.credits(), Story.rank_name()]
 	var max_hp := GameState.get_max_hp()
@@ -286,9 +292,38 @@ class HotSkill extends Control:
 		draw_string(kf, Vector2(2, 34), key_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UI.C_DIM)
 
 
+## Teclas de atalho desenhadas como teclinhas (canto inferior esquerdo, acima da hotbar).
+class KeyHints extends Control:
+	const ROWS := [[["I", "Inventário"], ["C", "Personagem"], ["N", "Caderno"], ["T", "Hábitos"]],
+		[["G", "Missões"], ["P", "Pomodoro"], ["Esc", "Pausa"]]]
+
+	func _init() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		size = Vector2(250, 32)
+
+	func _draw() -> void:
+		var f := Pix.font(1)
+		for r in ROWS.size():
+			var x := 0.0
+			var y := r * 15.0
+			for pair in ROWS[r]:
+				var kw := f.get_string_size(pair[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 6.0
+				draw_rect(Rect2(x, y + 1, kw, 12), Color(0.12, 0.1, 0.1, 0.78))
+				draw_rect(Rect2(x, y + 1, kw, 12), Color(1, 1, 1, 0.35), false, 1.0)
+				draw_rect(Rect2(x + 1, y + 11, kw - 2, 1), Color(0, 0, 0, 0.5))
+				draw_string(f, Vector2(x + 3, y + 11), pair[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UI.C_ORANGE_L)
+				x += kw + 3.0
+				draw_string(f, Vector2(x + 1, y + 12), pair[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0, 0, 0, 0.8))
+				draw_string(f, Vector2(x, y + 11), pair[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1, 1, 1, 0.78))
+				x += f.get_string_size(pair[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 9.0
+
+
+var _keys: KeyHints
+
+
 func _build_hotbar() -> void:
 	_hotbar = Control.new()
-	_hotbar.position = Vector2(UI.SIZE.x / 2.0 - 60, UI.SIZE.y - 46)
+	_hotbar.position = Vector2(8, UI.SIZE.y - 40)
 	_hotbar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_hotbar)
 	_hot_potion = UI.Slot.new(24)
@@ -312,11 +347,15 @@ func _build_hotbar() -> void:
 		var l := UI.label(pair[1], UI.C_DIM)
 		l.position = pair[0].position + Vector2(2, 25)
 		_hotbar.add_child(l)
-	_hint = UI.label("I Inventário  C Personagem  T Hábitos  G Missões  P Pomodoro  Esc Pausa", Color(1, 1, 1, 0.55))
+	_keys = KeyHints.new()
+	_keys.position = Vector2(8, UI.SIZE.y - 76)
+	root.add_child(_keys)
+	# dica de contexto (ex.: "V Organizar móveis"), acima das teclas
+	_hint = UI.label("", Color(1, 1, 1, 0.8))
 	_hint.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
 	_hint.add_theme_constant_override("shadow_offset_x", 1)
 	_hint.add_theme_constant_override("shadow_offset_y", 1)
-	_hint.position = Vector2(8, UI.SIZE.y - 14)
+	_hint.position = Vector2(8, UI.SIZE.y - 92)
 	root.add_child(_hint)
 
 
@@ -795,7 +834,13 @@ func open_window(id: String) -> void:
 	get_tree().paused = true
 	Game.input_locked = true
 	set_prompt("")
-	Audio.sfx("ui_open", -3.0)
+	match id:
+		"inventario", "guarda_roupa":
+			Audio.sfx2("gaveta", -8.0)
+		"caderno":
+			Audio.sfx2("ui_pack3", -6.0)
+		_:
+			Audio.sfx2("ui_pack1", -8.0)
 
 
 func close_window() -> void:
@@ -961,9 +1006,13 @@ func dialogue(entry: Variant) -> void:
 	Game.input_locked = true
 	_dialog = DialogueBox.new()
 	root.add_child(_dialog)
+	_keys.visible = false
+	_hotbar.visible = false
 	_dialog.start(lines)
 	await _dialog.finished
 	_dialog.queue_free()
+	_keys.visible = scene_kind != ""
+	_hotbar.visible = scene_kind != ""
 	_dialog = null
 	if not is_window_open() and not was_paused:
 		get_tree().paused = false

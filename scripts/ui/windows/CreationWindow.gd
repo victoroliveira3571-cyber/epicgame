@@ -1,18 +1,20 @@
 extends UIWindow
 
-## Criação do personagem (jogo novo): nome do herói, como ele é chamado e os nomes do pai e
-## da mãe. A classe é escolhida depois, na Guilda (capítulo 1).
+## Criação do personagem (jogo novo): nome do herói, como ele é chamado, os nomes do pai e
+## da mãe e a aparência (AppearanceEditor: pele, olhos, cabelo, barba). A classe é escolhida
+## depois, na Guilda (capítulo 1).
 
 var _hero: LineEdit
 var _father: LineEdit
 var _mother: LineEdit
 var _gender: String = "m"
 var _error: Label
+var _editor: AppearanceEditor
 
 
 func _init() -> void:
 	win_title = "Focus Town  -  Novo jogo"
-	win_size = Vector2(420, 226)
+	win_size = Vector2(600, 262)
 	close_on_escape = false
 
 
@@ -21,13 +23,13 @@ func build() -> void:
 	_add_landscape()
 	var v := UI.vbox(5)
 	add_to_body(v, Vector2(4, 0))
-	v.add_child(UI.wrap_label("Um Rei Demônio roubou as páginas do conhecimento de Focus Town. Cada hora de estudo de verdade é a única forma de recuperá-las.", UI.C_DIM, 392))
+	v.add_child(UI.wrap_label("Um Rei Demônio roubou as páginas do conhecimento de Focus Town. Cada hora de estudo de verdade é a única forma de recuperá-las.", UI.C_DIM, 226))
 	v.add_child(UI.hline())
 	_hero = _field(v, "Nome do herói", "Ex.: Ana, Léo...")
 	var g := UI.hbox(6)
 	v.add_child(g)
 	var gl := UI.label("Tratamento", UI.C_TEXT)
-	gl.custom_minimum_size.x = 110
+	gl.custom_minimum_size.x = 76
 	g.add_child(gl)
 	var b_m := UI.button("Ele", Callable(), 50)
 	var b_f := UI.button("Ela", Callable(), 50)
@@ -36,11 +38,13 @@ func build() -> void:
 	b_m.pressed.connect(func() -> void:
 		_gender = "m"
 		b_m.disabled = true
-		b_f.disabled = false)
+		b_f.disabled = false
+		_set_body("muscular"))
 	b_f.pressed.connect(func() -> void:
 		_gender = "f"
 		b_f.disabled = true
-		b_m.disabled = false)
+		b_m.disabled = false
+		_set_body("female"))
 	g.add_child(b_m)
 	g.add_child(b_f)
 	_father = _field(v, "Nome do pai", "O pai que desapareceu")
@@ -49,7 +53,29 @@ func build() -> void:
 	v.add_child(_error)
 	var start := UI.button("Começar a aventura", func() -> void: _start(), 150)
 	v.add_child(start)
+	# aparência
+	var right := UI.vbox(3)
+	add_to_body(right, Vector2(240, 0))
+	right.add_child(UI.label("Aparência", UI.C_ORANGE_L))
+	_editor = AppearanceEditor.new()
+	right.add_child(_editor)
+	var lk := LpcW.default_look("muscular")
+	lk["skin"] = LpcW.SKINS[randi() % 7][0]
+	lk["hair_pal"] = ["black", "dark_brown", "chestnut", "light_brown", "redhead", "blonde"][randi() % 6]
+	_editor.setup(lk)
 	_hero.call_deferred("grab_focus")
+
+
+func _set_body(b: String) -> void:
+	# troca para o visual-base do corpo, mantendo pele, olhos e cor do cabelo escolhidos
+	var keep := {}
+	for k in ["skin", "eyes", "hair_pal"]:
+		keep[k] = _editor.look.get(k)
+	var lk := LpcW.default_look(b)
+	for k in keep:
+		lk[k] = keep[k]
+	_editor.look = lk
+	_editor._rebuild()
 
 
 func refresh() -> void:
@@ -60,10 +86,10 @@ func _field(parent: Control, title: String, hint: String) -> LineEdit:
 	var h := UI.hbox(6)
 	parent.add_child(h)
 	var l := UI.label(title, UI.C_TEXT)
-	l.custom_minimum_size.x = 110
+	l.custom_minimum_size.x = 76
 	h.add_child(l)
 	var e := LineEdit.new()
-	e.custom_minimum_size = Vector2(220, 18)
+	e.custom_minimum_size = Vector2(146, 18)
 	e.placeholder_text = hint
 	e.max_length = 18
 	h.add_child(e)
@@ -82,6 +108,7 @@ func _start() -> void:
 	GameState.debug_reset()
 	GameState.gold = 25
 	Story.start_new_game(hero, father, mother, _gender)
+	GameState.set_appearance(_editor.look)
 	HUD.close_window()
 	Game.enter_interior("casa_familia")
 

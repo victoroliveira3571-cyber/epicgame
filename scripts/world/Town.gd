@@ -27,17 +27,19 @@ var minimap_tex: Texture2D       # chão da cidade em miniatura (minimapa do HUD
 
 const BUILDING_DEFS := [
 	{"id": "casa", "name": "Casa", "prop": "b_casa_laranja", "tile": Vector2i(14, 25), "door_dx": -8.0,
-		"npc": "OldWoman", "npc_dx": 36.0, "lines": ["Descanse, você merece.", "Em casa tudo fica melhor.", "Uma casa bonita rende bons hábitos."]},
+		"npc": "Villager5", "npc_dx": 36.0, "lines": ["Descanse, você merece.", "Em casa tudo fica melhor.", "Uma casa bonita rende bons hábitos."]},
 	{"id": "restaurante", "name": "Pousada Pão Quente", "prop": "b_padaria", "tile": Vector2i(23, 25), "door_dx": 0.0,
 		"npc": "Woman", "npc_dx": -30.0, "lines": ["Fome? Tenho pratos quentes!", "Comer bem rende mais foco.", "Hoje tem macarrão!"]},
 	{"id": "loja", "name": "Loja de Armas", "prop": "b_casa_empena", "tile": Vector2i(42, 25), "door_dx": 0.0,
-		"npc": "Villager4", "npc_dx": 30.0, "lines": ["Armas novas chegaram!", "Equipamento bom salva vidas.", "Só vendo o que presta."]},
+		"npc": "Villager2", "npc_dx": 30.0, "lines": ["O Otávio tem cada espada linda!", "Equipamento bom salva vidas.", "Vou juntar ouro para um escudo."]},
 	{"id": "forja", "name": "Ferreiro", "prop": "b_forja", "tile": Vector2i(51, 25), "door_dx": 0.0,
-		"npc": "Caveman", "npc_dx": -30.0, "lines": ["Traga barras e ouro.", "Aprimoro qualquer arma.", "Ferro quente, trabalho bom."]},
+		"npc": "aventureiro_cacador", "npc_dx": -30.0, "lines": ["O Brás deixou meu arco novinho.", "Dá para ouvir a bigorna daqui!", "Ferro quente, trabalho bom."]},
 	{"id": "biblioteca", "name": "Biblioteca", "prop": "b_salao_vermelho", "tile": Vector2i(22, 17), "door_dx": 0.0, "tint": Color(0.72, 0.86, 1.0),
-		"npc": "Master", "npc_dx": 36.0, "lines": ["Silêncio, por favor... aqui se estuda.", "Cada livro é uma aventura.", "As mesas lá dentro estão livres."]},
+		"npc": "Child", "npc_dx": 36.0, "lines": ["Silêncio, por favor... aqui se estuda.", "Cada livro é uma aventura.", "As mesas lá dentro estão livres."]},
 	{"id": "guilda", "name": "Guilda dos Aventureiros", "prop": "h_salao_madeira", "tile": Vector2i(32, 17), "door_dx": 0.0,
 		"npc": "OldMan3", "npc_dx": 44.0, "lines": ["Bem-vindo, aventureiro!", "A masmorra espera por você.", "Quem foca, conquista."]},
+	{"id": "arena", "name": "Arena de Combate", "prop": "b_salao_vermelho", "tile": Vector2i(44, 17), "door_dx": 0.0, "tint": Color(1.0, 0.82, 0.6),
+		"npc": "guarda", "npc_dx": 34.0, "lines": ["Duelos todos os dias!", "Ninguém morre na Arena. Só o orgulho.", "A Bruna está lá dentro."]},
 ]
 const HOUSE_DEFS := [
 	{"prop": "b_casa_creme", "tile": Vector2i(14, 37)}, {"prop": "b_estalagem", "tile": Vector2i(22, 37)},
@@ -118,6 +120,7 @@ func _build_masks() -> void:
 	_rect_fill(dirt, SPINE_X - 1, 17, SPINE_X + 1, 47)
 	_rect_fill(dirt, 27, 22, 37, 30)
 	_rect_fill(dirt, 21, 18, 23, AVENUE_Y - 1)   # caminho até a biblioteca
+	_rect_fill(dirt, 43, 18, 45, AVENUE_Y - 1)   # caminho até a arena
 	# lago esquerdo e lagoa direita
 	_rect_fill(water, 8, 30, 16, 35)
 	_rect_fill(water, 47, 31, 52, 35)
@@ -184,7 +187,7 @@ func _build_buildings() -> void:
 	for d in BUILDING_DEFS:
 		var t: Vector2i = d["tile"]
 		var pos := Vector2(t.x * T + 8, t.y * T)
-		var interior: String = d["id"] if d["id"] in ["casa", "restaurante", "guilda", "biblioteca"] else ""
+		var interior: String = d["id"] if d["id"] in ["casa", "restaurante", "guilda", "biblioteca", "forja", "loja", "arena"] else ""
 		var b := Building.create(world, d["id"], d["name"], d["prop"], pos, d["door_dx"], interior)
 		if d.has("tint") and b.sprite != null:
 			b.sprite.modulate = d["tint"]
@@ -371,7 +374,7 @@ func _build_npcs() -> void:
 		n.move_speed = rng.randf_range(14.0, 20.0)
 		n.lines = lines
 	# bichinhos
-	var animals := [["ChickenWhite", 1], ["ChickenBrown", 1], ["Cat", 1], ["Dog", 1]]
+	var animals := [["ChickenWhite", 1], ["ChickenBrown", 1], ["Cat", 1], ["Dog", 1], ["Cow", 2]]
 	for a in animals:
 		for k in a[1]:
 			var pos := _random_grass_near(Vector2(520, 460), 330.0)
@@ -380,6 +383,9 @@ func _build_npcs() -> void:
 			n2.move_speed = 9.0 if a[0] in ["Pig", "Cow"] else 13.0
 			n2.animal_flip_right = false
 			n2.wander_points = []
+			if a[0] == "Cow":
+				n2.move_speed = 7.0
+				Audio.emitter(n2, Vector2.ZERO, "vaca", -12.0, false, 28.0, 170.0)
 
 
 func _random_grass_near(center: Vector2, radius: float) -> Vector2:
@@ -398,6 +404,15 @@ func _random_grass_near(center: Vector2, radius: float) -> Vector2:
 
 
 func _build_ambient() -> void:
+	# sons: margem dos dois lagos, pássaros de dia, grilos e coruja à noite
+	var amb := Ambience.new()
+	amb.forced_hour = forced_hour
+	world.add_child(amb)
+	Audio.emitter(world, Vector2(12 * T, 32 * T + 8), "amb_margem", -9.0, true, 0.0, 200.0)
+	Audio.emitter(world, Vector2(50 * T, 33 * T), "amb_margem", -9.0, true, 0.0, 200.0)
+	# ferraria: a bigorna se ouve da rua
+	if buildings.has("forja"):
+		Audio.emitter(world, (buildings["forja"] as Node2D).position + Vector2(0, -20), "bigorna2", -16.0, false, 7.0, 180.0)
 	# borboletas voando perto das flores
 	for i in 6:
 		var b := Butterfly.new()

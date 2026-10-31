@@ -44,8 +44,9 @@ var _last_prompt: String = "<none>"
 var _step_timer: float = 0.0
 var _ghost_timer: float = 0.0
 var _anim_lock: float = 0.0
+var _attack_speed: float = 1.0
 
-var sprite: AnimatedSprite2D
+var sprite: LpcActor
 var weapon_pivot: Node2D
 var weapon_sprite: Sprite2D
 var camera: Camera2D
@@ -64,6 +65,7 @@ static func spawn(parent: Node, pos: Vector2) -> Player:
 
 func _ready() -> void:
 	add_to_group("player")
+	add_to_group("speaker_heroi")
 	world = get_parent()
 	collision_layer = 2
 	collision_mask = 1
@@ -74,11 +76,8 @@ func _ready() -> void:
 	col.shape = shape
 	col.position = Vector2(0, -3)
 	add_child(col)
-	shadow = Fx.make_shadow(self, 12.0, 0.0)
-	sprite = AnimatedSprite2D.new()
-	sprite.sprite_frames = Pix.actor_frames(_sheet_path())
-	sprite.position = Vector2(0, -9)
-	add_child(sprite)
+	shadow = Fx.make_shadow(self, 13.0, 0.0)
+	sprite = LpcActor.make(self, Looks.hero(), true)
 	sprite.play("idle_down")
 	weapon_pivot = Node2D.new()
 	weapon_pivot.position = Vector2(0, -8)
@@ -90,7 +89,7 @@ func _ready() -> void:
 	weapon_pivot.add_child(weapon_sprite)
 	camera = Camera2D.new()
 	camera.zoom = Vector2(CAMERA_ZOOM, CAMERA_ZOOM)
-	camera.position = Vector2(0, -8)
+	camera.position = Vector2(0, -12)
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 9.0
 	add_child(camera)
@@ -109,7 +108,7 @@ func _sheet_path() -> String:
 
 
 func refresh_sheet() -> void:
-	sprite.sprite_frames = Pix.actor_frames(_sheet_path())
+	sprite.refresh(Looks.hero())
 	sprite.play("idle_" + Pix.dir_name(facing))
 
 
@@ -121,10 +120,12 @@ func set_camera_limits(rect: Rect2) -> void:
 
 
 func _refresh_equipment_visual() -> void:
-	var hand: String = GameState.equipped_weapon_hand()
-	weapon_sprite.texture = Pix.tex(hand) if hand != "" else null
-	var wid: String = GameState.equipped.get("weapon", "")
-	weapon_sprite.modulate = Data.get_item(wid).get("tint", Color.WHITE) if wid != "" else Color.WHITE
+	# a arma e a armadura fazem parte do visual LPC (Looks.hero), montado de novo quando mudam
+	weapon_sprite.texture = null
+	if sprite != null:
+		var lk := Looks.hero()
+		if LpcW.look_key(lk, "full") != LpcW.look_key(sprite.look, "full"):
+			sprite.refresh(lk)
 
 
 # ====================================================================== Loop
@@ -215,14 +216,15 @@ func _update_animation(input: Vector2) -> void:
 	var dn := Pix.dir_name(facing)
 	var moving := input.length() > 0.1 and state == State.NORMAL
 	var anim := ""
-	if _anim_lock > 0.0 and sprite.sprite_frames.has_animation("attack_" + dn):
-		anim = "attack_" + dn
+	if _anim_lock > 0.0:
+		anim = sprite.base_anim() + "_" + dn
 	elif state == State.DODGE:
-		anim = "attack_" + dn if sprite.sprite_frames.has_animation("attack_" + dn) else "walk_" + dn
+		anim = "walk_" + dn
 	elif moving:
 		anim = "walk_" + dn
 	else:
 		anim = "idle_" + dn
+	sprite.speed_scale = 2.4 if state == State.DODGE else (_attack_speed if _anim_lock > 0.0 else 1.0)
 	if sprite.animation != anim:
 		sprite.play(anim)
 	if moving:
@@ -257,7 +259,7 @@ func _attack() -> void:
 	if heavy:
 		combo = 0
 	swing_time = 0.16
-	_anim_lock = 0.16
+	_play_attack_anim(family, heavy)
 	attacked.emit()
 	Audio.sfx("swing_combo" if heavy and not Data.CLASSES[GameState.player_class]["ranged"] else ("swing3" if heavy else ("swing1" if combo % 2 == 1 else "swing2")), -4.0)
 	if Data.CLASSES[GameState.player_class]["ranged"]:
@@ -274,7 +276,7 @@ func _melee(family: String, heavy: bool) -> void:
 	knock += dir * (85.0 if heavy else 45.0)
 	_swing_visual(dir, heavy)
 	var fx_name := "slash2" if heavy else "slash"
-	var fx_pos := global_position + Vector2(0, -8) + dir * (14.0 if family == "sword" else 11.0)
+	var fx_pos := global_position + Vector2(0, -13) + dir * (14.0 if family == "sword" else 11.0)
 	var fx_node := Fx.fx(world, fx_name, fx_pos, 1.0 if not heavy else 1.35, dir.angle(), Color(1, 1, 1, 0.95))
 	if fx_node != null and combo % 2 == 0 and not heavy:
 		fx_node.flip_v = true
@@ -299,6 +301,18 @@ func _melee(family: String, heavy: bool) -> void:
 		Fx.shake_camera(camera, 1.5 if heavy else 0.8, 0.12)
 		if heavy:
 			Game.hit_stop(0.05)
+
+
+## Animação LPC do golpe da classe, ajustada para caber no tempo de recarga do ataque.
+func _play_attack_anim(family: String, heavy: bool) -> void:
+	var base := LpcW.weapon_anim(str(sprite.look.get("weapon", family)))
+	if family == "dagger" and heavy:
+		base = "thrust"
+	var cd := float(ATTACK_CD.get(family, 0.38))
+	var length := sprite.anim_length(base)
+	_attack_speed = maxf(length / maxf(cd * 0.92, 0.1), 1.0)
+	_anim_lock = length / _attack_speed
+	sprite.play(base + "_" + Pix.dir_name(facing), true)
 
 
 func _swing_visual(dir: Vector2, heavy: bool) -> void:
@@ -350,7 +364,7 @@ func _shoot(heavy: bool) -> void:
 	facing = dir
 	var is_mage: bool = GameState.player_class == "mago"
 	var roll := _roll_damage(1.3 if heavy else 1.0)
-	var origin := global_position + Vector2(0, -8) + dir * 8.0
+	var origin := global_position + Vector2(0, -14) + dir * 8.0
 	var p := Projectile.make(world, origin, dir, Projectile.Kind.ORB if is_mage else Projectile.Kind.ARROW, roll[0], true)
 	p.crit = roll[1]
 	p.speed = 190.0 if is_mage else 250.0
@@ -377,17 +391,20 @@ func _start_dodge() -> void:
 	invuln = DODGE_TIME + 0.06
 	_ghost_timer = 0.0
 	knock = Vector2.ZERO
-	Audio.sfx("jump", -6.0, 0.1)
+	Audio.sfx2("whoosh", -6.0, 0.12)
 	dodged.emit(DODGE_COOLDOWN)
 	Fx.fx(world, "smoke", global_position + Vector2(0, -2), 0.7, 0.0, Color(1, 1, 1, 0.6))
 
 
 func _spawn_ghost() -> void:
-	var tex: Texture2D = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	var tex: Texture2D = sprite.snapshot()
 	if tex == null:
 		return
 	var g := Sprite2D.new()
 	g.texture = tex
+	g.centered = false
+	g.scale = sprite.sprite.scale
+	g.offset = sprite.sprite.offset
 	g.global_position = sprite.global_position
 	g.modulate = Color(0.6, 0.8, 1.0, 0.55)
 	g.z_index = -1
@@ -407,7 +424,12 @@ func _cast_skill() -> void:
 	var cd: float = float(Data.SKILLS[skill_id]["cd"])
 	skill_cd_left = cd
 	skill_used.emit(cd)
-	var center := global_position + Vector2(0, -6)
+	var skill_anim: String = {"giro": "slash", "luz": "spellcast", "sombra": "thrust", "muralha": "spellcast",
+		"meteoro": "thrust", "chuva": "shoot"}.get(skill_id, "spellcast")
+	_attack_speed = 1.5
+	_anim_lock = sprite.anim_length(skill_anim) / _attack_speed
+	sprite.play(skill_anim + "_" + Pix.dir_name(facing), true)
+	var center := global_position + Vector2(0, -10)
 	match skill_id:
 		"giro":
 			Audio.sfx("swing_combo", -2.0)
@@ -457,7 +479,7 @@ func _cast_skill() -> void:
 			for i in 7:
 				var a := deg_to_rad(-42.0 + 14.0 * i)
 				var roll := _roll_damage(1.0)
-				var p := Projectile.make(world, global_position + Vector2(0, -8) + base_dir * 6.0, base_dir.rotated(a), Projectile.Kind.ARROW, roll[0], true)
+				var p := Projectile.make(world, global_position + Vector2(0, -14) + base_dir * 6.0, base_dir.rotated(a), Projectile.Kind.ARROW, roll[0], true)
 				p.crit = roll[1]
 				p.speed = 260.0
 				p.lifetime = 0.9
@@ -505,7 +527,7 @@ func _dash_damage(dir: Vector2) -> void:
 func _use_quick(kind: String) -> void:
 	var item_id := GameState.quick_potion() if kind == "potion" else GameState.quick_food()
 	if item_id == "":
-		Fx.float_text(world, "Sem %s" % ("poções" if kind == "potion" else "comida"), global_position + Vector2(0, -22), Color("ff9a8a"))
+		Fx.float_text(world, "Sem %s" % ("poções" if kind == "potion" else "comida"), global_position + Vector2(0, -36), Color("ff9a8a"))
 		Audio.sfx("ui_error", -4.0)
 		return
 	var before := GameState.hp
@@ -513,16 +535,16 @@ func _use_quick(kind: String) -> void:
 		var it: Dictionary = Data.get_item(item_id)
 		if kind == "potion":
 			Audio.sfx("heal", -2.0)
-			Fx.fx(world, "aura", global_position + Vector2(0, -8), 1.2, 0.0, Color(0.6, 1, 0.7))
-			Fx.float_text(world, "+%d" % (GameState.hp - before), global_position + Vector2(0, -22), Color("7ef08a"), 8)
+			Fx.fx(world, "aura", global_position + Vector2(0, -14), 1.2, 0.0, Color(0.6, 1, 0.7))
+			Fx.float_text(world, "+%d" % (GameState.hp - before), global_position + Vector2(0, -36), Color("7ef08a"), 8)
 		else:
 			Audio.sfx("powerup", -4.0)
-			Fx.fx(world, "boost", global_position + Vector2(0, -10), 0.9, 0.0, Color(1, 0.9, 0.6))
-			Fx.float_text(world, "Fome +%d" % int(it.get("hunger", 0)), global_position + Vector2(0, -22), Color("ffcf6a"), 8)
+			Fx.fx(world, "boost", global_position + Vector2(0, -16), 0.9, 0.0, Color(1, 0.9, 0.6))
+			Fx.float_text(world, "Fome +%d" % int(it.get("hunger", 0)), global_position + Vector2(0, -36), Color("ffcf6a"), 8)
 			if it.has("buff"):
 				GameState.bump("meals")
 	else:
-		Fx.float_text(world, "Vida cheia" if kind == "potion" else "Sem fome", global_position + Vector2(0, -22), Color("c9c4b8"))
+		Fx.float_text(world, "Vida cheia" if kind == "potion" else "Sem fome", global_position + Vector2(0, -36), Color("c9c4b8"))
 
 
 # ======================================================================== Dano
@@ -538,8 +560,8 @@ func hurt(raw_damage: float, from_pos: Vector2, knockback_strength: float = 90.0
 	knock += away * knockback_strength * 1.6
 	Fx.flash(sprite, Color(2.4, 0.9, 0.9), 0.14)
 	Fx.shake_camera(camera, 2.5, 0.22)
-	Fx.float_text(world, "-%d" % amount, global_position + Vector2(0, -22), Color("ff6a5a"), 8)
-	Fx.burst(world, global_position + Vector2(0, -8), Color(1, 0.35, 0.3), 5, 34.0, 0.3)
+	Fx.float_text(world, "-%d" % amount, global_position + Vector2(0, -36), Color("ff6a5a"), 8)
+	Fx.burst(world, global_position + Vector2(0, -14), Color(1, 0.35, 0.3), 5, 34.0, 0.3)
 	Audio.sfx("hurt", -2.0)
 	Game.hit_stop(0.05)
 	return true
@@ -551,12 +573,12 @@ func _on_died() -> void:
 	state = State.DEAD
 	velocity = Vector2.ZERO
 	weapon_pivot.visible = false
-	sprite.play("idle_down")
+	sprite.hold_last = true
+	sprite.speed_scale = 1.0
+	sprite.play("hurt_down", true)
 	sprite.modulate = Color.WHITE
 	Audio.sfx("die")
 	var tw := create_tween()
-	tw.set_parallel(true)
-	tw.tween_property(sprite, "rotation", PI / 2.0, 0.35).set_trans(Tween.TRANS_BACK)
 	tw.tween_property(sprite, "modulate", Color(0.6, 0.6, 0.7, 0.9), 0.5)
 
 

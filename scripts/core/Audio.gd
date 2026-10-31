@@ -172,6 +172,49 @@ func sfx(name: String, volume_db: float = 0.0, pitch_var: float = 0.06) -> void:
 	_play_on_pool(stream, volume_db, pitch_var)
 
 
+## Sons enviados pelo Victor (assets/audio/sfx2/): ações e ambiente. Ver ASSETS.md.
+const SFX2_DIR := "res://assets/audio/sfx2/"
+
+
+func sfx2(name: String, volume_db: float = 0.0, pitch_var: float = 0.05) -> void:
+	var now := Time.get_ticks_msec()
+	if _last_played.has("2:" + name) and now - int(_last_played["2:" + name]) < 60:
+		return
+	_last_played["2:" + name] = now
+	var stream := _load_stream(SFX2_DIR + name + ".wav")
+	if stream != null:
+		_play_on_pool(stream, volume_db, pitch_var)
+
+
+## Som de ambiente preso a um ponto do mundo (rio, bigorna, relógio, goteira). `loop` = contínuo;
+## senão toca de vez em quando (a cada `every` segundos, com variação). Some com a distância.
+func emitter(parent: Node, pos: Vector2, name: String, volume_db: float = -8.0, loop: bool = true,
+		every: float = 8.0, max_dist: float = 220.0) -> AudioStreamPlayer2D:
+	var p := AudioStreamPlayer2D.new()
+	p.position = pos
+	p.stream = _load_stream(SFX2_DIR + name + ".wav", loop)
+	p.volume_db = volume_db
+	p.max_distance = max_dist
+	p.attenuation = 1.6
+	p.bus = "Master"
+	parent.add_child(p)
+	if p.stream == null:
+		return p
+	if loop:
+		p.play(randf() * maxf(p.stream.get_length() - 0.5, 0.0))
+	else:
+		var t := Timer.new()
+		t.one_shot = false
+		t.wait_time = every * randf_range(0.4, 1.0)
+		p.add_child(t)
+		t.timeout.connect(func() -> void:
+			t.wait_time = every * randf_range(0.6, 1.4)
+			p.pitch_scale = randf_range(0.92, 1.08)
+			p.play())
+		t.start()
+	return p
+
+
 ## Tique-taque do relógio (sessão de foco do Pomodoro).
 func set_clock(on: bool) -> void:
 	on = on and GameState.clock_on

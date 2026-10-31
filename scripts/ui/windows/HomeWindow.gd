@@ -30,4 +30,4 @@ func build() -> void:
 			"" if owned else UI.fmt_int(price), UI.C_GOLD if GameState.gold >= price else UI.C_BAD,
 			"Comprado" if owned else "Comprar", func() -> void:
 				if GameState.buy_furniture(id):
-					Audio.sfx("coin"), owned or GameState.gold < price, 520))
+					Audio.sfx2("moedas", -6.0), owned or GameState.gold < price, 520))

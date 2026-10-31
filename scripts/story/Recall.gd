@@ -226,11 +226,8 @@ static func pick(fmt: String, n: int) -> Array:
 		"type":
 			pool = _from_list(StoryData.CARDS_TYPE, "type")
 		_:
-			pool = user_cards()
-			if pool.size() < n:
-				var extra := _from_list(StoryData.CARDS_FREE, "free")
-				extra.shuffle()
-				pool.append_array(extra.slice(0, n - pool.size() + 2))
+			# o Caderno virou escrita livre: os chefes usam só o banco de perguntas da história
+			pool = _from_list(StoryData.CARDS_FREE, "free")
 	pool.shuffle()
 	pool.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return box_of(x) < box_of(y))
 	return pool.slice(0, mini(n, pool.size()))

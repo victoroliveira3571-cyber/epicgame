@@ -39,8 +39,20 @@ func build() -> void:
 			col.add_child(UI.wrap_label(line, UI.C_TEXT, body.size.x - 30))
 		col.add_child(UI.spacer(4))
 	var lpc := Lpc.credit_lines()
+	# autores das peças do mundo (corpos, rostos, armaduras, armas) somados aos do guarda-roupa
+	var world_lpc := LpcW.credit_lines()
+	var authors: Array = (lpc[0] as Array).duplicate()
+	for a in world_lpc[0]:
+		if not authors.has(a):
+			authors.append(a)
+	var lic: Array = (lpc[1] as Array).duplicate()
+	for l in world_lpc[1]:
+		if not lic.has(l):
+			lic.append(l)
+	authors.sort_custom(func(x: String, y: String) -> bool: return x.to_lower() < y.to_lower())
+	lpc = [authors, lic]
 	if not (lpc[0] as Array).is_empty():
-		col.add_child(UI.label("Roupas e corpos LPC - autores", UI.C_ORANGE_L))
+		col.add_child(UI.label("Personagens LPC (corpos, rostos, roupas, armaduras e armas) - autores", UI.C_ORANGE_L))
 		col.add_child(UI.wrap_label(", ".join(lpc[0]), UI.C_TEXT, body.size.x - 30))
 		col.add_child(UI.spacer(2))
 		col.add_child(UI.label("Licenças: " + ", ".join(lpc[1]), UI.C_DIM))

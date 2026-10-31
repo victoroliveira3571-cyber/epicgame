@@ -1,9 +1,11 @@
 class_name Interior
 extends Node2D
 
-## Interiores da cidade: sua casa (móveis que você arruma), o restaurante, a guilda e as
-## casas dos moradores. Cada interior é uma sala montada por código com pisos, paredes e
-## móveis do Ninja Adventure; o jogador entra e sai pela porta de baixo.
+## Interiores da cidade: sua casa (móveis que você arruma), a pousada, a guilda, a biblioteca,
+## a ferraria, a loja de armas, a arena e as casas dos moradores. Cada sala é montada por código
+## com pisos, paredes e móveis (Ninja Adventure + props próprios p_*); o tamanho segue a função
+## do lugar (oficina de costura pequena, salões grandes). O dono de cada estabelecimento se
+## apresenta na primeira visita (ShopTalk). O jogador entra e sai pela porta de baixo.
 
 const T := 16
 const WALL_H := 2          # linhas de parede no topo
@@ -11,15 +13,24 @@ const DOOR_W := 2          # largura do vão da porta (tiles)
 
 # Moradores das casas de cenário (índice = ordem de HOUSE_DEFS na cidade)
 const HOUSES := [
-	{"title": "Casa da Costureira", "npc": "Villager6", "floor": "floor_wood", "wall": "wall_cream",
-		"lines": ["Entre! Aceita um chá?", "Eu costuro capas para os aventureiros.", "A Dona Marta manda lembranças."]},
-	{"title": "Estalagem do Viajante", "npc": "Villager4", "floor": "floor_wood_dark", "wall": "wall_red",
+	{"title": "Ateliê da Costureira", "npc": "costureira", "floor": "floor_wood", "wall": "wall_cream", "size": Vector2i(14, 10),
+		"lines": ["Entre! Cuidado com os alfinetes.", "Capa nova? Volte quando juntar fichas de estilo.", "A Dona Marta manda lembranças."]},
+	{"title": "Estalagem do Viajante", "npc": "estalajadeiro", "floor": "floor_wood_dark", "wall": "wall_red", "size": Vector2i(24, 14),
 		"lines": ["Os quartos estão cheios hoje!", "Quem sobe a masmorra dorme melhor.", "Já ouvi histórias do chefe do andar 5."]},
-	{"title": "Casa do Mestre Lin", "npc": "Master", "floor": "floor_stone", "wall": "wall_stone",
+	{"title": "Casa do Mestre Lin", "npc": "Master", "floor": "floor_stone", "wall": "wall_stone", "size": Vector2i(16, 10),
 		"lines": ["Respire fundo. Um pomodoro por vez.", "A mente calma corta mais fundo.", "Hoje meditei por 25 minutos."]},
-	{"title": "Salão do Clã", "npc": "Samurai", "floor": "floor_wood_dark", "wall": "wall_red",
-		"lines": ["Aqui treinamos de madrugada.", "Honra vem da disciplina.", "Mostre o que você aprendeu."]},
+	{"title": "Salão do Clã", "npc": "mestre_cla", "floor": "floor_wood_dark", "wall": "wall_red", "size": Vector2i(26, 14),
+		"lines": ["Aqui treinamos de madrugada.", "Honra vem da disciplina.", "Mostre o que você aprendeu na Arena."]},
 ]
+
+## Tamanho de cada sala (tiles) e pisos.
+const ROOMS := {
+	"casa": [24, 14, "floor_wood", "wall_cream"], "restaurante": [28, 16, "floor_wood_dark", "wall_red"],
+	"guilda": [32, 18, "floor_stone", "wall_stone"], "biblioteca": [26, 15, "floor_wood_dark", "wall_cream"],
+	"casa_familia": [20, 12, "floor_wood", "wall_cream"], "casa_pai": [16, 10, "floor_wood_dark", "wall_stone"],
+	"forja": [18, 11, "floor_stone", "wall_stone"], "loja": [16, 10, "floor_wood", "wall_red"],
+	"arena": [30, 18, "floor_sand", "wall_stone"],
+}
 
 var id: String = "casa"
 var cols: int = 28
@@ -35,6 +46,8 @@ var edit_mode: bool = false
 var picked_id: String = ""
 var picked_from: Vector2 = Vector2.ZERO
 var _ending: bool = false
+var owner_id: String = ""          # dono do lugar (apresentação na primeira visita, ShopTalk)
+var owner_npc: NPC = null
 
 
 ## Textura de um móvel/objeto: primeiro assets/custom/props (arte própria), depois assets/ninja/props.
@@ -101,54 +114,46 @@ func _ready() -> void:
 		_build_family_home()
 	elif id == "casa_pai":
 		_build_father_house()
+	elif id == "forja":
+		_build_forge()
+	elif id == "loja":
+		_build_weapon_shop()
+	elif id == "arena":
+		_build_arena()
 	else:
 		_build_resident_house()
 	_spawn_player()
 	var mod := CanvasModulate.new()
 	mod.color = Color(0.72, 0.7, 0.76) if id == "casa_pai" else Color(1.0, 0.94, 0.86)
 	add_child(mod)
-	Audio.play_music("interior_taverna" if id == "restaurante" else ("home" if id == "casa_familia" else "interior_manor"))
+	Audio.play_music("interior_taverna" if id in ["restaurante", "casa_npc_1"] else ("home" if id == "casa_familia" else "interior_manor"))
 	HUD.on_scene_ready("interior")
 	if id == "casa_familia" and Story.step() == "c1_casa":
 		await get_tree().create_timer(0.8).timeout
 		Story.talk("mae")
+	elif owner_id != "" and not Story.flag("intro_" + owner_id) and not Story.is_busy():
+		# primeira visita: o dono nota o jogador, acena e se apresenta
+		await get_tree().create_timer(0.7).timeout
+		if is_instance_valid(owner_npc):
+			owner_npc.show_emote(22)
+			owner_npc.face(player.global_position)
+			if owner_npc.actor != null:
+				owner_npc.actor.hop(3.0)
+		await get_tree().create_timer(0.5).timeout
+		ShopTalk.talk(owner_id)
 
 
 func _configure() -> void:
-	if id == "casa":
-		cols = 28
-		rows = 16
-		floor_tex = "floor_wood"
-		wall_tex = "wall_cream"
-	elif id == "restaurante":
-		cols = 30
-		rows = 17
-		floor_tex = "floor_wood_dark"
-		wall_tex = "wall_red"
-	elif id == "guilda":
-		cols = 32
-		rows = 18
-		floor_tex = "floor_stone"
-		wall_tex = "wall_stone"
-	elif id == "biblioteca":
-		cols = 30
-		rows = 17
-		floor_tex = "floor_wood_dark"
-		wall_tex = "wall_cream"
-	elif id == "casa_familia":
-		cols = 24
-		rows = 14
-		floor_tex = "floor_wood"
-		wall_tex = "wall_cream"
-	elif id == "casa_pai":
-		cols = 20
-		rows = 12
-		floor_tex = "floor_wood_dark"
-		wall_tex = "wall_stone"
+	if ROOMS.has(id):
+		var r: Array = ROOMS[id]
+		cols = r[0]
+		rows = r[1]
+		floor_tex = r[2]
+		wall_tex = r[3]
 	else:
 		var h: Dictionary = HOUSES[_house_index()]
-		cols = 28
-		rows = 16
+		cols = h["size"].x
+		rows = h["size"].y
 		floor_tex = h["floor"]
 		wall_tex = h["wall"]
 
@@ -328,59 +333,120 @@ func study_spot(scene: String, pos: Vector2) -> Spot:
 	return spot("Estudar aqui (Pomodoro)", pos, func() -> void: HUD.open_pomodoro_at(scene), 22.0)
 
 
+## Objeto preso na parede de cima (quadros, janelas, prateleiras): fica atrás de todo mundo.
+func wall(name: String, x: float, y: float = 30.0) -> Node2D:
+	return prop(name, Vector2(x, y), false, true)
+
+
+## Morador sentado (taverna, biblioteca): `dir` = para onde olha.
+func sitter(look: String, pos: Vector2, dir: String, lines: Array) -> NPC:
+	var n := NPC.new()
+	n.sheet = look
+	n.mode = "sit"
+	n.sit_dir = dir
+	n.position = pos
+	n.lines = lines
+	world.add_child(n)
+	return n
+
+
+## Dono do lugar: NPC com "Falar com" (ShopTalk) e apresentação na primeira visita.
+func shop_owner(look: String, talk_id: String, title: String, pos: Vector2, lines: Array, mode: String = "static") -> NPC:
+	var n := npc(look, pos, lines, mode, 30.0)
+	n.add_to_group("speaker_" + talk_id)
+	var p := Spot.new("Falar com " + title, func() -> void: ShopTalk.talk(talk_id), 22.0)
+	n.add_child(p)
+	owner_id = talk_id
+	owner_npc = n
+	return n
+
+
+## Mesa com banquinhos, louça e, às vezes, vela.
+func table_set(t: Vector2, round_table: bool = false, deco: String = "i_bowl2", candle: bool = false) -> void:
+	prop("p_mesa_redonda" if round_table else "i_table", t, true)
+	prop("i_stool", t + Vector2(-16, 6))
+	prop("i_stool", t + Vector2(16, 6))
+	if deco != "":
+		prop(deco, t + Vector2(-3, -7 if round_table else -6), false)
+	if candle:
+		prop("p_vela", t + Vector2(5, -8), false)
+		light(t + Vector2(5, -14), Color(1.0, 0.75, 0.45), 0.5, 0.45)
+
+
 # ================================================================== Biblioteca
 func _build_library() -> void:
 	var w := cols * T
 	var cx := w / 2.0
-	for x in [40.0, 82.0, 124.0, w - 124.0, w - 82.0, w - 40.0]:
+	for x in [36.0, 72.0, 108.0, w - 108.0, w - 72.0, w - 36.0]:
 		prop("i_bookcase", Vector2(x, 62), false)
-	prop("i_painting", Vector2(cx, 28), false, true)
+	wall("i_painting", cx, 26)
+	wall("p_janela", cx - 46, 28)
+	wall("p_janela", cx + 46, 28)
+	prop("furn_relogio", Vector2(w - 20, 66), false)
+	Audio.emitter(world, Vector2(w - 20, 56), "amb_relogio", -14.0, true, 0.0, 180.0)
 	# balcão da bibliotecária
 	for dx in [-24.0, 24.0]:
 		prop("i_counter", Vector2(cx + dx, 100))
 	_block(Rect2(cx - 50, 44, 100, 36))
-	npc("OldWoman", Vector2(cx, 82), ["Bem-vindo à biblioteca.", "As mesas de estudo estão livres.", "Um pomodoro por vez, sem pressa."])
+	shop_owner("bibliotecaria", "bibliotecaria", "Dona Celeste", Vector2(cx, 82),
+		["Bem-vindo à biblioteca.", "As mesas de estudo estão livres.", "Um pomodoro por vez, sem pressa."])
 	prop("i_desk_paper", Vector2(cx + 30, 92), false)
+	prop("p_livros", Vector2(cx - 34, 92), false)
+	prop("p_vela", Vector2(cx - 18, 91), false)
 	# estantes no meio da sala
-	for x in [70.0, w - 70.0]:
-		prop("i_bookshelf_s", Vector2(x, 150))
-		prop("i_bookshelf_s", Vector2(x, 200))
-	# mesas de estudo
-	for t in [Vector2(cx - 70, 170), Vector2(cx + 70, 170), Vector2(cx - 70, 222), Vector2(cx + 70, 222)]:
-		prop("i_table", t, true)
-		prop("i_stool", t + Vector2(-16, 6))
-		prop("i_stool", t + Vector2(16, 6))
-		prop("i_mug", t + Vector2(-3, -8), false)
+	for x in [48.0, w - 48.0]:
+		prop("i_bookshelf_s", Vector2(x, 140))
+		prop("i_bookshelf_s", Vector2(x, 186))
+	prop("p_livros", Vector2(70, 196), false)
+	# mesas de estudo (com vela) e quem estuda nelas
+	var tables := [Vector2(cx - 62, 160), Vector2(cx + 62, 160), Vector2(cx - 62, 206), Vector2(cx + 62, 206)]
+	for t in tables:
+		table_set(t, false, "p_livros", true)
 		study_spot("livraria", t + Vector2(0, 14))
-	prop("i_rug_big", Vector2(cx, 196), false, true)
-	npc("Child", Vector2(cx - 40, 200), ["Shhh! Estou lendo.", "Esse livro tem dragões!"], "wander", 40.0)
-	npc("SorcererOrange", Vector2(cx + 40, 150), ["Procurando um grimório antigo...", "Ler também é treinar."], "wander", 40.0)
+	prop("i_rug_big", Vector2(cx, 190), false, true)
+	sitter("aventureira_maga", tables[1] + Vector2(16, 6), "left", ["Shhh! Estou revisando.", "Ler também é treinar."])
+	sitter("Villager", tables[2] + Vector2(-16, 6), "right", ["Mais uma página...", "Esse livro tem dragões!"])
+	# canto de leitura
+	prop("i_armchair", Vector2(w - 44, 220))
+	prop("p_planta_pequena", Vector2(w - 22, 222), false)
+	prop("furn_planta", Vector2(24, 222))
+	npc("Child", Vector2(cx, 226), ["Shhh! Estou lendo.", "Achei um livro sobre a masmorra!"], "wander", 40.0)
 	light(Vector2(cx, 80), Color(1.0, 0.86, 0.6), 2.4, 0.3)
-	light(Vector2(cx - 70, 190), Color(1.0, 0.8, 0.55), 1.3, 0.25)
-	light(Vector2(cx + 70, 190), Color(1.0, 0.8, 0.55), 1.3, 0.25)
 
 
 # ================================================================== Casa do jogador
 const FURNITURE_DEFAULTS := {
-	"cama": Vector2(44, 108), "estante": Vector2(120, 64), "lareira": Vector2(196, 60), "trofeu": Vector2(276, 64),
-	"relogio": Vector2(340, 52), "planta": Vector2(404, 112), "tapete": Vector2(226, 186), "mesa": Vector2(332, 176),
+	"cama": Vector2(40, 104), "estante": Vector2(104, 64), "lareira": Vector2(192, 60), "trofeu": Vector2(254, 64),
+	"relogio": Vector2(300, 54), "planta": Vector2(360, 110), "tapete": Vector2(192, 168), "mesa": Vector2(300, 168),
 }
 
 
 func _build_home() -> void:
+	var w := cols * T
 	# decoração fixa da parede e o catálogo de móveis
-	prop("i_painting", Vector2(70, 26), false, true)
-	prop("i_painting", Vector2(236, 26), false, true)
-	prop("i_painting", Vector2(392, 26), false, true)
-	prop("i_desk_paper", Vector2(412, 64))
-	spot("Catálogo de móveis", Vector2(412, 76), func() -> void: HUD.open_window("casa"), 24.0)
-	prop("i_chest", Vector2(32, 232))
+	wall("p_janela", 70, 28)
+	wall("i_painting", 150, 26)
+	wall("p_janela", 330, 28)
+	wall("p_prateleira_potes", 236, 30)
+	prop("i_desk_paper", Vector2(w - 40, 64))
+	prop("p_vela", Vector2(w - 48, 54), false)
+	spot("Catálogo de móveis", Vector2(w - 40, 76), func() -> void: HUD.open_window("casa"), 24.0)
+	prop("p_espelho", Vector2(w - 70, 64))
+	spot("Espelho (aparência)", Vector2(w - 70, 76), func() -> void: HUD.open_window("aparencia"), 20.0)
+	prop("i_chest", Vector2(28, 206))
+	prop("p_caixotes", Vector2(30, 186))
+	prop("p_vaso_flores", Vector2(w - 22, 208), false)
 	# escrivaninha de estudo: abre o Pomodoro com o cenário da casa
-	prop("i_desk_paper", Vector2(150, 230))
-	prop("i_stool", Vector2(150, 246))
-	study_spot("casa", Vector2(150, 244))
+	prop("i_desk_paper", Vector2(140, 206))
+	prop("p_livros", Vector2(128, 197), false)
+	prop("p_vela", Vector2(152, 196), false)
+	prop("i_stool", Vector2(140, 220))
+	study_spot("casa", Vector2(140, 218))
 	_place_furniture()
-	light(Vector2(224, 130), Color(1.0, 0.85, 0.6), 1.8, 0.3)
+	light(Vector2(192, 120), Color(1.0, 0.85, 0.6), 1.8, 0.3)
+	light(Vector2(152, 190), Color(1.0, 0.75, 0.45), 0.6, 0.4)
+	if GameState.owns_furniture("relogio"):
+		Audio.emitter(world, FURNITURE_DEFAULTS["relogio"], "amb_relogio", -16.0, true, 0.0, 160.0)
 	HUD.set_hint("V  Organizar móveis")
 
 
@@ -502,44 +568,54 @@ func _drop() -> void:
 	picked_id = ""
 
 
-# ================================================================== Restaurante
+# ================================================================== Pousada Pão Quente
 func _build_restaurant() -> void:
 	var w := cols * T
-	prop("i_shelf_big", Vector2(60, 62), false)
-	prop("i_bookcase", Vector2(108, 62), false)
-	prop("i_shelf_big", Vector2(w - 60, 62), false)
-	prop("i_pot", Vector2(w - 110, 60), false)
-	prop("i_barrel", Vector2(24, 100))
-	prop("i_barrel2", Vector2(24, 80))
-	prop("i_barrel", Vector2(w - 22, 100))
-	prop("i_sack", Vector2(w - 22, 120))
-	prop("i_laundry", Vector2(180, 40), false, true)
-	# balcão com a cozinheira atrás
 	var cx := w / 2.0
+	wall("p_janela", 40, 28)
+	wall("p_janela", w - 40, 28)
+	wall("p_panelas", cx - 50, 28)
+	wall("p_ervas", cx + 50, 26)
+	wall("i_painting", 110, 26)
+	wall("i_painting", w - 110, 26)
+	# cozinha atrás do balcão
+	prop("p_fogao", Vector2(cx - 40, 62), false)
+	prop("p_prateleira_potes", Vector2(cx + 36, 52), false, true)
+	prop("i_shelf_big", Vector2(cx + 40, 62), false)
+	light(Vector2(cx - 40, 52), Color(1.0, 0.6, 0.3), 0.8, 0.7)
 	for dx in [-45.0, 0.0, 45.0]:
-		prop("i_counter", Vector2(cx + dx, 98))
-	_block(Rect2(cx - 70, 40, 140, 36))     # cozinha atrás do balcão
-	var cook := npc("OldWoman", Vector2(cx - 20, 78), ["Hoje tem pão quentinho!", "Estudou hoje?", "Chá e foco: receita de vó."])
+		prop("i_counter", Vector2(cx + dx, 96))
+	_block(Rect2(cx - 70, 40, 140, 34))
+	var cook := npc("OldWoman", Vector2(cx - 18, 76), ["Hoje tem pão quentinho!", "Estudou hoje?", "Chá e foco: receita de vó."])
 	cook.sprite.z_index = 0
-	spot("Falar com Dona Marta", Vector2(cx - 20, 112), func() -> void: Story.talk("marta"), 22.0)
-	prop("i_bowl1", Vector2(cx + 22, 90), false)
-	prop("i_mug", Vector2(cx - 50, 90), false)
-	spot("Pedir comida", Vector2(cx + 30, 112), func() -> void: HUD.open_window("restaurante"), 22.0)
-	# mesas com banquinhos
-	var tables := [Vector2(90, 168), Vector2(180, 168), Vector2(w - 180, 168), Vector2(w - 90, 168), Vector2(135, 226), Vector2(w - 135, 226)]
-	for t in tables:
-		prop("i_table", t, true)
-		prop("i_stool", t + Vector2(-16, 6))
-		prop("i_stool", t + Vector2(16, 6))
-		prop("i_bowl2", t + Vector2(2, -6), false)
-	study_spot("taverna", Vector2(135, 240))
-	prop("i_rug_big", Vector2(cx, 214), false, true)
-	prop("i_painting", Vector2(w - 190, 28), false, true)
-	prop("i_painting", Vector2(190, 28), false, true)
-	# fregueses
-	npc("Villager", Vector2(130, 196), ["Esse macarrão é o melhor da cidade.", "Vim comer antes da masmorra."], "wander", 60.0)
-	npc("OldMan", Vector2(w - 130, 196), ["Já foi à Guilda hoje?", "Uma boa refeição dá força de verdade."], "wander", 60.0)
-	npc("Child", Vector2(cx + 60, 150), ["Quero um sushi!", "Mamãe disse pra eu comer tudo."], "wander", 50.0)
+	cook.add_to_group("speaker_marta")
+	spot("Falar com Dona Marta", Vector2(cx - 20, 110), func() -> void: Story.talk("marta"), 22.0)
+	prop("p_cha", Vector2(cx + 22, 88), false)
+	prop("i_mug", Vector2(cx - 50, 88), false)
+	prop("p_vaso_flores", Vector2(cx + 46, 88), false)
+	spot("Pedir comida", Vector2(cx + 30, 110), func() -> void: HUD.open_window("restaurante"), 22.0)
+	Audio.emitter(world, Vector2(cx, 70), "servir_agua", -16.0, false, 26.0, 200.0)
+	# barris e sacos nos cantos
+	prop("i_barrel", Vector2(22, 92))
+	prop("i_barrel2", Vector2(22, 74))
+	prop("i_sack", Vector2(40, 92))
+	prop("i_barrel", Vector2(w - 22, 92))
+	prop("p_caixotes", Vector2(w - 26, 74), false)
+	# lareira lateral e bancos
+	prop("furn_lareira", Vector2(w - 24, 196))
+	light(Vector2(w - 24, 184), Color(1.0, 0.55, 0.25), 0.9, 0.9)
+	prop("p_banco", Vector2(26, 230))
+	# mesas com fregueses sentados
+	var tables := [Vector2(76, 150), Vector2(156, 150), Vector2(w - 156, 150), Vector2(w - 76, 150), Vector2(116, 204), Vector2(w - 136, 204)]
+	for i in tables.size():
+		table_set(tables[i], i % 2 == 1, ["i_bowl2", "i_bowl1", "i_mug", "i_bowl3"][i % 4], i % 3 == 0)
+	study_spot("taverna", tables[4] + Vector2(0, 14))
+	sitter("Villager", tables[0] + Vector2(-16, 6), "right", ["Esse macarrão é o melhor da cidade.", "Vim comer antes da masmorra."])
+	sitter("OldMan", tables[2] + Vector2(16, 6), "left", ["Já foi à Guilda hoje?", "Uma boa refeição dá força de verdade."])
+	sitter("Villager2", tables[3] + Vector2(-16, 6), "right", ["A sopa da Marta cura tudo.", "Hoje é dia de folga!"])
+	sitter("aventureiro_cacador", tables[5] + Vector2(16, 6), "left", ["Caçada boa hoje.", "Lobos na Borda de novo."])
+	prop("i_rug_big", Vector2(cx, 196), false, true)
+	npc("Child", Vector2(cx + 30, 176), ["Quero um sushi!", "Mamãe disse pra eu comer tudo."], "wander", 40.0)
 	light(Vector2(cx, 70), Color(1.0, 0.8, 0.55), 2.2, 0.3)
 	light(Vector2(90, 150), Color(1.0, 0.8, 0.55), 1.2, 0.25)
 	light(Vector2(w - 90, 150), Color(1.0, 0.8, 0.55), 1.2, 0.25)
@@ -549,20 +625,29 @@ func _build_restaurant() -> void:
 func _build_guild() -> void:
 	var w := cols * T
 	var cx := w / 2.0
-	prop("i_bookcase", Vector2(70, 62), false)
-	prop("i_bookshelf_s", Vector2(112, 62), false)
-	prop("i_bookcase", Vector2(w - 70, 62), false)
-	prop("i_bookshelf_s", Vector2(w - 112, 62), false)
-	# quadro de missões na parede
-	prop("quadro_missoes", Vector2(cx - 110, 52), false, true)
-	prop("quadro_missoes", Vector2(cx + 110, 52), false, true)
-	prop("i_painting", Vector2(cx, 28), false, true)
+	prop("i_bookcase", Vector2(52, 62), false)
+	prop("i_bookshelf_s", Vector2(90, 62), false)
+	prop("i_bookcase", Vector2(w - 52, 62), false)
+	prop("i_bookshelf_s", Vector2(w - 90, 62), false)
+	wall("quadro_missoes", cx - 110, 52)
+	wall("quadro_missoes", cx + 110, 52)
+	wall("i_painting", cx, 26)
+	wall("p_estandarte", cx - 60, 34)
+	wall("p_estandarte_azul", cx + 60, 34)
+	wall("p_escudos_parede", 140, 28)
+	wall("p_tocha_parede", 20, 30)
+	wall("p_tocha_parede", w - 20, 30)
+	light(Vector2(20, 18), Color(1.0, 0.6, 0.3), 0.6, 0.8)
+	light(Vector2(w - 20, 18), Color(1.0, 0.6, 0.3), 0.6, 0.8)
 	# balcão de recepção
 	for dx in [-45.0, 0.0, 45.0]:
 		prop("i_counter", Vector2(cx + dx, 104))
 	_block(Rect2(cx - 70, 44, 140, 38))
-	npc("Princess", Vector2(cx, 84), ["Bem-vindo à Guilda!", "As missões do dia estão no quadro.", "Quem foca, conquista."])
+	var helena := npc("Princess", Vector2(cx, 84), ["Bem-vindo à Guilda!", "As missões do dia estão no quadro.", "Quem foca, conquista."])
+	helena.add_to_group("speaker_helena")
 	prop("i_desk_paper", Vector2(cx - 50, 96), false)
+	prop("p_cofre", Vector2(cx + 50, 78))
+	prop("p_vaso_flores", Vector2(cx + 20, 96), false)
 	spot("Falar com Helena", Vector2(cx, 118), func() -> void: Story.talk("helena"), 22.0)
 	spot("Missões da Guilda", Vector2(cx + 46, 118), func() -> void: HUD.open_window("guilda"), 18.0)
 	_guild_story_npcs(cx, w)
@@ -572,18 +657,19 @@ func _build_guild() -> void:
 	prop("stairs_down_0", Vector2(w - 64, 196), false, true)
 	spot("Portão da masmorra", Vector2(w - 64, 200), func() -> void: HUD.open_window("dungeon"), 26.0)
 	prop("h_estatua_pequena", Vector2(w - 100, 200), true)
+	prop("p_lancas", Vector2(w - 30, 200))
+	prop("p_caixotes", Vector2(28, 250))
+	prop("p_barril_espadas", Vector2(52, 252))
 	# mesas dos aventureiros
-	for t in [Vector2(120, 170), Vector2(200, 214), Vector2(w - 220, 170)]:
-		prop("i_table", t, true)
-		prop("i_stool", t + Vector2(-16, 6))
-		prop("i_stool", t + Vector2(16, 6))
-		prop("i_mug", t + Vector2(-3, -8), false)
+	var tables := [Vector2(110, 170), Vector2(190, 214), Vector2(w - 220, 170), Vector2(110, 236)]
+	for t in tables:
+		table_set(t, false, "i_mug", false)
+	prop("p_banco", Vector2(cx, 250))
 	prop("i_rug_big", Vector2(cx, 200), false, true)
-	# aventureiros
-	npc("Samurai", Vector2(150, 190), ["Cheguei no andar 8 ontem.", "O chefe do pântano é duro."], "wander", 50.0)
-	npc("Hunter", Vector2(w - 190, 190), ["Arqueiros mantêm a distância.", "Baús no fundo das salas, sempre."], "wander", 50.0)
-	npc("SorcererOrange", Vector2(cx - 40, 160), ["Santuários dão bênçãos de verdade.", "Mago sem foco explode o próprio chapéu."], "wander", 50.0)
-	npc("FighterRed", Vector2(cx + 70, 150), ["Vou treinar no andar 3.", "Elites soltam equipamento melhor!"], "wander", 50.0)
+	sitter("aventureiro_samurai", tables[0] + Vector2(-16, 6), "right", ["Cheguei no andar 8 ontem.", "O chefe do pântano é duro."])
+	sitter("aventureira_maga", tables[2] + Vector2(16, 6), "left", ["Santuários dão bênçãos de verdade.", "Mago sem foco explode o próprio chapéu."])
+	npc("Hunter", Vector2(w - 190, 214), ["Arqueiros mantêm a distância.", "Baús no fundo das salas, sempre."], "wander", 50.0)
+	npc("FighterRed", Vector2(cx + 70, 150), ["Vou treinar na Arena.", "Elites soltam equipamento melhor!"], "wander", 50.0)
 	light(Vector2(cx, 80), Color(1.0, 0.82, 0.55), 2.4, 0.3)
 	light(Vector2(130, 150), Color(1.0, 0.8, 0.55), 1.4, 0.25)
 	light(Vector2(w - 130, 150), Color(1.0, 0.8, 0.55), 1.4, 0.25)
@@ -606,40 +692,59 @@ func _guild_story_npcs(cx: float, w: float) -> void:
 # ================================================================== Casa da família (floresta)
 func _build_family_home() -> void:
 	var w := cols * T
-	prop("i_painting", Vector2(70, 26), false, true)
-	prop("i_painting", Vector2(w - 70, 26), false, true)
+	wall("p_janela", 50, 28)
+	wall("p_janela", w - 50, 28)
+	wall("p_ervas", 110, 26)
+	wall("i_painting", 210, 26)
 	prop("furn_lareira", Vector2(w / 2.0, 58), true)
 	light(Vector2(w / 2.0, 50), Color(1.0, 0.55, 0.25), 0.9, 0.9)
-	prop("furn_cama", Vector2(48, 104))
-	prop("furn_cama", Vector2(48, 150))
-	prop("i_dresser", Vector2(w - 50, 62), false)
-	prop("furn_mesa", Vector2(w / 2.0 + 40, 150))
-	prop("i_stool", Vector2(w / 2.0 + 20, 162))
-	prop("i_stool", Vector2(w / 2.0 + 60, 162))
-	prop("i_bowl3", Vector2(w / 2.0 + 40, 145), false)
-	prop("furn_tapete", Vector2(w / 2.0 - 40, 170), false, true)
-	prop("furn_planta", Vector2(w - 34, 120))
-	prop("i_basket", Vector2(w - 40, 190))
-	var mom := npc("Woman", Vector2(w / 2.0 - 30, 120), ["Coma alguma coisa antes de sair.", "Seu pai adorava esta lareira."])
+	prop("furn_cama", Vector2(30, 100))
+	prop("p_cama_simples", Vector2(66, 96))
+	prop("i_dresser", Vector2(w - 34, 62), false)
+	prop("p_espelho", Vector2(w - 62, 62))
+	spot("Espelho (aparência)", Vector2(w - 62, 74), func() -> void: HUD.open_window("aparencia"), 18.0)
+	prop("p_fogao", Vector2(w / 2.0 + 56, 62), false)
+	wall("p_panelas", w / 2.0 + 56, 30)
+	prop("p_mesa_redonda", Vector2(w / 2.0 + 56, 140))
+	prop("i_stool", Vector2(w / 2.0 + 38, 146))
+	prop("i_stool", Vector2(w / 2.0 + 74, 146))
+	prop("i_bowl3", Vector2(w / 2.0 + 52, 133), false)
+	prop("p_vaso_flores", Vector2(w / 2.0 + 62, 132), false)
+	prop("furn_tapete", Vector2(w / 2.0 - 40, 150), false, true)
+	# canto de costura da mãe
+	prop("p_roca", Vector2(96, 128))
+	prop("p_novelos", Vector2(120, 132), false)
+	prop("furn_planta", Vector2(w - 24, 120))
+	prop("i_basket", Vector2(w - 28, 164))
+	prop("p_caixotes", Vector2(26, 166))
+	var mom := npc("Woman", Vector2(118, 112), ["Coma alguma coisa antes de sair.", "Seu pai adorava esta lareira."])
 	StoryProp.talker(mom, "mae", Story.fmt("{mae}"))
-	spot("Descansar", Vector2(48, 116), func() -> void:
+	spot("Descansar", Vector2(30, 112), func() -> void:
 		GameState.full_heal()
 		Audio.sfx("sleep", -4.0)
 		HUD.show_toast("Você descansou em casa. Vida cheia!", UI.C_GOOD), 20.0)
-	light(Vector2(w / 2.0, 130), Color(1.0, 0.82, 0.55), 2.0, 0.3)
+	Audio.emitter(world, Vector2(w / 2.0, 50), "amb_relogio", -20.0, true, 0.0, 120.0)
+	light(Vector2(w / 2.0, 120), Color(1.0, 0.82, 0.55), 2.0, 0.3)
 
 
 # ================================================================== Casa abandonada do pai
 func _build_father_house() -> void:
 	var w := cols * T
-	prop("i_bookcase", Vector2(60, 62), false)
-	prop("i_shelf_s", Vector2(w - 60, 62), false)
-	prop("i_desk_paper", Vector2(w / 2.0, 100))
-	prop("i_stool", Vector2(w / 2.0, 114))
-	prop("i_crate", Vector2(30, 160))
-	prop("i_sack", Vector2(w - 30, 150))
-	var chest_prop := prop("i_chest", Vector2(w / 2.0 + 60, 150))
-	spot("Abrir o baú do pai", Vector2(w / 2.0 + 60, 162), func() -> void:
+	prop("i_bookcase", Vector2(40, 62), false)
+	prop("i_shelf_s", Vector2(w - 40, 62), false)
+	wall("p_janela", w / 2.0, 28)
+	wall("p_ervas", 90, 26)
+	prop("i_desk_paper", Vector2(w / 2.0, 96))
+	prop("p_vela", Vector2(w / 2.0 - 10, 86), false)
+	prop("p_livros", Vector2(w / 2.0 + 12, 87), false)
+	prop("i_stool", Vector2(w / 2.0, 110))
+	prop("i_crate", Vector2(24, 130))
+	prop("p_caixotes", Vector2(30, 112), false)
+	prop("i_sack", Vector2(w - 24, 128))
+	prop("p_cama_simples", Vector2(w - 30, 106)).modulate = Color(0.8, 0.76, 0.72)
+	var chest_prop := prop("i_chest", Vector2(w / 2.0 + 50, 132))
+	spot("Abrir o baú do pai", Vector2(w / 2.0 + 50, 142), func() -> void:
+		Audio.sfx2("chaves", -6.0)
 		await Story.say("casa_pai")
 		if not Story.flag("diario_pai"):
 			Story.set_flag("diario_pai")
@@ -647,7 +752,212 @@ func _build_father_house() -> void:
 			GameState.add_xp(30, false)
 			HUD.show_toast("Página do diário guardada. +30 ouro  +30 XP", UI.C_GOLD), 22.0)
 	chest_prop.modulate = Color(0.85, 0.8, 0.75)
-	light(Vector2(w / 2.0, 100), Color(0.9, 0.85, 0.7), 1.4, 0.35)
+	Audio.emitter(world, Vector2(40, 140), "amb_goteira", -10.0, true, 0.0, 200.0)
+	light(Vector2(w / 2.0, 90), Color(0.9, 0.85, 0.7), 1.2, 0.35)
+
+
+# ================================================================== Ferraria
+func _build_forge() -> void:
+	var w := cols * T
+	var cx := w / 2.0
+	prop("p_fornalha", Vector2(70, 66), false)
+	light(Vector2(70, 52), Color(1.0, 0.5, 0.2), 1.3, 1.1)
+	prop("p_fole", Vector2(98, 62), false)
+	prop("p_carvao", Vector2(40, 72), false)
+	wall("p_ferramentas", cx + 20, 30)
+	wall("p_escudos_parede", w - 60, 28)
+	prop("p_rack_espadas", Vector2(w - 40, 64), false)
+	prop("p_lingotes", Vector2(cx + 40, 66), false)
+	# bigorna no meio, ferreiro martelando
+	prop("p_bigorna", Vector2(cx - 8, 110))
+	prop("p_tina_agua", Vector2(cx + 26, 112))
+	prop("p_rebolo", Vector2(w - 42, 118))
+	prop("i_barrel", Vector2(24, 128))
+	prop("p_barril_espadas", Vector2(24, 150))
+	prop("p_caixotes", Vector2(w - 28, 160))
+	var smith := shop_owner("ferreiro", "ferreiro", "Brás", Vector2(cx - 30, 104),
+		["Traga barras e ouro.", "Aprimoro qualquer arma.", "Ferro quente, trabalho bom."])
+	smith.set_meta("hammer", true)
+	_hammer_loop(smith)
+	# balcão de serviço perto da porta
+	prop("i_counter", Vector2(cx - 50, 150))
+	spot("Aprimorar equipamento", Vector2(cx - 50, 162), func() -> void: HUD.open_window("forja"), 22.0)
+	Audio.emitter(world, Vector2(70, 56), "bigorna1", -18.0, false, 9.0, 220.0)
+	light(Vector2(cx, 100), Color(1.0, 0.75, 0.5), 1.8, 0.3)
+
+
+## O ferreiro bate na bigorna de tempos em tempos (gesto + som + faíscas).
+func _hammer_loop(smith: NPC) -> void:
+	var t := Timer.new()
+	t.wait_time = 2.6
+	t.autostart = true
+	smith.add_child(t)
+	t.timeout.connect(func() -> void:
+		if smith.talking or smith.actor == null:
+			return
+		smith.play_anim("idle_right")
+		smith.actor.gesture()
+		Audio.sfx2("bigorna1" if randf() < 0.5 else "bigorna2", -14.0, 0.08)
+		Fx.burst(world, smith.global_position + Vector2(22, -10), Color(1.0, 0.7, 0.3), 6, 26.0, 0.3)
+		t.wait_time = randf_range(2.0, 4.0))
+
+
+# ================================================================== Loja de armas
+func _build_weapon_shop() -> void:
+	var w := cols * T
+	var cx := w / 2.0
+	wall("p_escudos_parede", 48, 28)
+	wall("p_arcos_parede", w - 48, 28)
+	wall("p_tocha_parede", cx, 30)
+	light(Vector2(cx, 20), Color(1.0, 0.6, 0.3), 0.6, 0.8)
+	prop("p_rack_espadas", Vector2(cx - 50, 64), false)
+	prop("p_rack_espadas", Vector2(cx + 50, 64), false)
+	prop("p_armadura", Vector2(24, 82))
+	prop("p_armadura", Vector2(w - 24, 82))
+	prop("p_lancas", Vector2(24, 126))
+	prop("p_barril_espadas", Vector2(w - 24, 128))
+	prop("p_cofre", Vector2(cx + 34, 76))
+	# vitrine com o armeiro atrás
+	prop("p_vitrine", Vector2(cx, 102))
+	_block(Rect2(cx - 24, 50, 48, 46))
+	shop_owner("armeiro", "armeiro", "Otávio", Vector2(cx, 84), ["Espadas novas chegaram!", "Equipamento bom salva vidas.", "Só vendo o que presta."])
+	spot("Comprar equipamento", Vector2(cx, 116), func() -> void: HUD.open_window("loja"), 22.0)
+	prop("i_rug_big", Vector2(cx, 130), false, true)
+	prop("p_planta_pequena", Vector2(w - 40, 150), false)
+	light(Vector2(cx, 100), Color(1.0, 0.82, 0.55), 1.6, 0.3)
+
+
+# ================================================================== Arena
+func _build_arena() -> void:
+	var w := cols * T
+	var cx := w / 2.0
+	for x in [70.0, cx, w - 70.0]:
+		prop("p_arquibancada", Vector2(x, 66), false)
+	wall("p_estandarte", 30, 34)
+	wall("p_estandarte_azul", w - 30, 34)
+	for x in [120.0, w - 120.0]:
+		wall("p_tocha_parede", x, 30)
+		light(Vector2(x, 20), Color(1.0, 0.6, 0.3), 0.8, 0.8)
+	prop("p_portao_arena", Vector2(22, 170), true)
+	prop("p_portao_arena", Vector2(w - 22, 170), true)
+	# torcida na arquibancada
+	var crowd := ["Villager", "Villager2", "OldMan", "Villager5", "Child", "aventureiro_cacador"]
+	for i in crowd.size():
+		var cn := sitter(crowd[i], Vector2(40.0 + i * ((w - 80.0) / crowd.size()), 52.0 + (i % 2) * 8.0), "down", ["Vai! Vai!", "Que golpe!", "Rola, rola!"])
+		cn.add_to_group("arena_crowd")
+	# a mestra da arena perto da entrada
+	shop_owner("bruna", "arena", "Bruna", Vector2(cx - 60, rows * T - 52),
+		["Pronto para um duelo?", "Prestígio se conquista luta a luta.", "Rolar na hora certa vale ouro."])
+	spot("Inscrever-se num duelo", Vector2(cx - 30, rows * T - 44), func() -> void: HUD.open_window("arena"), 20.0)
+	prop("p_placa_arena", Vector2(cx - 30, rows * T - 56), false)
+	prop("p_boneco_treino", Vector2(w - 60, rows * T - 46))
+	# linhas do ringue no chão
+	var ring := Line2D.new()
+	ring.width = 1.0
+	ring.default_color = Color(0.6, 0.45, 0.3, 0.5)
+	var c := Vector2(cx, 160)
+	for k in 33:
+		var a := TAU * k / 32.0
+		ring.add_point(c + Vector2(cos(a) * 150.0, sin(a) * 70.0))
+	deco.add_child(ring)
+	arena_center = c
+	light(Vector2(cx, 160), Color(1.0, 0.9, 0.7), 3.0, 0.3)
+
+
+var arena_center: Vector2 = Vector2.ZERO
+var _duel: ArenaFighter = null
+var _duel_opp: Dictionary = {}
+var _duel_over: bool = true
+
+
+## Duelo da Arena: posiciona os dois no ringue, contagem, luta até alguém cair.
+func start_duel(opp: Dictionary) -> void:
+	if not _duel_over:
+		return
+	_duel_over = false
+	_duel_opp = opp
+	GameState.full_heal()
+	GameState.no_death = true
+	if not GameState.knocked_out.is_connected(_on_duel_lost):
+		GameState.knocked_out.connect(_on_duel_lost)
+	player.global_position = arena_center + Vector2(-90, 0)
+	player.facing = Vector2.RIGHT
+	player.camera.reset_smoothing()
+	_duel = ArenaFighter.spawn(world, opp, arena_center + Vector2(90, 0))
+	_duel.defeated.connect(_on_duel_won)
+	Game.input_locked = true
+	Audio.sfx2("porta_metal", -6.0, 0.0)
+	Audio.play_music("boss", 0.6)
+	HUD.show_boss(str(opp["name"]), 1.0)
+	_crowd_cheer(18)
+	for n in ["3", "2", "1"]:
+		HUD.floor_banner(n, "Duelo contra " + str(opp["name"]))
+		Audio.sfx("ui_tab", -4.0)
+		await get_tree().create_timer(0.75).timeout
+		if not is_inside_tree():
+			return
+	HUD.floor_banner("LUTEM!", Arena.rank_name() + "  -  " + str(Arena.DIFFS[int(opp["diff"])][0]))
+	Audio.sfx2("impacto", -6.0)
+	Game.input_locked = false
+	_duel.begin()
+
+
+func _crowd_cheer(emote: int) -> void:
+	for n in get_tree().get_nodes_in_group("arena_crowd"):
+		if randf() < 0.7:
+			(n as NPC).show_emote(emote if randf() < 0.7 else 27)
+
+
+func _on_duel_won() -> void:
+	if _duel_over:
+		return
+	_duel_over = true
+	_end_duel(true)
+
+
+func _on_duel_lost() -> void:
+	if _duel_over:
+		return
+	_duel_over = true
+	_end_duel(false)
+
+
+func _end_duel(won: bool) -> void:
+	GameState.no_death = false
+	Game.input_locked = true
+	HUD.hide_boss()
+	var res := Arena.record(_duel_opp, won)
+	if won:
+		Audio.jingle("boss_clear")
+		Audio.sfx2("moedas", -4.0)
+		_crowd_cheer(27)
+		player.sprite.play("emote_down", true)
+		HUD.floor_banner("VITÓRIA!", "+%d ouro  +%d XP  +%d prestígio" % [res["gold"], res["xp"], res["prestige"]])
+	else:
+		Audio.sfx2("trombone", -4.0)
+		if is_instance_valid(_duel):
+			_duel.celebrate()
+		_crowd_cheer(16)
+		player.sprite.hold_last = true
+		player.sprite.play("hurt_down", true)
+		HUD.floor_banner("DERROTA", "%d prestígio. Treine e volte!" % res["prestige"])
+	if res["rank_up"]:
+		await get_tree().create_timer(1.6).timeout
+		Audio.sfx("powerup")
+		HUD.floor_banner("NOVO RANK: " + Arena.rank_name(), "A Arena inteira aplaude você")
+		_crowd_cheer(27)
+	await get_tree().create_timer(2.4).timeout
+	if not is_inside_tree():
+		return
+	player.sprite.hold_last = false
+	player.sprite.play("idle_down", true)
+	GameState.full_heal()
+	if is_instance_valid(_duel):
+		var tw := _duel.create_tween()
+		tw.tween_property(_duel, "modulate:a", 0.0, 0.5)
+		tw.tween_callback(_duel.queue_free)
+	Game.input_locked = false
+	Audio.play_music("interior_manor", 1.0)
 
 
 # ================================================================== Casa de morador
@@ -655,32 +965,104 @@ func _build_resident_house() -> void:
 	var idx := _house_index()
 	var h: Dictionary = HOUSES[idx]
 	var w := cols * T
-	var r := RandomNumberGenerator.new()
-	r.seed = 9000 + idx
-	prop("i_painting", Vector2(90, 26), false, true)
-	prop("i_painting", Vector2(w - 90, 26), false, true)
-	prop("furn_estante", Vector2(150, 62), false)
-	prop("i_bookcase", Vector2(w - 150, 62), false)
-	prop("furn_lareira", Vector2(w / 2.0, 58), true)
-	light(Vector2(w / 2.0, 50), Color(1.0, 0.55, 0.25), 0.9, 0.9)
-	prop("furn_cama", Vector2(48, 110))
-	prop("i_chest", Vector2(48, 150))
-	prop("furn_mesa", Vector2(w / 2.0 + 30, 170))
-	prop("i_stool", Vector2(w / 2.0 + 10, 182))
-	prop("i_stool", Vector2(w / 2.0 + 50, 182))
-	prop("i_bowl3", Vector2(w / 2.0 + 30, 165), false)
-	prop("furn_tapete", Vector2(w / 2.0 - 70, 200), false, true)
-	prop("furn_planta", Vector2(w - 40, 112))
-	prop("i_pot", Vector2(w - 40, 215))
-	prop("i_barrel", Vector2(30, 232))
-	var resident := npc(h["npc"], Vector2(w / 2.0 - 30, 150), h["lines"], "wander", 50.0)
-	if idx == 2:
-		StoryProp.talker(resident, "lin", "Mestre Lin")
+	match idx:
+		0:
+			_build_tailor(h, w)
+		1:
+			_build_inn(h, w)
+		2:
+			_build_lin(h, w)
+		_:
+			_build_dojo(h, w)
 	var title := UI.label(h["title"], Color("fff1c9"))
 	title.size = Vector2(300, 14)
 	title.position = Vector2(w / 2.0 - 150, 6)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.z_index = 50
-	title.scale = Vector2.ONE
 	add_child(title)
-	light(Vector2(w / 2.0, 120), Color(1.0, 0.8, 0.55), 2.0, 0.28)
+
+
+func _build_tailor(h: Dictionary, w: float) -> void:
+	# ateliê pequeno e cheio: manequins, roca, tecidos e a mesa de costura
+	wall("p_janela", 40, 28)
+	prop("p_tecidos", Vector2(w / 2.0, 62), false)
+	prop("p_manequim", Vector2(w - 30, 70))
+	prop("p_manequim", Vector2(w - 52, 74))
+	prop("p_espelho", Vector2(26, 66))
+	prop("p_mesa_costura", Vector2(w / 2.0 - 10, 104))
+	prop("i_stool", Vector2(w / 2.0 - 10, 118))
+	prop("p_roca", Vector2(30, 110))
+	prop("p_novelos", Vector2(w - 30, 112), false)
+	prop("i_rack", Vector2(w / 2.0 + 30, 132), false)
+	prop("p_vaso_flores", Vector2(w / 2.0 + 6, 96), false)
+	shop_owner("costureira", "costureira", "Rosa", Vector2(w / 2.0 + 20, 92), h["lines"])
+	spot("Guarda-roupa da Rosa", Vector2(w - 40, 86), func() -> void: HUD.open_window("guarda_roupa"), 18.0)
+	light(Vector2(w / 2.0, 90), Color(1.0, 0.8, 0.55), 1.4, 0.3)
+
+
+func _build_inn(h: Dictionary, w: float) -> void:
+	wall("p_janela", 60, 28)
+	wall("p_janela", w - 60, 28)
+	wall("i_painting", w / 2.0, 26)
+	prop("furn_lareira", Vector2(w / 2.0, 58), true)
+	light(Vector2(w / 2.0, 50), Color(1.0, 0.55, 0.25), 0.9, 0.9)
+	# quartos: camas separadas por estantes
+	for x in [26.0, 62.0, w - 62.0, w - 26.0]:
+		prop("p_cama_simples", Vector2(x, 104))
+	prop("i_shelf_s", Vector2(44, 128), false)
+	prop("i_shelf_s", Vector2(w - 44, 128), false)
+	# recepção
+	prop("i_counter", Vector2(w / 2.0 - 20, 128))
+	prop("i_counter", Vector2(w / 2.0 + 25, 128))
+	prop("p_vela", Vector2(w / 2.0 - 10, 120), false)
+	shop_owner("estalajadeiro", "estalajadeiro", "Bento", Vector2(w / 2.0, 108), h["lines"])
+	table_set(Vector2(w / 2.0 - 60, 176), true, "i_mug", true)
+	table_set(Vector2(w / 2.0 + 60, 176), false, "i_bowl1", false)
+	sitter("aventureiro_samurai", Vector2(w / 2.0 + 76, 182), "left", ["Amanhã sigo para a Mata.", "Ouvi luzes no Pântano."])
+	prop("p_banco", Vector2(w / 2.0, 206))
+	prop("i_barrel", Vector2(24, 200))
+	prop("i_barrel2", Vector2(w - 24, 200))
+	light(Vector2(w / 2.0, 150), Color(1.0, 0.8, 0.55), 2.0, 0.28)
+
+
+func _build_lin(h: Dictionary, w: float) -> void:
+	prop("i_bookshelf_s", Vector2(36, 62), false)
+	prop("i_bookshelf_s", Vector2(w - 36, 62), false)
+	wall("p_janela", w / 2.0, 28)
+	prop("h_estatua_pequena", Vector2(w / 2.0, 66), true)
+	prop("i_rug_big", Vector2(w / 2.0, 118), false, true)
+	for p in [Vector2(-34, 96), Vector2(34, 96), Vector2(-34, 136), Vector2(34, 136)]:
+		prop("p_vela", Vector2(w / 2.0, 0) + p, false)
+		light(Vector2(w / 2.0, -6) + p, Color(1.0, 0.75, 0.45), 0.45, 0.5)
+	prop("p_cha", Vector2(w / 2.0 + 50, 120), false)
+	prop("p_livros", Vector2(30, 120), false)
+	prop("p_planta_pequena", Vector2(w - 22, 136), false)
+	var lin := npc(h["npc"], Vector2(w / 2.0, 112), h["lines"], "static")
+	StoryProp.talker(lin, "lin", "Mestre Lin")
+	Audio.emitter(world, Vector2(w / 2.0, 60), "amb_relogio", -20.0, true, 0.0, 120.0)
+
+
+func _build_dojo(h: Dictionary, w: float) -> void:
+	wall("p_estandarte", 40, 34)
+	wall("p_estandarte_azul", w - 40, 34)
+	wall("p_escudos_parede", w / 2.0, 28)
+	prop("p_lancas", Vector2(80, 64), false)
+	prop("p_rack_espadas", Vector2(w - 90, 64), false)
+	prop("i_rug_big", Vector2(w / 2.0 - 50, 140), false, true)
+	prop("i_rug_big", Vector2(w / 2.0 + 50, 140), false, true)
+	for x in [60.0, w - 60.0, w / 2.0]:
+		prop("p_boneco_treino", Vector2(x, 112))
+	shop_owner("mestre_cla", "mestre_cla", "Mestre Daichi", Vector2(w / 2.0, 86), h["lines"])
+	var pupil := npc("aventureira_lutadora", Vector2(70, 140), ["Mais um golpe!", "Hah!"], "static")
+	var t := Timer.new()
+	t.wait_time = 1.8
+	t.autostart = true
+	pupil.add_child(t)
+	t.timeout.connect(func() -> void:
+		if pupil.actor != null and not pupil.talking:
+			pupil.play_anim("idle_up")
+			pupil.actor.gesture()
+			Audio.sfx("swing1", -22.0, 0.1))
+	prop("p_banco", Vector2(w / 2.0, 200))
+	prop("i_barrel", Vector2(24, 196))
+	light(Vector2(w / 2.0, 120), Color(1.0, 0.8, 0.55), 2.2, 0.28)

@@ -110,4 +110,5 @@ static func make_ivo_trap() -> StoryProp:
 static func talker(npc_node: Node2D, npc_id: String, title: String) -> StoryProp:
 	var p := make("Falar com " + title, func(_me: StoryProp) -> void: Story.talk(npc_id), null, 22.0, false)
 	npc_node.add_child(p)
+	npc_node.add_to_group("speaker_" + npc_id)
 	return p

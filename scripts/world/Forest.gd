@@ -69,6 +69,7 @@ func _ready() -> void:
 		Story.set_step("c1_ervas")
 	_build_story()
 	_build_decor()
+	_build_sounds()
 	_build_herbs()
 	_build_monsters()
 	_build_fog()
@@ -347,6 +348,17 @@ func _build_ruins() -> void:
 
 
 # ================================================================== Decoração
+## Sons: rio (vários pontos), pássaros/grilos/coruja, ovelhas ao longe na Clareira, goteira nas Ruínas.
+func _build_sounds() -> void:
+	var amb := Ambience.new()
+	amb.bird_every = 6.0
+	world.add_child(amb)
+	for ty in [12, 30, 48, 62]:
+		Audio.emitter(world, Vector2((RIVER_X + 1) * T, ty * T), "amb_margem", -10.0, true, 0.0, 200.0)
+	Audio.emitter(world, Vector2(64 * T, 30 * T), "ovelha", -14.0, false, 22.0, 260.0)
+	Audio.emitter(world, Vector2(8 * T, 36 * T), "amb_goteira", -8.0, true, 0.0, 220.0)
+
+
 func _build_decor() -> void:
 	# borda densa de árvores em volta do mapa
 	var x := -8.0

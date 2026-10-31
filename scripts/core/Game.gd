@@ -154,6 +154,7 @@ func enter_dungeon(start_floor: int = 1) -> bool:
 	}
 	GameState.in_dungeon = true
 	GameState.register_floor_reached(start_floor)
+	Audio.sfx2("porta_metal", -6.0, 0.0)
 	run_updated.emit()
 	change_scene(DUNGEON_SCENE)
 	return true

@@ -1,0 +1,6089 @@
+{
+ "frame": 64,
+ "size": [
+  1024,
+  1792
+ ],
+ "layout": {
+  "walk": [
+   0,
+   0,
+   9,
+   4,
+   64
+  ],
+  "idle": [
+   576,
+   0,
+   2,
+   4,
+   64
+  ],
+  "emote": [
+   704,
+   0,
+   3,
+   4,
+   64
+  ],
+  "combat_idle": [
+   896,
+   0,
+   2,
+   4,
+   64
+  ],
+  "sit": [
+   0,
+   256,
+   3,
+   4,
+   64
+  ],
+  "hurt": [
+   192,
+   256,
+   6,
+   1,
+   64
+  ],
+  "spellcast": [
+   576,
+   256,
+   7,
+   4,
+   64
+  ],
+  "shoot": [
+   0,
+   512,
+   13,
+   4,
+   64
+  ],
+  "slash": [
+   0,
+   768,
+   6,
+   4,
+   128
+  ],
+  "thrust": [
+   0,
+   1280,
+   8,
+   4,
+   128
+  ]
+ },
+ "palettes": {
+  "body": {
+   "light": [
+    "271920",
+    "99423c",
+    "cc8665",
+    "e4a47c",
+    "f9d5ba",
+    "faece7"
+   ],
+   "amber": [
+    "281716",
+    "9e3e37",
+    "d28144",
+    "ea9f54",
+    "fdd082",
+    "fbe7a4"
+   ],
+   "olive": [
+    "271920",
+    "442725",
+    "7f4c31",
+    "ae6b3f",
+    "d38b59",
+    "e4a47c"
+   ],
+   "taupe": [
+    "271920",
+    "503734",
+    "785946",
+    "936849",
+    "ba8454",
+    "c7935f"
+   ],
+   "bronze": [
+    "1a1213",
+    "442725",
+    "644133",
+    "7f4c31",
+    "ae6b3f",
+    "d38b59"
+   ],
+   "brown": [
+    "120e10",
+    "412b29",
+    "5f4539",
+    "76513a",
+    "9c663e",
+    "b8773f"
+   ],
+   "black": [
+    "000000",
+    "1a1213",
+    "2e1f1c",
+    "442725",
+    "603429",
+    "7f4c31"
+   ],
+   "blue": [
+    "16171b",
+    "46425d",
+    "586b90",
+    "748da4",
+    "a9c9ca",
+    "c8e8e8"
+   ],
+   "bright_green": [
+    "02280e",
+    "06410e",
+    "255e1d",
+    "5b8f11",
+    "75ae23",
+    "99d248"
+   ],
+   "dark_green": [
+    "011708",
+    "02280e",
+    "06410e",
+    "255e1d",
+    "508a48",
+    "509e59"
+   ],
+   "fur_black": [
+    "040510",
+    "0a0e1b",
+    "0d1621",
+    "14212c",
+    "1b2c36",
+    "154259"
+   ],
+   "fur_brown": [
+    "000000",
+    "1e120e",
+    "251b19",
+    "473730",
+    "624135",
+    "975b5a"
+   ],
+   "fur_copper": [
+    "0f0506",
+    "300500",
+    "6a1a00",
+    "9c3b01",
+    "cc6901",
+    "faa301"
+   ],
+   "fur_gold": [
+    "200808",
+    "552b15",
+    "ac5d1f",
+    "e09e2b",
+    "fccf56",
+    "ffe67d"
+   ],
+   "fur_grey": [
+    "0f0f11",
+    "36363f",
+    "55585f",
+    "6a6e74",
+    "909699",
+    "b8bbbc"
+   ],
+   "fur_tan": [
+    "222121",
+    "3a200e",
+    "663a1a",
+    "975f43",
+    "b88751",
+    "db8e60"
+   ],
+   "fur_white": [
+    "17171a",
+    "36363f",
+    "484e57",
+    "8b9498",
+    "b8bbbc",
+    "d8dcdc"
+   ],
+   "green": [
+    "140c09",
+    "09320b",
+    "19541d",
+    "228236",
+    "39aa4e",
+    "53bf71"
+   ],
+   "lavender": [
+    "16171b",
+    "393b44",
+    "787c8f",
+    "a0a5bc",
+    "c9d0ee",
+    "fbece6"
+   ],
+   "pale_green": [
+    "271920",
+    "314829",
+    "456238",
+    "5f874d",
+    "86b278",
+    "adcca6"
+   ],
+   "zombie": [
+    "281820",
+    "6b5c40",
+    "928364",
+    "a79778",
+    "c5b38f",
+    "dbcbab"
+   ],
+   "zombie_green": [
+    "101925",
+    "074337",
+    "4a7a69",
+    "839f6e",
+    "d4d887",
+    "f2f0c4"
+   ]
+  },
+  "eye": {
+   "blue": [
+    "2a3c49",
+    "5686ae",
+    "57cee4"
+   ],
+   "green": [
+    "2b4b29",
+    "53b351",
+    "84ec50"
+   ],
+   "purple": [
+    "710862",
+    "b90da0",
+    "eba0e0"
+   ],
+   "red": [
+    "532421",
+    "cb4a39",
+    "ff3d62"
+   ],
+   "orange": [
+    "a45227",
+    "be734b",
+    "ea9b71"
+   ],
+   "yellow": [
+    "b69953",
+    "d9bf46",
+    "fedf47"
+   ],
+   "brown": [
+    "232017",
+    "544c2e",
+    "7e4e20"
+   ],
+   "gray": [
+    "3d3c37",
+    "8b8979",
+    "ada18f"
+   ]
+  },
+  "hair": {
+   "orange": [
+    "260d14",
+    "6a1108",
+    "a42600",
+    "bf4000",
+    "e55600",
+    "ff8a00"
+   ],
+   "ash": [
+    "2d061b",
+    "642442",
+    "935065",
+    "c18f8a",
+    "eddf95",
+    "fff1c1"
+   ],
+   "platinum": [
+    "1c0e06",
+    "7d5d5d",
+    "a87d52",
+    "c0ab81",
+    "eddf95",
+    "f6f6f3"
+   ],
+   "white": [
+    "1d1d21",
+    "484e57",
+    "8b9498",
+    "b8bbbc",
+    "d8dcdc",
+    "ffffff"
+   ],
+   "gray": [
+    "0e0e0e",
+    "292929",
+    "4b4b4b",
+    "777777",
+    "aaaaaa",
+    "d9d9d9"
+   ],
+   "blonde": [
+    "331313",
+    "552b15",
+    "ac5d1f",
+    "e09e2b",
+    "fccf56",
+    "ffe67d"
+   ],
+   "sandy": [
+    "1c0e06",
+    "633e2c",
+    "99622d",
+    "bf9d5a",
+    "eddc7e",
+    "f6f6c2"
+   ],
+   "strawberry": [
+    "300700",
+    "6a2800",
+    "9c5900",
+    "cca000",
+    "faf080",
+    "f6f6c2"
+   ],
+   "gold": [
+    "5c0d00",
+    "902900",
+    "e47100",
+    "ffa913",
+    "ffe453",
+    "eefe7e"
+   ],
+   "ginger": [
+    "300500",
+    "6a1a00",
+    "9c3b01",
+    "cc6901",
+    "faa301",
+    "ffe01e"
+   ],
+   "carrot": [
+    "5a1500",
+    "8a2000",
+    "ac2800",
+    "ec673e",
+    "f68764",
+    "ffb39c"
+   ],
+   "redhead": [
+    "260d14",
+    "3e111a",
+    "73171e",
+    "9e1f1f",
+    "c7341b",
+    "e74716"
+   ],
+   "red": [
+    "300000",
+    "870000",
+    "a40712",
+    "cb0000",
+    "e21414",
+    "f1583a"
+   ],
+   "light_brown": [
+    "1a0e04",
+    "301b07",
+    "60350f",
+    "7d4513",
+    "ae682a",
+    "c88d58"
+   ],
+   "chestnut": [
+    "200c0d",
+    "3a130e",
+    "63200b",
+    "81310a",
+    "b6550e",
+    "d28102"
+   ],
+   "dark_brown": [
+    "050100",
+    "160701",
+    "290e02",
+    "421603",
+    "5f1f04",
+    "792806"
+   ],
+   "dark_gray": [
+    "000000",
+    "0e0e0e",
+    "1b1b1b",
+    "3b3b3b",
+    "7c7c7c",
+    "c1c1c1"
+   ],
+   "black": [
+    "000000",
+    "080a0a",
+    "101414",
+    "1c2222",
+    "31313e",
+    "4a5057"
+   ],
+   "raven": [
+    "010107",
+    "040b18",
+    "061421",
+    "071f2a",
+    "0d384d",
+    "1a5369"
+   ],
+   "rose": [
+    "30051f",
+    "6a1e4b",
+    "9c4373",
+    "cc789d",
+    "fabbc6",
+    "fae1e5"
+   ],
+   "pink": [
+    "330410",
+    "71043a",
+    "b60a68",
+    "e941aa",
+    "e976c4",
+    "ea95d5"
+   ],
+   "purple": [
+    "13112d",
+    "2b225a",
+    "402e82",
+    "7141b2",
+    "a966dd",
+    "d085ed"
+   ],
+   "violet": [
+    "1e032e",
+    "30035c",
+    "380392",
+    "3c07d8",
+    "5662f3",
+    "5792f2"
+   ],
+   "navy": [
+    "180716",
+    "20102b",
+    "281e41",
+    "322d6a",
+    "3c49ad",
+    "466ac9"
+   ],
+   "blue": [
+    "000027",
+    "00005e",
+    "000091",
+    "0041b4",
+    "0074cb",
+    "1e85ef"
+   ],
+   "green": [
+    "000400",
+    "001400",
+    "002d00",
+    "005000",
+    "007c00",
+    "00a700"
+   ]
+  },
+  "cloth": {
+   "brown": [
+    "1d131e",
+    "411e05",
+    "4b2b13",
+    "62351c",
+    "744b30",
+    "996b4a"
+   ],
+   "leather": [
+    "2b1c1d",
+    "311210",
+    "4b2b13",
+    "704325",
+    "75502d",
+    "9a6f37"
+   ],
+   "walnut": [
+    "1d0f0e",
+    "3e2613",
+    "62351c",
+    "744b30",
+    "996b4a",
+    "a17c50"
+   ],
+   "yellow": [
+    "301723",
+    "5f2f25",
+    "ba5b23",
+    "d99431",
+    "f3c03f",
+    "ffe360"
+   ],
+   "tan": [
+    "3e2613",
+    "684415",
+    "986a20",
+    "b78c41",
+    "b7996a",
+    "cfc587"
+   ],
+   "orange": [
+    "301723",
+    "5f1d1b",
+    "9c3f23",
+    "d75b1a",
+    "ef7e19",
+    "ffa749"
+   ],
+   "rose": [
+    "1d131e",
+    "301723",
+    "562323",
+    "77372b",
+    "8a3d28",
+    "b05f3c"
+   ],
+   "maroon": [
+    "1d131e",
+    "400b1f",
+    "551c22",
+    "682121",
+    "832121",
+    "ae424a"
+   ],
+   "red": [
+    "1d131e",
+    "400b1f",
+    "651117",
+    "82171c",
+    "ab1e1e",
+    "cd2429"
+   ],
+   "pink": [
+    "1d131e",
+    "54242e",
+    "6c3536",
+    "ae424a",
+    "c36072",
+    "e08080"
+   ],
+   "lavender": [
+    "13112d",
+    "2b225a",
+    "402e82",
+    "7141b2",
+    "a966dd",
+    "d085ed"
+   ],
+   "purple": [
+    "180716",
+    "13112d",
+    "261044",
+    "411357",
+    "621e78",
+    "813089"
+   ],
+   "blue": [
+    "180716",
+    "281e41",
+    "322d6a",
+    "3c49ad",
+    "466ac9",
+    "61a0ef"
+   ],
+   "navy": [
+    "180716",
+    "20102b",
+    "281e41",
+    "322d6a",
+    "3c49ad",
+    "466ac9"
+   ],
+   "teal": [
+    "180716",
+    "1b2b47",
+    "0e4e72",
+    "156c99",
+    "0098b2",
+    "00cfdf"
+   ],
+   "bluegray": [
+    "11150b",
+    "0b2b28",
+    "2e403a",
+    "315b49",
+    "557e85",
+    "79979d"
+   ],
+   "forest": [
+    "09131d",
+    "07391d",
+    "0b1f25",
+    "0b2b28",
+    "134507",
+    "1b5502"
+   ],
+   "green": [
+    "101820",
+    "192832",
+    "0b5c2f",
+    "214437",
+    "2f8136",
+    "64a42c"
+   ],
+   "white": [
+    "281820",
+    "4d4a5d",
+    "958080",
+    "c4b59f",
+    "e5e6c7",
+    "ffffff"
+   ],
+   "sky": [
+    "1a0d18",
+    "313148",
+    "586b90",
+    "9fbbcb",
+    "c6eefd",
+    "ffffff"
+   ],
+   "slate": [
+    "1d131e",
+    "31313e",
+    "4a5057",
+    "818b8b",
+    "b3afa1",
+    "e5e6c7"
+   ],
+   "gray": [
+    "0e0e18",
+    "201e2b",
+    "373340",
+    "585561",
+    "797580",
+    "a2a0a4"
+   ],
+   "black": [
+    "000000",
+    "101414",
+    "1c2222",
+    "22282a",
+    "2a3034",
+    "4a5057"
+   ],
+   "charcoal": [
+    "000000",
+    "130d14",
+    "1c2222",
+    "2a3034",
+    "4a5057",
+    "6e7675"
+   ]
+  },
+  "metal": {
+   "ceramic": [
+    "181009",
+    "32251a",
+    "594435",
+    "7d604d",
+    "ba9069",
+    "fbe3b0"
+   ],
+   "brass": [
+    "1a1213",
+    "61482c",
+    "836332",
+    "af8a35",
+    "fdd082",
+    "fdf5cc"
+   ],
+   "copper": [
+    "691503",
+    "7b2008",
+    "973c23",
+    "9d5427",
+    "ec855c",
+    "ffc95a"
+   ],
+   "bronze": [
+    "4f2313",
+    "6d4a00",
+    "966600",
+    "bf8200",
+    "e7a820",
+    "fbe3b0"
+   ],
+   "iron": [
+    "000000",
+    "1b192b",
+    "29253a",
+    "343043",
+    "484152",
+    "726b7e"
+   ],
+   "steel": [
+    "1d131e",
+    "4d4a5d",
+    "726b7e",
+    "867e7f",
+    "c4b59f",
+    "ffffff"
+   ],
+   "silver": [
+    "1d131e",
+    "31313e",
+    "4a5057",
+    "818b8b",
+    "d6e1d3",
+    "ffffff"
+   ],
+   "gold": [
+    "2e2533",
+    "6d4a00",
+    "966600",
+    "dc6f35",
+    "ffc95a",
+    "ffff61"
+   ]
+  }
+ },
+ "bodies": {
+  "male": [
+   {
+    "file": "body_bodies_male.png",
+    "z": 10,
+    "ramp": "skin"
+   }
+  ],
+  "female": [
+   {
+    "file": "body_bodies_female.png",
+    "z": 10,
+    "ramp": "skin"
+   }
+  ],
+  "muscular": [
+   {
+    "file": "body_bodies_muscular.png",
+    "z": 10,
+    "ramp": "skin"
+   }
+  ]
+ },
+ "heads": {
+  "human_male": {
+   "male": [
+    {
+     "file": "head_heads_human_male.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "female": [
+    {
+     "file": "head_heads_human_male.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "faces": "male",
+   "eyes": "adult"
+  },
+  "human_female": {
+   "male": [
+    {
+     "file": "head_heads_human_female.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "female": [
+    {
+     "file": "head_heads_human_female.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "faces": "female",
+   "eyes": "adult"
+  },
+  "elderly_male": {
+   "male": [
+    {
+     "file": "head_heads_human_male_elderly.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "female": [
+    {
+     "file": "head_heads_human_male_elderly.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "faces": "elderly",
+   "eyes": "elderly"
+  },
+  "elderly_female": {
+   "male": [
+    {
+     "file": "head_heads_human_female_elderly.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "female": [
+    {
+     "file": "head_heads_human_female_elderly.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "faces": "elderly",
+   "eyes": "elderly"
+  },
+  "plump": {
+   "male": [
+    {
+     "file": "head_heads_human_male_plump.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "female": [
+    {
+     "file": "head_heads_human_male_plump.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "faces": "male",
+   "eyes": "adult"
+  },
+  "gaunt": {
+   "male": [
+    {
+     "file": "head_heads_human_male_gaunt.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "female": [
+    {
+     "file": "head_heads_human_male_gaunt.png",
+     "z": 100,
+     "ramp": "skin"
+    }
+   ],
+   "faces": "male",
+   "eyes": "adult"
+  }
+ },
+ "faces": {
+  "male": {
+   "neutral": {
+    "file": "head_faces_male_neutral.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "happy": {
+    "file": "head_faces_male_happy.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "sad": {
+    "file": "head_faces_male_sad.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "anger": {
+    "file": "head_faces_male_anger.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "shock": {
+    "file": "head_faces_male_shock.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "blush": {
+    "file": "head_faces_male_blush.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "closed": {
+    "file": "head_faces_male_closed.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "closing": {
+    "file": "head_faces_male_closing.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "shame": {
+    "file": "head_faces_male_shame.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "eyeroll": {
+    "file": "head_faces_male_eyeroll.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "look_l": {
+    "file": "head_faces_male_look_l.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "look_r": {
+    "file": "head_faces_male_look_r.png",
+    "z": 101,
+    "ramp": "skin"
+   }
+  },
+  "female": {
+   "neutral": {
+    "file": "head_faces_female_neutral.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "happy": {
+    "file": "head_faces_female_happy.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "sad": {
+    "file": "head_faces_female_sad.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "anger": {
+    "file": "head_faces_female_anger.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "shock": {
+    "file": "head_faces_female_shock.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "blush": {
+    "file": "head_faces_female_blush.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "closed": {
+    "file": "head_faces_female_closed.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "closing": {
+    "file": "head_faces_female_closing.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "shame": {
+    "file": "head_faces_female_shame.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "eyeroll": {
+    "file": "head_faces_female_eyeroll.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "look_l": {
+    "file": "head_faces_female_look_l.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "look_r": {
+    "file": "head_faces_female_look_r.png",
+    "z": 101,
+    "ramp": "skin"
+   }
+  },
+  "elderly": {
+   "neutral": {
+    "file": "head_faces_elderly_neutral.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "happy": {
+    "file": "head_faces_elderly_happy.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "sad": {
+    "file": "head_faces_elderly_sad.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "anger": {
+    "file": "head_faces_elderly_anger.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "shock": {
+    "file": "head_faces_elderly_shock.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "blush": {
+    "file": "head_faces_elderly_blush.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "closed": {
+    "file": "head_faces_elderly_closed.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "closing": {
+    "file": "head_faces_elderly_closing.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "shame": {
+    "file": "head_faces_elderly_shame.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "eyeroll": {
+    "file": "head_faces_elderly_eyeroll.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "look_l": {
+    "file": "head_faces_elderly_look_l.png",
+    "z": 101,
+    "ramp": "skin"
+   },
+   "look_r": {
+    "file": "head_faces_elderly_look_r.png",
+    "z": 101,
+    "ramp": "skin"
+   }
+  },
+  "global": {
+   "happy2": {
+    "file": "head_faces_global_happy2.png",
+    "z": 102,
+    "ramp": "skin"
+   },
+   "angry2": {
+    "file": "head_faces_global_angry2.png",
+    "z": 102,
+    "ramp": "skin"
+   },
+   "tears": {
+    "file": "head_faces_global_tears.png",
+    "z": 102,
+    "ramp": "skin"
+   },
+   "sad2": {
+    "file": "head_faces_global_sad2.png",
+    "z": 102,
+    "ramp": "skin"
+   }
+  }
+ },
+ "eyes": {
+  "adult": {
+   "default": {
+    "file": "eyes_human_adult_default.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "neutral": {
+    "file": "eyes_human_adult_neutral.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "anger": {
+    "file": "eyes_human_adult_anger.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "sad": {
+    "file": "eyes_human_adult_sad.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "sad2": {
+    "file": "eyes_human_adult_sad2.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "shock": {
+    "file": "eyes_human_adult_shock.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "closing": {
+    "file": "eyes_human_adult_closing.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "shame": {
+    "file": "eyes_human_adult_shame.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "eyeroll": {
+    "file": "eyes_human_adult_eyeroll.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "look_l": {
+    "file": "eyes_human_adult_look_l.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "look_r": {
+    "file": "eyes_human_adult_look_r.png",
+    "z": 105,
+    "ramp": "eye"
+   }
+  },
+  "elderly": {
+   "default": {
+    "file": "eyes_human_elderly_default.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "anger": {
+    "file": "eyes_human_elderly_anger.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "sad": {
+    "file": "eyes_human_elderly_sad.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "shock": {
+    "file": "eyes_human_elderly_shock.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "closing": {
+    "file": "eyes_human_elderly_closing.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "shame": {
+    "file": "eyes_human_elderly_shame.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "look_l": {
+    "file": "eyes_human_elderly_look_l.png",
+    "z": 105,
+    "ramp": "eye"
+   },
+   "look_r": {
+    "file": "eyes_human_elderly_look_r.png",
+    "z": 105,
+    "ramp": "eye"
+   }
+  }
+ },
+ "brows": {
+  "thick": {
+   "file": "eyes_eyebrows_thick_adult.png",
+   "z": 106,
+   "ramp": "hair"
+  },
+  "thin": {
+   "file": "eyes_eyebrows_thin_adult.png",
+   "z": 106,
+   "ramp": "hair"
+  }
+ },
+ "wrinkles": {
+  "file": "head_wrinkles.png",
+  "z": 102,
+  "ramp": "skin"
+ },
+ "parts": {
+  "cab_liso": {
+   "name": "Liso",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_plain_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_plain_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_baguncado": {
+   "name": "Bagunçado",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_messy1_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_messy1_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_acordei": {
+   "name": "Recém-acordado",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_bedhead_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_bedhead_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_raspado": {
+   "name": "Raspado",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_buzzcut_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_buzzcut_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_cacheado": {
+   "name": "Cacheado curto",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_curly_short_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_curly_short_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_afro": {
+   "name": "Afro",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_afro_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_afro_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_espetado": {
+   "name": "Espetado",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_spiked_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_spiked_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_topete": {
+   "name": "Topete",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_swoop_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_swoop_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_repartido": {
+   "name": "Repartido",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_parted_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_parted_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_pixie": {
+   "name": "Pixie",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_pixie_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_pixie_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_chanel": {
+   "name": "Chanel",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_bob_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_bob_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_longo": {
+   "name": "Longo",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_long_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_long_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_longo_liso": {
+   "name": "Longo liso",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_long_straight_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_long_straight_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_ondulado": {
+   "name": "Ondulado",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_wavy_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_wavy_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_wavy_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_wavy_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_rabo": {
+   "name": "Rabo de cavalo",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_ponytail_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_ponytail_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_ponytail_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_ponytail_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_rabo_alto": {
+   "name": "Rabo alto",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_high_ponytail_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_high_ponytail_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_high_ponytail_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_high_ponytail_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_tranca": {
+   "name": "Trança",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_braid_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_braid_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_braid_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_braid_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_coque": {
+   "name": "Coque",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_bangs_bun_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_bangs_bun_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_dread": {
+   "name": "Dreads",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_dreadlocks_short_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_dreadlocks_short_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_moicano": {
+   "name": "Moicano",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_shorthawk_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_shorthawk_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_careca": {
+   "name": "Calvície",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_balding_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_balding_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "bar_por_fazer": {
+   "name": "Por fazer",
+   "cat": "barba",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "beards_beard_5oclock_shadow.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "beards_beard_5oclock_shadow.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "bar_aparada": {
+   "name": "Aparada",
+   "cat": "barba",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "beards_beard_trimmed.png",
+      "z": 110,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "beards_beard_trimmed.png",
+      "z": 110,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "bar_media": {
+   "name": "Média",
+   "cat": "barba",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "beards_beard_medium.png",
+      "z": 110,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "beards_beard_medium.png",
+      "z": 110,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "bar_cheia": {
+   "name": "Cheia",
+   "cat": "barba",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "beards_beard_basic.png",
+      "z": 110,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "beards_beard_basic.png",
+      "z": 110,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "bar_bigode": {
+   "name": "Bigode",
+   "cat": "barba",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "beards_mustache_basic.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "beards_mustache_basic.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "bar_bigodao": {
+   "name": "Bigodão",
+   "cat": "barba",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "beards_mustache_walrus.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "beards_mustache_walrus.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "bar_guidao": {
+   "name": "Bigode guidão",
+   "cat": "barba",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "beards_mustache_handlebar.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "beards_mustache_handlebar.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cartola": {
+   "name": "Cartola",
+   "cat": "chapeu",
+   "price": 80,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_formal_tophat_adult.png",
+      "z": 130,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_formal_tophat_adult.png",
+      "z": 130,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "coco": {
+   "name": "Chapéu-coco",
+   "cat": "chapeu",
+   "price": 60,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_formal_bowler_adult.png",
+      "z": 130,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_formal_bowler_adult.png",
+      "z": 130,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "boina_couro": {
+   "name": "Boné de couro",
+   "cat": "chapeu",
+   "price": 40,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_cloth_leather_cap_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_cloth_leather_cap_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     }
+    ]
+   },
+   "color": "8a5a36"
+  },
+  "chapeu_pena": {
+   "name": "Chapéu com pena",
+   "cat": "chapeu",
+   "price": 90,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_pirate_cavalier_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     },
+     {
+      "file": "hat_pirate_cavalier_feather_adult.png",
+      "z": 131,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_pirate_cavalier_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     },
+     {
+      "file": "hat_pirate_cavalier_feather_adult.png",
+      "z": 131,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "bonnie": {
+   "name": "Chapéu de aba",
+   "cat": "chapeu",
+   "price": 70,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_pirate_bonnie_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     },
+     {
+      "file": "hat_pirate_bonnie_feather_adult.png",
+      "z": 131,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_pirate_bonnie_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     },
+     {
+      "file": "hat_pirate_bonnie_feather_adult.png",
+      "z": 131,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "tricornio": {
+   "name": "Tricórnio",
+   "cat": "chapeu",
+   "price": 70,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_pirate_tricorne_basic_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_pirate_tricorne_basic_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     }
+    ]
+   }
+  },
+  "bicorne": {
+   "name": "Bicorne",
+   "cat": "chapeu",
+   "price": 70,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_pirate_bicorne_athwart_basic_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_pirate_bicorne_athwart_basic_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     }
+    ]
+   }
+  },
+  "chapeu_mago": {
+   "name": "Chapéu de mago",
+   "cat": "chapeu",
+   "price": 120,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_magic_wizard_base_adult.png",
+      "z": 130,
+      "ramp": ""
+     },
+     {
+      "file": "hat_magic_wizard_belt_adult.png",
+      "z": 131,
+      "ramp": ""
+     },
+     {
+      "file": "hat_magic_wizard_buckle_adult.png",
+      "z": 132,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_magic_wizard_base_adult.png",
+      "z": 130,
+      "ramp": ""
+     },
+     {
+      "file": "hat_magic_wizard_belt_adult.png",
+      "z": 131,
+      "ramp": ""
+     },
+     {
+      "file": "hat_magic_wizard_buckle_adult.png",
+      "z": 132,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "chapeu_lua": {
+   "name": "Chapéu celestial",
+   "cat": "chapeu",
+   "price": 140,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_magic_celestial_moon_adult.png",
+      "z": 130,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_magic_celestial_moon_adult.png",
+      "z": 130,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "tiara": {
+   "name": "Tiara",
+   "cat": "chapeu",
+   "price": 150,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_formal_tiara_adult.png",
+      "z": 130,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_formal_tiara_adult.png",
+      "z": 130,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "coroa": {
+   "name": "Coroa",
+   "cat": "chapeu",
+   "price": 250,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_formal_crown_adult.png",
+      "z": 130,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_formal_crown_adult.png",
+      "z": 130,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "capuz": {
+   "name": "Capuz",
+   "cat": "touca",
+   "price": 40,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_cloth_hood_adult.png",
+      "z": 130,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_cloth_hood_adult.png",
+      "z": 130,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "56663a"
+  },
+  "capuz_saco": {
+   "name": "Capuz de saco",
+   "cat": "touca",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_cloth_hood_sack_adult.png",
+      "z": 130,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_cloth_hood_sack_adult.png",
+      "z": 130,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "d8c49a"
+  },
+  "bandana": {
+   "name": "Bandana",
+   "cat": "touca",
+   "price": 25,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_cloth_bandana_adult.png",
+      "z": 120,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_cloth_bandana_adult.png",
+      "z": 120,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "c8463c"
+  },
+  "bandana2": {
+   "name": "Bandana com borda",
+   "cat": "touca",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_cloth_bandana2_adult.png",
+      "z": 120,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_cloth_bandana2_adult.png",
+      "z": 120,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "3f6fc0"
+  },
+  "hijab": {
+   "name": "Hijab",
+   "cat": "touca",
+   "price": 40,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_cloth_hijab_male.png",
+      "z": 130,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_cloth_hijab_thin.png",
+      "z": 130,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "7a52a8"
+  },
+  "gorro_natal": {
+   "name": "Gorro de Natal",
+   "cat": "touca",
+   "price": 80,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_holiday_christmas_adult.png",
+      "z": 130,
+      "ramp": "cloth:red"
+     },
+     {
+      "file": "hat_holiday_santa_adult.png",
+      "z": 131,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_holiday_christmas_adult.png",
+      "z": 130,
+      "ramp": "cloth:red"
+     },
+     {
+      "file": "hat_holiday_santa_adult.png",
+      "z": 131,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "oc_simples": {
+   "name": "Óculos simples",
+   "cat": "oculos",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "facial_glasses_glasses_adult.png",
+      "z": 115,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "facial_glasses_glasses_adult.png",
+      "z": 115,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "oc_redondo": {
+   "name": "Óculos redondos",
+   "cat": "oculos",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "facial_glasses_round_adult.png",
+      "z": 115,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "facial_glasses_round_adult.png",
+      "z": 115,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "oc_nerd": {
+   "name": "Óculos de nerd",
+   "cat": "oculos",
+   "price": 35,
+   "layers": {
+    "male": [
+     {
+      "file": "facial_glasses_nerd_adult.png",
+      "z": 115,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "facial_glasses_nerd_adult.png",
+      "z": 115,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "oc_meia_lua": {
+   "name": "Meia-lua",
+   "cat": "oculos",
+   "price": 35,
+   "layers": {
+    "male": [
+     {
+      "file": "facial_glasses_halfmoon_adult.png",
+      "z": 115,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "facial_glasses_halfmoon_adult.png",
+      "z": 115,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "oc_gatinho": {
+   "name": "Gatinho",
+   "cat": "oculos",
+   "price": 35,
+   "layers": {
+    "male": [
+     {
+      "file": "facial_glasses_secretary_adult.png",
+      "z": 115,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "facial_glasses_secretary_adult.png",
+      "z": 115,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "oc_escuro": {
+   "name": "Óculos escuros",
+   "cat": "oculos",
+   "price": 50,
+   "layers": {
+    "male": [
+     {
+      "file": "facial_glasses_shades_adult.png",
+      "z": 115,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "facial_glasses_shades_adult.png",
+      "z": 115,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "oc_sol": {
+   "name": "Óculos de sol",
+   "cat": "oculos",
+   "price": 50,
+   "layers": {
+    "male": [
+     {
+      "file": "facial_glasses_sunglasses_adult.png",
+      "z": 115,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "facial_glasses_sunglasses_adult.png",
+      "z": 115,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "monoculo": {
+   "name": "Monóculo",
+   "cat": "oculos",
+   "price": 60,
+   "layers": {
+    "male": [
+     {
+      "file": "facial_monocle_right_adult.png",
+      "z": 115,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "facial_monocle_right_adult.png",
+      "z": 115,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "mascara_lisa": {
+   "name": "Máscara",
+   "cat": "mascara",
+   "price": 40,
+   "layers": {
+    "male": [
+     {
+      "file": "facial_masks_plain_adult.png",
+      "z": 114,
+      "ramp": "cloth:gray"
+     }
+    ],
+    "female": [
+     {
+      "file": "facial_masks_plain_adult.png",
+      "z": 114,
+      "ramp": "cloth:gray"
+     }
+    ]
+   }
+  },
+  "tapa_olho": {
+   "name": "Tapa-olho",
+   "cat": "mascara",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "facial_patches_eyepatch_left_adult.png",
+      "z": 115,
+      "ramp": "cloth:brown"
+     }
+    ],
+    "female": [
+     {
+      "file": "facial_patches_eyepatch_left_adult.png",
+      "z": 115,
+      "ramp": "cloth:brown"
+     }
+    ]
+   }
+  },
+  "tapa_olho2": {
+   "name": "Tapa-olho pequeno",
+   "cat": "mascara",
+   "price": 25,
+   "layers": {
+    "male": [
+     {
+      "file": "facial_patches_small_left_adult.png",
+      "z": 115,
+      "ramp": "cloth:gray"
+     }
+    ],
+    "female": [
+     {
+      "file": "facial_patches_small_left_adult.png",
+      "z": 115,
+      "ramp": "cloth:gray"
+     }
+    ]
+   }
+  },
+  "camiseta": {
+   "name": "Camiseta",
+   "cat": "camisa",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_shortsleeve_tshirt_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_shortsleeve_tshirt_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "3f6fc0"
+  },
+  "camiseta_v": {
+   "name": "Camiseta gola V",
+   "cat": "camisa",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_shortsleeve_tshirt_vneck_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_shortsleeve_tshirt_vneck_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "f2efe6"
+  },
+  "camiseta_botao": {
+   "name": "Camiseta com botões",
+   "cat": "camisa",
+   "price": 35,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_shortsleeve_tshirt_buttoned_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_shortsleeve_tshirt_buttoned_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "5f9e4a"
+  },
+  "polo": {
+   "name": "Polo",
+   "cat": "camisa",
+   "price": 40,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_shortsleeve_shortsleeve_polo_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_shortsleeve_shortsleeve_polo_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "c8463c"
+  },
+  "polo_longa": {
+   "name": "Polo manga longa",
+   "cat": "camisa",
+   "price": 45,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve2_polo_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve2_polo_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "2e3f6e"
+  },
+  "camisa_social": {
+   "name": "Camisa social",
+   "cat": "camisa",
+   "price": 50,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve2_buttoned_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve2_buttoned_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "f2efe6"
+  },
+  "regata": {
+   "name": "Regata",
+   "cat": "blusa",
+   "price": 25,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_sleeveless_sleeveless1_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_sleeveless_sleeveless1_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "f2efe6"
+  },
+  "regata_decote": {
+   "name": "Regata decotada",
+   "cat": "blusa",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_sleeveless_sleeveless2_scoop_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_sleeveless_sleeveless2_scoop_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "e08fb0"
+  },
+  "regata_v": {
+   "name": "Regata gola V",
+   "cat": "blusa",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_sleeveless_sleeveless2_vneck_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_sleeveless_sleeveless2_vneck_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "e8c84a"
+  },
+  "blusa_decote": {
+   "name": "Blusa decotada",
+   "cat": "blusa",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_shortsleeve_tshirt_scoop_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_shortsleeve_tshirt_scoop_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "7fb5e0"
+  },
+  "blusa_ombro": {
+   "name": "Blusa manga longa",
+   "cat": "blusa",
+   "price": 35,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_longsleeve_scoop_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_longsleeve_scoop_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "7e2f3e"
+  },
+  "manga_longa": {
+   "name": "Blusa de manga longa",
+   "cat": "blusa_frio",
+   "price": 40,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "8e8c96"
+  },
+  "moletom": {
+   "name": "Moletom",
+   "cat": "blusa_frio",
+   "price": 40,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve2_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve2_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "56663a"
+  },
+  "cardigan": {
+   "name": "Cardigã",
+   "cat": "blusa_frio",
+   "price": 55,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve2_cardigan_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve2_cardigan_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "8a5a36"
+  },
+  "sueter_v": {
+   "name": "Suéter gola V",
+   "cat": "blusa_frio",
+   "price": 45,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve2_vneck_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_longsleeve_longsleeve2_vneck_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "7e2f3e"
+  },
+  "colete_trico": {
+   "name": "Cardigã curto",
+   "cat": "blusa_frio",
+   "price": 45,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_shortsleeve_shortsleeve_cardigan_male.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_shortsleeve_shortsleeve_cardigan_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "d8c49a"
+  },
+  "calca": {
+   "name": "Calça",
+   "cat": "calca",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_pants_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_pants_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "2e3f6e"
+  },
+  "calca_larga": {
+   "name": "Calça comprida",
+   "cat": "calca",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_pants2_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_pants2_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "8a5a36"
+  },
+  "calca_social": {
+   "name": "Calça social",
+   "cat": "calca",
+   "price": 45,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_formal_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_formal_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "3a3640"
+  },
+  "calca_listrada": {
+   "name": "Calça listrada",
+   "cat": "calca",
+   "price": 50,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_formal_striped_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_formal_striped_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "8e8c96"
+  },
+  "calca_dobra": {
+   "name": "Calça dobrada",
+   "cat": "calca",
+   "price": 35,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_cuffed_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_cuffed_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "3f6fc0"
+  },
+  "bombacha": {
+   "name": "Bombacha",
+   "cat": "calca",
+   "price": 40,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_pantaloons_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_pantaloons_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "d8c49a"
+  },
+  "legging": {
+   "name": "Legging",
+   "cat": "calca",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_leggings_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_leggings_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "3a3640"
+  },
+  "bermuda": {
+   "name": "Bermuda",
+   "cat": "short",
+   "price": 25,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_shorts_shorts_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_shorts_shorts_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "d8c49a"
+  },
+  "short": {
+   "name": "Short",
+   "cat": "short",
+   "price": 25,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_shorts_short_shorts_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_shorts_short_shorts_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "3f6fc0"
+  },
+  "saia": {
+   "name": "Saia",
+   "cat": "short",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_skirts_plain_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_skirts_plain_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "7a52a8"
+  },
+  "sapato": {
+   "name": "Sapato",
+   "cat": "sapato",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "feet_shoes_basic_male.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "feet_shoes_basic_thin.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "3a3640"
+  },
+  "sapatilha": {
+   "name": "Sapatilha",
+   "cat": "sapato",
+   "price": 30,
+   "layers": {
+    "male": [
+     {
+      "file": "feet_shoes_sara_male.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "feet_shoes_sara_thin.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "c8463c"
+  },
+  "sapato_amarrar": {
+   "name": "Sapato de amarrar",
+   "cat": "sapato",
+   "price": 35,
+   "layers": {
+    "male": [
+     {
+      "file": "feet_shoes_ghillies_male.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "feet_shoes_ghillies_thin.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "8a5a36"
+  },
+  "bota": {
+   "name": "Bota",
+   "cat": "sapato",
+   "price": 45,
+   "layers": {
+    "male": [
+     {
+      "file": "feet_boots_basic_male.png",
+      "z": 25,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "feet_boots_basic_thin.png",
+      "z": 25,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "8a5a36"
+  },
+  "bota_dobra": {
+   "name": "Bota dobrada",
+   "cat": "sapato",
+   "price": 50,
+   "layers": {
+    "male": [
+     {
+      "file": "feet_boots_fold_male.png",
+      "z": 25,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "feet_boots_fold_thin.png",
+      "z": 25,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "3a3640"
+  },
+  "sandalia": {
+   "name": "Sandália",
+   "cat": "sapato",
+   "price": 20,
+   "layers": {
+    "male": [
+     {
+      "file": "feet_sandals_male.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "feet_sandals_thin.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "8a5a36"
+  },
+  "pantufa": {
+   "name": "Pantufa",
+   "cat": "sapato",
+   "price": 20,
+   "layers": {
+    "male": [
+     {
+      "file": "feet_slippers_male.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "feet_slippers_thin.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "e08fb0"
+  },
+  "fan_esqueleto": {
+   "name": "Esqueleto",
+   "cat": "fantasia",
+   "price": 150,
+   "layers": {
+    "male": [
+     {
+      "file": "head_heads_skeleton_adult.png",
+      "z": 100,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "head_heads_skeleton_adult.png",
+      "z": 100,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "hides": [
+    "cabelo",
+    "barba"
+   ],
+   "head": true
+  },
+  "fan_vampiro": {
+   "name": "Vampiro",
+   "cat": "fantasia",
+   "price": 150,
+   "layers": {
+    "male": [
+     {
+      "file": "head_heads_vampire_adult.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ],
+    "female": [
+     {
+      "file": "head_heads_vampire_adult.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ]
+   },
+   "hides": [
+    "barba"
+   ],
+   "head": true
+  },
+  "fan_zumbi": {
+   "name": "Zumbi",
+   "cat": "fantasia",
+   "price": 150,
+   "layers": {
+    "male": [
+     {
+      "file": "head_heads_zombie_adult.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ],
+    "female": [
+     {
+      "file": "head_heads_zombie_adult.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ]
+   },
+   "hides": [
+    "barba"
+   ],
+   "head": true
+  },
+  "fan_lobo": {
+   "name": "Lobisomem",
+   "cat": "fantasia",
+   "price": 180,
+   "layers": {
+    "male": [
+     {
+      "file": "head_heads_wolf_male.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ],
+    "female": [
+     {
+      "file": "head_heads_wolf_female.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ]
+   },
+   "hides": [
+    "cabelo",
+    "barba"
+   ],
+   "head": true
+  },
+  "fan_orc": {
+   "name": "Orc",
+   "cat": "fantasia",
+   "price": 120,
+   "layers": {
+    "male": [
+     {
+      "file": "head_heads_orc_male.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ],
+    "female": [
+     {
+      "file": "head_heads_orc_female.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ]
+   },
+   "hides": [
+    "barba"
+   ],
+   "head": true
+  },
+  "fan_goblin": {
+   "name": "Goblin",
+   "cat": "fantasia",
+   "price": 120,
+   "layers": {
+    "male": [
+     {
+      "file": "head_heads_goblin_adult.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ],
+    "female": [
+     {
+      "file": "head_heads_goblin_adult.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ]
+   },
+   "hides": [
+    "barba"
+   ],
+   "head": true
+  },
+  "fan_abobora": {
+   "name": "Cabeça de abóbora",
+   "cat": "fantasia",
+   "price": 120,
+   "layers": {
+    "male": [
+     {
+      "file": "head_heads_jack_adult.png",
+      "z": 100,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "head_heads_jack_adult.png",
+      "z": 100,
+      "ramp": ""
+     }
+    ]
+   },
+   "hides": [
+    "cabelo",
+    "barba",
+    "oculos",
+    "mascara"
+   ],
+   "head": true
+  },
+  "fan_frank": {
+   "name": "Frankenstein",
+   "cat": "fantasia",
+   "price": 150,
+   "layers": {
+    "male": [
+     {
+      "file": "head_heads_frankenstein_adult.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ],
+    "female": [
+     {
+      "file": "head_heads_frankenstein_adult.png",
+      "z": 100,
+      "ramp": "skin"
+     }
+    ]
+   },
+   "hides": [
+    "cabelo",
+    "barba"
+   ],
+   "head": true
+  },
+  "fan_cavaleiro": {
+   "name": "Armadura de cavaleiro",
+   "cat": "fantasia",
+   "price": 300,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_armour_plate_male.png",
+      "z": 60,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "legs_armour_plate_male.png",
+      "z": 20,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "feet_armour_plate_male.png",
+      "z": 15,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "arms_armour_plate_male.png",
+      "z": 60,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "hat_helmet_mail_adult.png",
+      "z": 125,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_armour_plate_female.png",
+      "z": 60,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "legs_armour_plate_thin.png",
+      "z": 20,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "feet_armour_plate_thin.png",
+      "z": 15,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "arms_armour_plate_thin.png",
+      "z": 60,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "hat_helmet_mail_adult.png",
+      "z": 125,
+      "ramp": "metal:steel"
+     }
+    ]
+   },
+   "hides": [
+    "torso",
+    "pernas",
+    "pes",
+    "cabeca",
+    "cabelo"
+   ]
+  },
+  "fan_legiao": {
+   "name": "Legionário",
+   "cat": "fantasia",
+   "price": 250,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_armour_legion_male.png",
+      "z": 60,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "legs_skirts_legion_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "feet_sandals_male.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_armour_legion_female.png",
+      "z": 60,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "legs_skirts_legion_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "feet_sandals_thin.png",
+      "z": 15,
+      "ramp": "cloth:white"
+     }
+    ]
+   },
+   "color": "8a5a36",
+   "hides": [
+    "torso",
+    "pernas",
+    "pes"
+   ]
+  },
+  "fan_pirata": {
+   "name": "Capitão pirata",
+   "cat": "fantasia",
+   "price": 250,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_pirate_tricorne_captain_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     },
+     {
+      "file": "hat_pirate_tricorne_captain_skull_adult.png",
+      "z": 131,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "facial_patches_eyepatch_left_adult.png",
+      "z": 115,
+      "ramp": "cloth:brown"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_pirate_tricorne_captain_adult.png",
+      "z": 130,
+      "ramp": "cloth:brown"
+     },
+     {
+      "file": "hat_pirate_tricorne_captain_skull_adult.png",
+      "z": 131,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "facial_patches_eyepatch_left_adult.png",
+      "z": 115,
+      "ramp": "cloth:brown"
+     }
+    ]
+   },
+   "hides": [
+    "cabeca",
+    "mascara",
+    "oculos"
+   ]
+  },
+  "fan_noel": {
+   "name": "Papai Noel",
+   "cat": "fantasia",
+   "price": 200,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_holiday_christmas_adult.png",
+      "z": 130,
+      "ramp": "cloth:red"
+     },
+     {
+      "file": "hat_holiday_santa_adult.png",
+      "z": 131,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "beards_beard_winter_male.png",
+      "z": 110,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_holiday_christmas_adult.png",
+      "z": 130,
+      "ramp": "cloth:red"
+     },
+     {
+      "file": "hat_holiday_santa_adult.png",
+      "z": 131,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "beards_beard_winter_female.png",
+      "z": 110,
+      "ramp": "hair"
+     }
+    ]
+   },
+   "color": "f2efe6",
+   "hides": [
+    "cabeca",
+    "barba"
+   ]
+  },
+  "cab_solto": {
+   "name": "Solto",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_loose_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_loose_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_meio_preso": {
+   "name": "Meio preso",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_half_up_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_half_up_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_marias": {
+   "name": "Maria-chiquinha",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_pigtails_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_pigtails_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_chanel_lado": {
+   "name": "Chanel de lado",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_bob_side_part_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_bob_side_part_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_cachos_longos": {
+   "name": "Cachos longos",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_curly_long_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_curly_long_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_preso_baixo": {
+   "name": "Preso baixo",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_long_tied_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_long_tied_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_long_tied_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_long_tied_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_princesa": {
+   "name": "Princesa",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_princess_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_princess_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_princess_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_princess_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_coque_alto": {
+   "name": "Coque alto",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_parted_side_bangs_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_extensions_ponytails_topknot_short_adult.png",
+      "z": 145,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_parted_side_bangs_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_extensions_ponytails_topknot_short_adult.png",
+      "z": 145,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_trancinhas": {
+   "name": "Trancinhas",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_cornrows_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_cornrows_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_flat_top": {
+   "name": "Flat top",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_flat_top_fade_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_flat_top_fade_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_twists": {
+   "name": "Twists",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_twists_fade_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_twists_fade_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_desalinhado": {
+   "name": "Desalinhado",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_unkempt_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_unkempt_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_franja": {
+   "name": "Franja",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_bangs_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_bangs_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_xlongo": {
+   "name": "Bem longo ondulado",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_xlong_wavy_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_xlong_wavy_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_xlong_wavy_adult_fg.png",
+      "z": 120,
+      "ramp": "hair"
+     },
+     {
+      "file": "hair_xlong_wavy_adult_bg.png",
+      "z": 9,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_franja_lado": {
+   "name": "Franja de lado",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_parted_side_bangs_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_parted_side_bangs_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_natural": {
+   "name": "Natural",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_natural_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_natural_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_lob": {
+   "name": "Long bob",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_lob_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_lob_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_bagunca2": {
+   "name": "Bagunçado 2",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_messy2_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_messy2_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_liberdade": {
+   "name": "Espetado longo",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_spiked_liberty_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_spiked_liberty_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "cab_cacheado2": {
+   "name": "Cacheado 2",
+   "cat": "cabelo",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hair_curly_short2_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "hair_curly_short2_adult.png",
+      "z": 120,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "npc_torso_clothes_robe": {
+   "name": "torso_clothes_robe",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_robe_female.png",
+      "z": 35,
+      "ramp": "cloth:gray"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_robe_female.png",
+      "z": 35,
+      "ramp": "cloth:gray"
+     }
+    ]
+   }
+  },
+  "npc_torso_clothes_tunic": {
+   "name": "torso_clothes_tunic",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_tunic_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_tunic_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_clothes_blouse": {
+   "name": "torso_clothes_blouse",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_blouse_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_blouse_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_clothes_blouse_longsleeve": {
+   "name": "torso_clothes_blouse_longsleeve",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_blouse_longsleeve_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_blouse_longsleeve_female.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_clothes_vest": {
+   "name": "torso_clothes_vest",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_vest_male.png",
+      "z": 45,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_vest_male.png",
+      "z": 45,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_clothes_vest_open": {
+   "name": "torso_clothes_vest_open",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_vest_open_male.png",
+      "z": 45,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_vest_open_male.png",
+      "z": 45,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_clothes_corset": {
+   "name": "torso_clothes_corset",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_clothes_corset_female.png",
+      "z": 45,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_clothes_corset_female.png",
+      "z": 45,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_aprons_apron": {
+   "name": "torso_aprons_apron",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_aprons_apron_male.png",
+      "z": 40,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_aprons_apron_female.png",
+      "z": 40,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_aprons_apron_full": {
+   "name": "torso_aprons_apron_full",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_aprons_apron_full_female.png",
+      "z": 40,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_aprons_apron_full_female.png",
+      "z": 40,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_aprons_apron_half": {
+   "name": "torso_aprons_apron_half",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_aprons_apron_half_female.png",
+      "z": 40,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_aprons_apron_half_female.png",
+      "z": 40,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_aprons_overalls": {
+   "name": "torso_aprons_overalls",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_aprons_overalls_male.png",
+      "z": 38,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_aprons_overalls_female.png",
+      "z": 38,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_aprons_suspenders": {
+   "name": "torso_aprons_suspenders",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_aprons_suspenders_male.png",
+      "z": 38,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_aprons_suspenders_female.png",
+      "z": 38,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "npc_torso_jacket_tabard": {
+   "name": "torso_jacket_tabard",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_jacket_tabard_male.png",
+      "z": 55,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_jacket_tabard_female.png",
+      "z": 55,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_jacket_frock": {
+   "name": "torso_jacket_frock",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_jacket_frock_male.png",
+      "z": 55,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_jacket_frock_male.png",
+      "z": 55,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_jacket_collared": {
+   "name": "torso_jacket_collared",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_jacket_collared_male.png",
+      "z": 55,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_jacket_collared_male.png",
+      "z": 55,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_torso_jacket_trench": {
+   "name": "torso_jacket_trench",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_jacket_trench_male.png",
+      "z": 55,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_jacket_trench_male.png",
+      "z": 55,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "npc_dress_bodice": {
+   "name": "dress_bodice",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "dress_bodice_female.png",
+      "z": 45,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "dress_bodice_female.png",
+      "z": 45,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_dress_sash": {
+   "name": "dress_sash",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "dress_sash_female.png",
+      "z": 30,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "dress_sash_female.png",
+      "z": 30,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_dress_slit": {
+   "name": "dress_slit",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "dress_slit_female.png",
+      "z": 30,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "dress_slit_female.png",
+      "z": 30,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_cape_solid": {
+   "name": "cape_solid",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "cape_solid_fg.png",
+      "z": 85,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "cape_solid_bg.png",
+      "z": 5,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "cape_solid_fg.png",
+      "z": 85,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "cape_solid_bg.png",
+      "z": 5,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_cape_trim": {
+   "name": "cape_trim",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "cape_trim.png",
+      "z": 90,
+      "ramp": "cloth:brown"
+     }
+    ],
+    "female": [
+     {
+      "file": "cape_trim.png",
+      "z": 90,
+      "ramp": "cloth:brown"
+     }
+    ]
+   }
+  },
+  "npc_cape_tattered": {
+   "name": "cape_tattered",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "cape_tattered_fg.png",
+      "z": 85,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "cape_tattered_bg.png",
+      "z": 5,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "cape_tattered_fg.png",
+      "z": 85,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "cape_tattered_bg.png",
+      "z": 5,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_belt_leather": {
+   "name": "belt_leather",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_waist_belt_leather_male.png",
+      "z": 70,
+      "ramp": "cloth:brown"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_waist_belt_leather_female.png",
+      "z": 70,
+      "ramp": "cloth:brown"
+     }
+    ]
+   }
+  },
+  "npc_belt_robe": {
+   "name": "belt_robe",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_waist_belt_robe_male.png",
+      "z": 70,
+      "ramp": "cloth:slate"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_waist_belt_robe_female.png",
+      "z": 70,
+      "ramp": "cloth:slate"
+     }
+    ]
+   }
+  },
+  "npc_belt_sash": {
+   "name": "belt_sash",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_waist_sash_male.png",
+      "z": 65,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_waist_sash_female.png",
+      "z": 65,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_belt_formal": {
+   "name": "belt_formal",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "torso_waist_belt_formal.png",
+      "z": 80,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "torso_waist_belt_formal.png",
+      "z": 80,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "npc_legs_skirt_straight": {
+   "name": "legs_skirt_straight",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_skirts_straight_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_skirts_straight_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_legs_skirt_belle": {
+   "name": "legs_skirt_belle",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_skirts_belle_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_skirts_belle_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_legs_skirt_overskirt": {
+   "name": "legs_skirt_overskirt",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_skirts_overskirt_thin.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_skirts_overskirt_thin.png",
+      "z": 35,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_legs_hose": {
+   "name": "legs_hose",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "legs_hose_male.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "legs_hose_thin.png",
+      "z": 20,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_neck_necklace_simple": {
+   "name": "neck_necklace_simple",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "neck_necklace_simple_male.png",
+      "z": 80,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "neck_necklace_simple_female.png",
+      "z": 80,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_neck_scarf": {
+   "name": "neck_scarf",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "neck_scarf.png",
+      "z": 90,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "neck_scarf.png",
+      "z": 90,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_neck_amulet_star": {
+   "name": "neck_amulet_star",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "neck_amulet_star_male.png",
+      "z": 81,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "neck_amulet_star_female.png",
+      "z": 81,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_neck_amulet_cross": {
+   "name": "neck_amulet_cross",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "neck_amulet_cross_male.png",
+      "z": 81,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "neck_amulet_cross_female.png",
+      "z": 81,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_neck_capeclip": {
+   "name": "neck_capeclip",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "neck_capeclip_male.png",
+      "z": 90,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "neck_capeclip_thin.png",
+      "z": 90,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "npc_beards_winter": {
+   "name": "beards_winter",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "beards_beard_winter_male.png",
+      "z": 110,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "beards_beard_winter_female.png",
+      "z": 110,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "npc_beards_bigstache": {
+   "name": "beards_bigstache",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "beards_mustache_bigstache.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "beards_mustache_bigstache.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "npc_beards_french": {
+   "name": "beards_french",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "beards_mustache_french.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ],
+    "female": [
+     {
+      "file": "beards_mustache_french.png",
+      "z": 111,
+      "ramp": "hair"
+     }
+    ]
+   }
+  },
+  "npc_quiver": {
+   "name": "quiver",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "quiver.png",
+      "z": 8,
+      "ramp": ""
+     }
+    ],
+    "female": [
+     {
+      "file": "quiver.png",
+      "z": 8,
+      "ramp": ""
+     }
+    ]
+   }
+  },
+  "npc_hat_helmet_horned": {
+   "name": "hat_helmet_horned",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_helmet_horned_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_helmet_horned_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "npc_hat_helmet_barbarian": {
+   "name": "hat_helmet_barbarian",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "hat_helmet_barbarian_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_helmet_barbarian_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "npc_arms_gloves": {
+   "name": "arms_gloves",
+   "cat": "npc",
+   "price": 0,
+   "layers": {
+    "male": [
+     {
+      "file": "arms_hands_gloves_male.png",
+      "z": 70,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "arms_hands_gloves_thin.png",
+      "z": 70,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  }
+ },
+ "equip": {
+  "armor": [
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "torso_armour_leather_male.png",
+       "z": 60,
+       "ramp": "cloth:leather"
+      }
+     ],
+     "female": [
+      {
+       "file": "torso_armour_leather_female.png",
+       "z": 60,
+       "ramp": "cloth:leather"
+      }
+     ]
+    },
+    "material": "cloth",
+    "palette": "leather"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "torso_chainmail_male.png",
+       "z": 50,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "arms_bracers_male.png",
+       "z": 70,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "torso_chainmail_female.png",
+       "z": 50,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "arms_bracers_thin.png",
+       "z": 70,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "metal",
+    "palette": "steel"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "torso_armour_plate_male.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "arms_bracers_male.png",
+       "z": 70,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "torso_armour_plate_female.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "arms_bracers_thin.png",
+       "z": 70,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "metal",
+    "palette": "silver"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "torso_armour_plate_male.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "shoulders_pauldrons_male.png",
+       "z": 60,
+       "ramp": "cloth:white"
+      },
+      {
+       "file": "arms_armour_plate_male.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "torso_armour_plate_female.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "shoulders_pauldrons_thin.png",
+       "z": 60,
+       "ramp": "cloth:white"
+      },
+      {
+       "file": "arms_armour_plate_thin.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "cloth",
+    "palette": "bluegray"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "torso_armour_legion_male.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "shoulders_legion_male.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "arms_armour_plate_male.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "torso_armour_legion_female.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "shoulders_legion_female.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "arms_armour_plate_thin.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "cloth",
+    "palette": "lavender"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "torso_armour_plate_male.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "shoulders_pauldrons_male.png",
+       "z": 60,
+       "ramp": "cloth:white"
+      },
+      {
+       "file": "arms_armour_plate_male.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "shoulders_bauldron_male.png",
+       "z": 65,
+       "ramp": "cloth:white"
+      }
+     ],
+     "female": [
+      {
+       "file": "torso_armour_plate_female.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "shoulders_pauldrons_thin.png",
+       "z": 60,
+       "ramp": "cloth:white"
+      },
+      {
+       "file": "arms_armour_plate_thin.png",
+       "z": 60,
+       "ramp": "metal:steel"
+      },
+      {
+       "file": "shoulders_bauldron_thin.png",
+       "z": 65,
+       "ramp": "cloth:white"
+      }
+     ]
+    },
+    "material": "metal",
+    "palette": "gold"
+   }
+  ],
+  "helmet": [
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "hat_cloth_hood_adult.png",
+       "z": 130,
+       "ramp": "cloth:white"
+      }
+     ],
+     "female": [
+      {
+       "file": "hat_cloth_hood_adult.png",
+       "z": 130,
+       "ramp": "cloth:white"
+      }
+     ]
+    },
+    "material": "cloth",
+    "palette": "leather"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "hat_helmet_nasal_adult.png",
+       "z": 130,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "hat_helmet_nasal_adult.png",
+       "z": 130,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "metal",
+    "palette": "steel"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "hat_helmet_barbuta_male.png",
+       "z": 130,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "hat_helmet_barbuta_female.png",
+       "z": 130,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "metal",
+    "palette": "silver"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "hat_helmet_armet_adult.png",
+       "z": 130,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "hat_helmet_armet_adult.png",
+       "z": 130,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "cloth",
+    "palette": "bluegray"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "hat_helmet_spangenhelm_adult.png",
+       "z": 130,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "hat_helmet_spangenhelm_adult.png",
+       "z": 130,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "cloth",
+    "palette": "lavender"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "hat_formal_crown_adult.png",
+       "z": 130,
+       "ramp": ""
+      }
+     ],
+     "female": [
+      {
+       "file": "hat_formal_crown_adult.png",
+       "z": 130,
+       "ramp": ""
+      }
+     ]
+    },
+    "material": "metal",
+    "palette": "gold"
+   }
+  ],
+  "boots": [
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "feet_boots_basic_male.png",
+       "z": 25,
+       "ramp": "cloth:white"
+      }
+     ],
+     "female": [
+      {
+       "file": "feet_boots_basic_thin.png",
+       "z": 25,
+       "ramp": "cloth:white"
+      }
+     ]
+    },
+    "material": "cloth",
+    "palette": "leather"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "feet_boots_fold_male.png",
+       "z": 25,
+       "ramp": "cloth:white"
+      }
+     ],
+     "female": [
+      {
+       "file": "feet_boots_fold_thin.png",
+       "z": 25,
+       "ramp": "cloth:white"
+      }
+     ]
+    },
+    "material": "cloth",
+    "palette": "walnut"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "feet_armour_plate_male.png",
+       "z": 15,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "feet_armour_plate_thin.png",
+       "z": 15,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "metal",
+    "palette": "silver"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "feet_armour_plate_male.png",
+       "z": 15,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "feet_armour_plate_thin.png",
+       "z": 15,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "cloth",
+    "palette": "bluegray"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "feet_armour_plate_male.png",
+       "z": 15,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "feet_armour_plate_thin.png",
+       "z": 15,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "cloth",
+    "palette": "lavender"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "feet_armour_plate_male.png",
+       "z": 15,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "feet_armour_plate_thin.png",
+       "z": 15,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "metal",
+    "palette": "gold"
+   }
+  ],
+  "shield": [
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "shield_round.png",
+       "z": 110,
+       "ramp": ""
+      }
+     ],
+     "female": [
+      {
+       "file": "shield_round.png",
+       "z": 110,
+       "ramp": ""
+      }
+     ]
+    },
+    "material": "",
+    "palette": ""
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "shield_round.png",
+       "z": 110,
+       "ramp": ""
+      }
+     ],
+     "female": [
+      {
+       "file": "shield_round.png",
+       "z": 110,
+       "ramp": ""
+      }
+     ]
+    },
+    "material": "metal",
+    "palette": "steel"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "shield_heater_original_wood_bg.png",
+       "z": 2,
+       "ramp": ""
+      },
+      {
+       "file": "shield_heater_original_wood_fg.png",
+       "z": 110,
+       "ramp": ""
+      }
+     ],
+     "female": [
+      {
+       "file": "shield_heater_original_wood_bg.png",
+       "z": 2,
+       "ramp": ""
+      },
+      {
+       "file": "shield_heater_original_wood_fg.png",
+       "z": 110,
+       "ramp": ""
+      }
+     ]
+    },
+    "material": "",
+    "palette": ""
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "shield_spartan_bg.png",
+       "z": 2,
+       "ramp": "cloth:walnut"
+      },
+      {
+       "file": "shield_spartan_fg.png",
+       "z": 110,
+       "ramp": "cloth:walnut"
+      }
+     ],
+     "female": [
+      {
+       "file": "shield_spartan_bg.png",
+       "z": 2,
+       "ramp": "cloth:walnut"
+      },
+      {
+       "file": "shield_spartan_fg.png",
+       "z": 110,
+       "ramp": "cloth:walnut"
+      }
+     ]
+    },
+    "material": "cloth",
+    "palette": "bluegray"
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "shield_crusader_bg.png",
+       "z": 2,
+       "ramp": "cloth:walnut"
+      },
+      {
+       "file": "shield_crusader_fg_male.png",
+       "z": 110,
+       "ramp": "cloth:white"
+      }
+     ],
+     "female": [
+      {
+       "file": "shield_crusader_bg.png",
+       "z": 2,
+       "ramp": "cloth:walnut"
+      },
+      {
+       "file": "shield_crusader_fg_female.png",
+       "z": 110,
+       "ramp": "cloth:white"
+      }
+     ]
+    },
+    "material": "",
+    "palette": ""
+   },
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "shield_spartan_bg.png",
+       "z": 2,
+       "ramp": "cloth:walnut"
+      },
+      {
+       "file": "shield_spartan_fg.png",
+       "z": 110,
+       "ramp": "cloth:walnut"
+      }
+     ],
+     "female": [
+      {
+       "file": "shield_spartan_bg.png",
+       "z": 2,
+       "ramp": "cloth:walnut"
+      },
+      {
+       "file": "shield_spartan_fg.png",
+       "z": 110,
+       "ramp": "cloth:walnut"
+      }
+     ]
+    },
+    "material": "metal",
+    "palette": "gold"
+   }
+  ],
+  "legs_heavy": [
+   {
+    "layers": {
+     "male": [
+      {
+       "file": "legs_armour_plate_male.png",
+       "z": 20,
+       "ramp": "metal:steel"
+      }
+     ],
+     "female": [
+      {
+       "file": "legs_armour_plate_thin.png",
+       "z": 20,
+       "ramp": "metal:steel"
+      }
+     ]
+    },
+    "material": "metal",
+    "palette": ""
+   }
+  ]
+ },
+ "weapon_default": {
+  "sword": "arming",
+  "dagger": "dagger",
+  "staff": "staff",
+  "bow": "recurve",
+  "spear": "spear"
+ },
+ "weapons": {
+  "arming": [
+   {
+    "file": "weapon_arming_bg.png",
+    "z": 9,
+    "ramp": "metal:steel"
+   },
+   {
+    "file": "weapon_arming_fg.png",
+    "z": 140,
+    "ramp": "metal:steel"
+   }
+  ],
+  "saber": [
+   {
+    "file": "weapon_saber_bg.png",
+    "z": 9,
+    "ramp": "metal:iron"
+   },
+   {
+    "file": "weapon_saber_fg.png",
+    "z": 140,
+    "ramp": "metal:iron"
+   }
+  ],
+  "longsword": [
+   {
+    "file": "weapon_longsword_bg.png",
+    "z": 9,
+    "ramp": "metal:steel"
+   },
+   {
+    "file": "weapon_longsword_fg.png",
+    "z": 140,
+    "ramp": "metal:steel"
+   }
+  ],
+  "waraxe": [
+   {
+    "file": "weapon_waraxe_bg.png",
+    "z": 9,
+    "ramp": "metal:silver"
+   },
+   {
+    "file": "weapon_waraxe_fg.png",
+    "z": 140,
+    "ramp": "metal:silver"
+   }
+  ],
+  "mace": [
+   {
+    "file": "weapon_mace_bg.png",
+    "z": 9,
+    "ramp": "metal:iron"
+   },
+   {
+    "file": "weapon_mace_fg.png",
+    "z": 140,
+    "ramp": "metal:iron"
+   }
+  ],
+  "dagger": [
+   {
+    "file": "weapon_dagger_bg.png",
+    "z": 9,
+    "ramp": "metal:steel"
+   },
+   {
+    "file": "weapon_dagger_fg.png",
+    "z": 140,
+    "ramp": "metal:steel"
+   }
+  ],
+  "katana": [
+   {
+    "file": "weapon_katana_bg.png",
+    "z": 9,
+    "ramp": "metal:iron"
+   },
+   {
+    "file": "weapon_katana_fg.png",
+    "z": 140,
+    "ramp": "metal:iron"
+   }
+  ],
+  "rapier": [
+   {
+    "file": "weapon_rapier_bg.png",
+    "z": 9,
+    "ramp": "metal:steel"
+   },
+   {
+    "file": "weapon_rapier_fg.png",
+    "z": 140,
+    "ramp": "metal:steel"
+   }
+  ],
+  "scimitar": [
+   {
+    "file": "weapon_scimitar_bg.png",
+    "z": 9,
+    "ramp": "metal:iron"
+   },
+   {
+    "file": "weapon_scimitar_fg.png",
+    "z": 140,
+    "ramp": "metal:iron"
+   }
+  ],
+  "staff": [
+   {
+    "file": "weapon_staff_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_staff_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "gnarled": [
+   {
+    "file": "weapon_gnarled_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_gnarled_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "loop": [
+   {
+    "file": "weapon_loop_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_loop_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "s_staff": [
+   {
+    "file": "weapon_s_staff_bg.png",
+    "z": 9,
+    "ramp": "cloth:brown"
+   },
+   {
+    "file": "weapon_s_staff_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "diamond": [
+   {
+    "file": "weapon_diamond_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_diamond_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "crystal": [
+   {
+    "file": "weapon_crystal_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_crystal_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "diamond_gold": [
+   {
+    "file": "weapon_diamond_gold_bg.png",
+    "z": 9,
+    "ramp": "metal:gold"
+   },
+   {
+    "file": "weapon_diamond_gold_fg.png",
+    "z": 140,
+    "ramp": "metal:gold"
+   }
+  ],
+  "bow": [
+   {
+    "file": "weapon_bow_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_bow_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "bow_dark": [
+   {
+    "file": "weapon_bow_dark_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_bow_dark_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "recurve": [
+   {
+    "file": "weapon_recurve_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_recurve_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "recurve_light": [
+   {
+    "file": "weapon_recurve_light_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_recurve_light_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "recurve_dark": [
+   {
+    "file": "weapon_recurve_dark_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_recurve_dark_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "great_light": [
+   {
+    "file": "weapon_great_light_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_great_light_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "great": [
+   {
+    "file": "weapon_great_bg.png",
+    "z": 9,
+    "ramp": ""
+   },
+   {
+    "file": "weapon_great_fg.png",
+    "z": 140,
+    "ramp": ""
+   }
+  ],
+  "great_gold": [
+   {
+    "file": "weapon_great_gold_bg.png",
+    "z": 9,
+    "ramp": "metal:gold"
+   },
+   {
+    "file": "weapon_great_gold_fg.png",
+    "z": 140,
+    "ramp": "metal:gold"
+   }
+  ],
+  "spear": [
+   {
+    "file": "weapon_spear_bg.png",
+    "z": 9,
+    "ramp": "cloth:brown"
+   },
+   {
+    "file": "weapon_spear_fg.png",
+    "z": 140,
+    "ramp": "metal:steel"
+   }
+  ]
+ },
+ "categories": [
+  [
+   "cabelo",
+   "Cabelo",
+   "cabelo"
+  ],
+  [
+   "barba",
+   "Barba",
+   "barba"
+  ],
+  [
+   "chapeu",
+   "Chapéus",
+   "cabeca"
+  ],
+  [
+   "touca",
+   "Toucas",
+   "cabeca"
+  ],
+  [
+   "oculos",
+   "Óculos",
+   "oculos"
+  ],
+  [
+   "mascara",
+   "Máscaras",
+   "mascara"
+  ],
+  [
+   "camisa",
+   "Camisas",
+   "torso"
+  ],
+  [
+   "blusa",
+   "Blusas",
+   "torso"
+  ],
+  [
+   "blusa_frio",
+   "Blusas de frio",
+   "torso"
+  ],
+  [
+   "calca",
+   "Calças",
+   "pernas"
+  ],
+  [
+   "short",
+   "Shorts e saias",
+   "pernas"
+  ],
+  [
+   "sapato",
+   "Sapatos",
+   "pes"
+  ],
+  [
+   "fantasia",
+   "Fantasias",
+   "fantasia"
+  ]
+ ],
+ "credits": {
+  "authors": [
+   "7Soul",
+   "??",
+   "Ahmad3366",
+   "AntumDeluge",
+   "Benjamin K. Smith (BenCreating)",
+   "bluecarrot16",
+   "Bluecarrot16",
+   "Carlo Enrico Victoria (Nemisys)",
+   "Charles Sanchez (CharlesGabriel)",
+   "dalonedrau",
+   "DarkwallLKE",
+   "Durrani",
+   "Eliza Wyatt (ElizaWy)",
+   "ElizaWy",
+   "Evert",
+   "Fabzy",
+   "JaidynReiman",
+   "Joe White",
+   "Johannes Sjölund (wulax)",
+   "Joshua Taylor",
+   "kcilds/Rocetti/Eredah",
+   "laetissima",
+   "Lanea Zimmerman (Sharm)",
+   "Luke Mehl",
+   "Mandi Paugh",
+   "Manuel Riecke (MrBeast)",
+   "Marcel van de Steeg (MadMarcel)",
+   "Matthew Krohn (makrohn)",
+   "Matthew Krohn (Makrohn)",
+   "Michael Whitlock (bigbeargames)",
+   "MuffinElZangano",
+   "Napsio",
+   "Napsio (Vitruvian Studio)",
+   "Nila122",
+   "Pierre Vigier (pvigier)",
+   "Radomir Dopieralski",
+   "Sander Frenken (castelonia)",
+   "Shaun Williams",
+   "Stephen Challener (Redshrike)",
+   "Thane Brimhall (pennomi)",
+   "thecilekli",
+   "TheraHedwig",
+   "Tracy",
+   "Tuomo Untinen (reemax)",
+   "William.Thompsonj",
+   "William.Thomsponj",
+   "Zi Ye"
+  ],
+  "licenses": [
+   "CC-BY 3.0",
+   "CC-BY 3.0+",
+   "CC-BY 4.0",
+   "CC-BY-SA 3.0",
+   "CC0",
+   "GPL 2.0",
+   "GPL 3.0",
+   "OGA-BY 3.0",
+   "OGA-BY 3.0+",
+   "OGA-SA 3.0"
+  ]
+ },
+ "source": "Universal LPC Spritesheet Character Generator - github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator"
+}

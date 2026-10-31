@@ -105,7 +105,27 @@ static func texture(file: String) -> Texture2D:
 
 ## Camadas do visual, da mais funda para a mais à frente: [{tex, z, color}].
 ## `preview` = peça vestida só para a prévia da loja (sem comprar).
+## Se o personagem do mundo (LpcW) já está montado, devolve uma camada só com o atlas dele
+## (mesma pele, olhos e cabelo do mundo); senão pede a montagem e usa as camadas antigas.
 static func layers(look_in: Dictionary, blink: bool = false, preview: String = "") -> Array:
+	if LpcW.available():
+		var lk: Dictionary = LpcW.resolve(look_in).duplicate(true)
+		if preview != "" and not item(preview).is_empty():
+			var eq: Dictionary = lk.get("equip", {})
+			eq[slot_of(preview)] = preview
+			lk["equip"] = eq
+		lk.erase("gear")
+		lk["weapon"] = ""
+		if blink:
+			lk["expr"] = "closed"
+		var tex := LpcW.cached(lk, "npc")
+		if tex != null:
+			return [{"tex": tex, "z": 0, "color": Color.WHITE, "atlas": true}]
+		LpcW.request(lk, "npc", func(_t: Texture2D) -> void: pass)
+	return _old_layers(look_in, blink, preview)
+
+
+static func _old_layers(look_in: Dictionary, blink: bool = false, preview: String = "") -> Array:
 	var look := resolve(look_in)
 	var body: String = look.get("body", "male")
 	if body != "male" and body != "female":
@@ -146,6 +166,14 @@ static func layers(look_in: Dictionary, blink: bool = false, preview: String = "
 static func draw(ci: CanvasItem, top_left: Vector2, scale: float, frame: int, lays: Array) -> void:
 	var dst := Rect2(top_left, Vector2(FRAME, FRAME) * scale)
 	var src := Rect2(frame * FRAME, 0, FRAME, FRAME)
+	if not lays.is_empty() and lays[0].get("atlas", false):
+		# atlas do LpcW: sentado (linha "direita" do grupo sit) e andando para a direita
+		if frame == F_CHAIR:
+			src = Rect2(2 * FRAME, 448, FRAME, FRAME)
+		elif frame == F_GROUND:
+			src = Rect2(1 * FRAME, 448, FRAME, FRAME)
+		else:
+			src = Rect2((frame - F_WALK) * FRAME, 192, FRAME, FRAME)
 	for l in lays:
 		if l["tex"] != null:
 			ci.draw_texture_rect_region(l["tex"], dst, src, l["color"])
