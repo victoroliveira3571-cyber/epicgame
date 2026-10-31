@@ -7,6 +7,9 @@ const COLS := 9
 
 var filter: String = ""
 var selected: String = ""
+var compare_open: bool = false     # painel flutuante de comparação (abre ao clicar num equipamento)
+var _sel_slot: Control = null
+var _compare: Control = null
 
 
 func _init() -> void:
@@ -15,6 +18,7 @@ func _init() -> void:
 
 
 func build() -> void:
+	_sel_slot = null
 	# --- equipamento
 	var eq := UI.vbox(3)
 	add_to_body(eq, Vector2(0, 0))
@@ -62,8 +66,11 @@ func build() -> void:
 			s2.selected = id2 == selected
 			s2.equipped = GameState.is_equipped(id2)
 			s2.pressed.connect(func() -> void:
+				compare_open = selected != id2 or not compare_open
 				selected = id2
 				rebuild())
+			if id2 == selected:
+				_sel_slot = s2
 		grid.add_child(s2)
 	# --- detalhes
 	var det := UI.card(UI.C_PANEL, UI.C_LINE)
@@ -76,6 +83,53 @@ func build() -> void:
 	_build_details(dv)
 	var gold := UI.label("Ouro: %s" % UI.fmt_int(GameState.gold), UI.C_GOLD)
 	add_to_body(gold, Vector2(0, 250))
+	_build_compare()
+
+
+# ------------------------------------------------------------------ Comparação
+## Equipamento clicado na mochila: painel flutuante ao lado do item, com os atributos lado a lado
+## (item escolhido x o que está equipado no mesmo espaço) e a diferença de cada um.
+func _build_compare() -> void:
+	_compare = null
+	if not compare_open or _sel_slot == null or not Data.is_equipment(selected) or GameState.is_equipped(selected):
+		return
+	var cur: String = GameState.equipped.get(Data.slot_of(selected), "")
+	_compare = UIWindow.compare_card(selected, cur)
+	_compare.z_index = 20
+	var row := UI.hbox(4)
+	(_compare.get_child(0) as Control).add_child(row)
+	var sel := selected
+	var eqb := UI.button("Equipar", func() -> void:
+		compare_open = false
+		GameState.equip_item(sel), 56)
+	eqb.disabled = not Data.class_can_use(GameState.player_class, sel)
+	row.add_child(eqb)
+	row.add_child(UI.button("Fechar", func() -> void:
+		compare_open = false
+		rebuild(), 50))
+	body.add_child(_compare)
+	_place_compare.call_deferred()
+
+
+func _place_compare() -> void:
+	if _compare == null or not is_instance_valid(_compare) or not is_instance_valid(_sel_slot):
+		return
+	_compare.reset_size()
+	var r := _sel_slot.get_global_rect()
+	var origin := body.get_global_rect().position
+	var sz := _compare.size
+	var pos := Vector2(r.end.x + 4.0, r.position.y - 6.0) - origin
+	if pos.x + sz.x > body.size.x:
+		pos.x = r.position.x - origin.x - sz.x - 4.0
+	pos.y = clampf(pos.y, -4.0, body.size.y - sz.y + 4.0)
+	_compare.position = pos.round()
+
+
+func _gui_input(ev: InputEvent) -> void:
+	# clicar fora do painel fecha a comparação
+	if compare_open and ev is InputEventMouseButton and ev.pressed:
+		compare_open = false
+		rebuild()
 
 
 func _filtered_ids() -> Array:

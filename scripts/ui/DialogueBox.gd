@@ -335,15 +335,17 @@ func _layout_speech(kind: String, who: String, text: String, expr: String) -> vo
 	fs.shadow_size = 4
 	_frame.add_theme_stylebox_override("panel", fs)
 	_portrait.position = Vector2(px + 5, py + 5)
-	var face := _speaker_face(who)
-	var lk := _speaker_look(who)
+	var vis := _speaker_visual(who)
+	var lk: Dictionary = vis.get("look", {})
+	var face: Texture2D = vis.get("face", null)
+	var vis_tint: Color = vis.get("tint", Color.WHITE)
 	if not lk.is_empty():
 		_portrait.set_look(lk)
 	elif face != null:
-		_portrait.set_fallback(face, sp.get("tint", Color.WHITE))
+		_portrait.set_fallback(face, vis_tint)
 	else:
 		_portrait.set_fallback(null)
-	_portrait.tint = Color(1.0, 0.86, 0.7) if kind == "mem" else Color.WHITE
+	_portrait.tint = vis_tint * Color(1.0, 0.86, 0.7) if kind == "mem" else vis_tint
 	_portrait.expr = expr
 	_portrait.set_expr(expr)
 	if kind == "think":
@@ -440,19 +442,10 @@ func _max_lines(pg: Array) -> int:
 
 
 # ================================================================== Retratos
-func _speaker_look(who: String) -> Dictionary:
-	if who == "heroi" or who == "espelho":
-		return Looks.hero()
-	var key: String = Looks.SPEAKER_LOOK.get(who, "")
-	return Looks.of(key) if key != "" else {}
-
-
-func _speaker_face(who: String) -> Texture2D:
-	var sp: Dictionary = StoryData.SPEAKERS.get(who, {})
-	var face := String(sp.get("face", ""))
-	if face == "" or face == "hero":
-		return null
-	return Pix.tex(face)
+## Retrato = o mesmo visual do personagem no mapa (Looks.speaker_visual é a fonte única).
+func _speaker_visual(who: String) -> Dictionary:
+	var live := _actor_of(who)
+	return Looks.speaker_visual(who, _lpc_of(live) if live != null else null)
 
 
 # ================================================================== Direção (NPCs vivos)

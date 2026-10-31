@@ -47,11 +47,14 @@ func _ready() -> void:
 	panel.add_child(body)
 	build()
 	GameState.stats_changed.connect(_on_state_changed)
+	LpcW.item_icons_ready.connect(_on_state_changed)   # ícones de equipamento acabaram de ser montados
 
 
 func _exit_tree() -> void:
 	if GameState.stats_changed.is_connected(_on_state_changed):
 		GameState.stats_changed.disconnect(_on_state_changed)
+	if LpcW.item_icons_ready.is_connected(_on_state_changed):
+		LpcW.item_icons_ready.disconnect(_on_state_changed)
 
 
 func _on_state_changed() -> void:
@@ -104,6 +107,108 @@ static func item_text(item_id: String) -> String:
 	if desc != "":
 		lines.append(desc)
 	return "\n".join(lines)
+
+
+## Atributos de um equipamento já com o aprimoramento (+N).
+static func equip_stats(item_id: String) -> Dictionary:
+	var out := {}
+	var it: Dictionary = Data.get_item(item_id)
+	if it.is_empty():
+		return out
+	var mult := 1.0 + Data.UPGRADE_STAT_BONUS * float(GameState.upgrade_level(item_id))
+	for k in ["atk", "def", "hp", "speed", "crit", "luck"]:
+		var v := float(it.get(k, 0.0))
+		if v > 0.0:
+			out[k] = v * mult
+	return out
+
+
+const COMPARE_STATS := [["atk", "Ataque"], ["def", "Defesa"], ["hp", "Vida"], ["speed", "Velocidade"], ["crit", "Crítico %"], ["luck", "Sorte %"]]
+
+
+## Painel de comparação: item escolhido x item equipado no mesmo espaço, lado a lado, com a diferença.
+static func compare_card(new_id: String, cur_id: String) -> PanelContainer:
+	var card := UI.card(Color("231f1c"), UI.C_ORANGE)
+	card.mouse_filter = Control.MOUSE_FILTER_STOP
+	var v := UI.vbox(3)
+	card.add_child(v)
+	v.add_child(UI.label("Comparar  -  %s" % Data.SLOT_NAMES.get(Data.slot_of(new_id), ""), UI.C_ORANGE_L))
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 2)
+	v.add_child(grid)
+	# cabeçalho: ícone e nome de cada item
+	grid.add_child(UI.label("", UI.C_DIM))
+	for id in [new_id, cur_id]:
+		var col := UI.vbox(1)
+		if id != "":
+			col.add_child(UI.icon(Pix.item_icon(id), 22))
+			var lvl := GameState.upgrade_level(id)
+			col.add_child(UI.wrap_label(Data.item_name(id) + (" +%d" % lvl if lvl > 0 else ""), UI.item_color(id), 74))
+		else:
+			col.add_child(UI.label("(vazio)", UI.C_DIM))
+		col.add_child(UI.label("Escolhido" if id == new_id else "Equipado", UI.C_DIM))
+		grid.add_child(col)
+	grid.add_child(UI.label("Dif.", UI.C_DIM))
+	var a := equip_stats(new_id)
+	var b := equip_stats(cur_id)
+	var total := 0
+	for pair in COMPARE_STATS:
+		var k: String = pair[0]
+		if not a.has(k) and not b.has(k):
+			continue
+		var va := float(a.get(k, 0.0))
+		var vb := float(b.get(k, 0.0))
+		var diff := va - vb
+		grid.add_child(UI.label(pair[1], UI.C_DIM))
+		grid.add_child(UI.label(_fmt_stat(va) if a.has(k) else "-", UI.C_TEXT))
+		grid.add_child(UI.label(_fmt_stat(vb) if b.has(k) else "-", UI.C_TEXT))
+		var col2 := UI.C_GOOD if diff > 0.04 else UI.C_BAD if diff < -0.04 else UI.C_DIM
+		grid.add_child(UI.label(("+" if diff > 0.04 else "") + _fmt_stat(diff) if absf(diff) > 0.04 else "=", col2))
+		total += 1 if diff > 0.04 else -1 if diff < -0.04 else 0
+	v.add_child(UI.hline(UI.C_LINE))
+	if not Data.class_can_use(GameState.player_class, new_id):
+		v.add_child(UI.label("Sua classe não pode usar.", UI.C_BAD))
+	elif cur_id == "":
+		v.add_child(UI.label("Espaço vazio: só ganha.", UI.C_GOOD))
+	else:
+		v.add_child(UI.label("Melhor no geral" if total > 0 else "Pior no geral" if total < 0 else "Troca equilibrada",
+			UI.C_GOOD if total > 0 else UI.C_BAD if total < 0 else UI.C_DIM))
+	return card
+
+
+static func _fmt_stat(v: float) -> String:
+	if absf(v - round(v)) < 0.05:
+		return str(int(round(v)))
+	return ("%.1f" % v).replace(".", ",")
+
+
+## Prova de promoção aberta (também aparece na Guilda): metas, progresso e o botão Promover.
+static func trial_box(parent: Control, width: float) -> void:
+	var tr := GameState.promotion_trial()
+	var tier := GameState.promotion_tier()
+	if tr.is_empty():
+		if tier >= Data.PROMOTION_LEVELS.size():
+			parent.add_child(UI.wrap_label("Todas as promoções concluídas. Lenda!", UI.C_GOLD, width))
+		else:
+			parent.add_child(UI.wrap_label("Próxima prova no nível %d." % Data.PROMOTION_LEVELS[tier], UI.C_DIM, width))
+		return
+	var t := int(tr["tier"])
+	parent.add_child(UI.label("Prova: %s" % Data.PROMOTION_TITLES[GameState.player_class][t - 1], UI.C_ORANGE_L))
+	var p := GameState.trial_progress()
+	for pair in [["monsters", "Monstros"], ["focus", "Minutos de foco"], ["bosses", "Chefes"]]:
+		var got := int(p[pair[0]][0])
+		var goal := int(p[pair[0]][1])
+		if goal <= 0:
+			continue
+		parent.add_child(UI.label("%s: %d / %d" % [pair[1], mini(got, goal), goal], UI.C_GOOD if got >= goal else UI.C_TEXT))
+	var b := UI.button("Promover", func() -> void:
+		if GameState.promote():
+			Audio.jingle("levelup")
+			HUD.floor_banner("Promoção!", GameState.class_title()), 80)
+	b.disabled = not GameState.can_promote()
+	parent.add_child(b)
 
 
 func add_to_body(node: Control, pos: Vector2 = Vector2.ZERO) -> void:

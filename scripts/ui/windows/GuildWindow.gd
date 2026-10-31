@@ -1,6 +1,7 @@
 extends UIWindow
 
-## Guilda dos Aventureiros: missões permanentes, missões diárias e acesso à masmorra.
+## Guilda dos Aventureiros: missões permanentes, missões diárias, prova de promoção de classe
+## (níveis 25, 50, 75 e 100) e acesso à masmorra.
 
 var tab: int = 0
 
@@ -11,7 +12,8 @@ func _init() -> void:
 
 
 func build() -> void:
-	tab_bar(["Diárias", "Missões"], tab, func(i: int) -> void:
+	var promo_name := "Promoção" + (" !" if GameState.can_promote() else "")
+	tab_bar(["Diárias", "Missões", promo_name], tab, func(i: int) -> void:
 		tab = i
 		rebuild(), Vector2(0, 0), 80)
 	var enter := UI.button("Portão da masmorra (créditos: %d)" % Story.credits(), func() -> void:
@@ -21,8 +23,21 @@ func build() -> void:
 	var col := scroll_column(Vector2(0, 22), Vector2(540, 252))
 	if tab == 0:
 		_daily(col)
-	else:
+	elif tab == 1:
 		_missions(col)
+	else:
+		_promotion(col)
+
+
+func _promotion(col: VBoxContainer) -> void:
+	if not GameState.has_chosen_class():
+		col.add_child(UI.label("Registre-se numa classe primeiro.", UI.C_DIM))
+		return
+	col.add_child(UI.wrap_label("Helena: nos níveis 25, 50, 75 e 100 a Guilda abre uma prova. Cumpra as metas (contam a partir de quando a prova abre) e volte aqui para ser promovido.", UI.C_DIM, 530))
+	col.add_child(UI.label("Classe atual: %s" % GameState.class_title(), UI.C_GOLD))
+	var box := UI.vbox(3)
+	col.add_child(box)
+	UIWindow.trial_box(box, 520)
 
 
 func _reward_text(r: Dictionary) -> String:

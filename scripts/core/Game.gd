@@ -49,6 +49,8 @@ func _setup_input() -> void:
 	_add_action("attack", [KEY_SPACE, KEY_J])
 	_add_action("dodge", [KEY_SHIFT, KEY_K])
 	_add_action("skill", [KEY_Q, KEY_L])
+	_add_action("skill2", [KEY_R])      # habilidade do nível 10
+	_add_action("skill3", [KEY_X])      # habilidade do nível 30
 	_add_action("interact", [KEY_E])
 	_add_action("eat", [KEY_F])
 	_add_action("potion", [KEY_H])
@@ -138,11 +140,16 @@ func go_to_forest(spawn: String = "town") -> void:
 
 
 # ============================================================ Masmorra
-## Pode entrar no andar: liberado pela história e pedágio pago hoje (ou créditos para pagar).
+## Pode entrar no andar: liberado pela história e créditos para a entrada (o custo sobe a cada
+## entrada no mesmo andar no mesmo dia, ver Data.travel_cost).
 func can_enter_floor(floor_n: int) -> bool:
 	if not Story.floor_unlocked(floor_n):
 		return false
-	return Story.has_pass("andar_%d" % floor_n) or Story.credits() >= Data.floor_toll(floor_n)
+	return Story.credits() >= floor_entry_cost(floor_n)
+
+
+func floor_entry_cost(floor_n: int) -> int:
+	return Story.entry_cost("andar_%d" % floor_n, Data.floor_toll(floor_n))
 
 
 func enter_dungeon(start_floor: int = 1) -> bool:
@@ -150,8 +157,8 @@ func enter_dungeon(start_floor: int = 1) -> bool:
 		GameState.toast.emit("Este andar ainda não está liberado pela história.", Color("ff7a6a"))
 		Audio.sfx("ui_error")
 		return false
-	if not Story.buy_pass("andar_%d" % start_floor, Data.floor_toll(start_floor)):
-		GameState.toast.emit("Faltam créditos de estudo: o andar %d custa %d." % [start_floor, Data.floor_toll(start_floor)], Color("ff7a6a"))
+	if not Story.pay_entry("andar_%d" % start_floor, Data.floor_toll(start_floor)):
+		GameState.toast.emit("Faltam créditos de estudo: o andar %d custa %d agora." % [start_floor, floor_entry_cost(start_floor)], Color("ff7a6a"))
 		Audio.sfx("ui_error")
 		return false
 	current_floor = start_floor
@@ -174,16 +181,13 @@ func try_descend() -> void:
 		HUD.show_toast("O andar %d ainda não está liberado pela história." % next, UI.C_BAD)
 		Audio.sfx("ui_error")
 		return
-	if Story.has_pass("andar_%d" % next):
-		descend()
-		return
-	var cost := Data.floor_toll(next)
+	var cost := floor_entry_cost(next)
 	if Story.credits() < cost:
-		HUD.show_toast("O andar %d custa %d créditos de estudo (você tem %d)." % [next, cost, Story.credits()], UI.C_BAD)
+		HUD.show_toast("O andar %d custa %d créditos de estudo agora (você tem %d)." % [next, cost, Story.credits()], UI.C_BAD)
 		Audio.sfx("ui_error")
 		return
-	HUD.confirm("Pagar %d crédito%s de estudo para descer ao andar %d? (passe válido hoje)" % [cost, "s" if cost > 1 else "", next], func() -> void:
-		if Story.buy_pass("andar_%d" % next, cost):
+	HUD.confirm("Pagar %s para descer ao andar %d?" % [Story.entry_text("andar_%d" % next, Data.floor_toll(next)), next], func() -> void:
+		if Story.pay_entry("andar_%d" % next, Data.floor_toll(next)):
 			descend())
 
 

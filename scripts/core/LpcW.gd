@@ -46,6 +46,7 @@ func _ready() -> void:
 		if typeof(parsed) == TYPE_DICTIONARY:
 			_cat = parsed
 	_shader = load(DIR + "lpc_ramp.gdshader")
+	prewarm_item_icons.call_deferred()
 
 
 func available() -> bool:
@@ -306,7 +307,7 @@ func request(look: Dictionary, mode: String, cb: Callable) -> void:
 		_waiting[key].append(cb)
 		return
 	_waiting[key] = [cb]
-	_queue.append([key, resolve(look), mode])
+	_queue.append([key, look if mode == "item" else resolve(look), mode])
 	if not _busy:
 		_run_queue.call_deferred()
 
@@ -316,6 +317,8 @@ func cached(look: Dictionary, mode: String) -> Texture2D:
 
 
 func look_key(look: Dictionary, mode: String) -> String:
+	if mode == "item":
+		return "item:%s:%s:%s" % [look["_item"], look["_bt"], item_frame(str(look["_item"]))]
 	return mode + ":" + str(resolve(look).hash())
 
 
@@ -328,7 +331,10 @@ func _run_queue() -> void:
 		while not _queue.is_empty() and (batch.is_empty() or budget < 40):
 			var job: Array = _queue.pop_front()
 			batch.append(job)
-			budget += layers(job[1]).size() * (PORTRAIT_EXPR.size() if job[2] == "portrait" else 1)
+			if job[2] == "item":
+				budget += item_layers(str(job[1]["_item"]), str(job[1]["_bt"])).size()
+			else:
+				budget += layers(job[1]).size() * (PORTRAIT_EXPR.size() if job[2] == "portrait" else 1)
 		var vps: Array = []
 		for job in batch:
 			vps.append(_make_viewport(job[1], job[2]))
@@ -344,6 +350,8 @@ func _run_queue() -> void:
 			vp.queue_free()
 			var tex: Texture2D = null
 			if img != null and not img.is_empty():
+				if batch[i][2] == "item":
+					img = _icon_crop(img)
 				tex = ImageTexture.create_from_image(img)
 			var key: String = batch[i][0]
 			_cache[key] = tex
@@ -363,7 +371,17 @@ func _make_viewport(look: Dictionary, mode: String) -> SubViewport:
 	add_child(vp)
 	if OS.get_cmdline_user_args().has("--lpc-debug"):
 		print("[LpcW] compose ", mode, " layers=", layers(look).size(), " look=", look)
-	if mode == "portrait":
+	if mode == "item":
+		var frame := item_frame(str(look["_item"]))
+		vp.size = Vector2i(frame.size)
+		for l in item_layers(str(look["_item"]), str(look["_bt"])):
+			var si := _sprite(l)
+			si.region_enabled = true
+			si.region_rect = frame
+			var hi := Node2D.new()
+			vp.add_child(hi)
+			hi.add_child(si)
+	elif mode == "portrait":
 		vp.size = Vector2i(CELL * PORTRAIT_EXPR.size(), CELL)
 		for i in PORTRAIT_EXPR.size():
 			var holder := Node2D.new()
@@ -399,6 +417,110 @@ func _sprite(l: Dictionary) -> Sprite2D:
 	m.set_shader_parameter("ramp", l["ramp"])
 	s.material = m
 	return s
+
+
+# ================================================================== Ícones de itens
+## O ícone de um equipamento é desenhado com as MESMAS camadas e cores que o herói veste no mapa
+## (catálogo "equip"/"weapons" + Looks.WEAPON_VISUALS): o que aparece no inventário é o que aparece
+## no corpo. Amuletos não aparecem no corpo e seguem com o ícone antigo.
+signal item_icons_ready
+
+const ICON_SLOTS := ["weapon", "armor", "helmet", "boots", "shield"]
+## Quadro usado no ícone (escolhido para cada arma mostrar a peça inteira): armadura/capacete de frente,
+## escudo e botas de lado, lâminas no meio do golpe, arcos no disparo, machado/maça andando.
+var icon_frames := {"weapon": Rect2(256, 128, 64, 64), "shield": Rect2(0, 64, 64, 64), "boots": Rect2(0, 64, 64, 64)}
+const ICON_WEAPON_FRAME := {"sword": Rect2(256, 1024, 128, 128), "dagger": Rect2(256, 1024, 128, 128),
+	"bow": Rect2(512, 576, 64, 64), "staff": Rect2(0, 128, 64, 64)}
+const ICON_VISUAL_FRAME := {"waraxe": Rect2(256, 128, 64, 64), "mace": Rect2(256, 128, 64, 64),
+	"arming": Rect2(0, 64, 64, 64), "saber": Rect2(0, 64, 64, 64)}
+const ICON_DEFAULT_FRAME := Rect2(576, 128, 64, 64)
+
+
+func item_frame(item_id: String) -> Rect2:
+	var it: Dictionary = Data.get_item(item_id)
+	if str(it.get("slot", "")) == "weapon":
+		var vis := str(Looks.WEAPON_VISUALS.get(item_id, [""])[0])
+		if ICON_VISUAL_FRAME.has(vis):
+			return ICON_VISUAL_FRAME[vis]
+		if ICON_WEAPON_FRAME.has(str(it.get("family", ""))):
+			return ICON_WEAPON_FRAME[str(it["family"])]
+	return icon_frames.get(str(it.get("slot", "")), ICON_DEFAULT_FRAME)
+
+
+## Camadas do equipamento sozinho (sem corpo), na ordem de profundidade do personagem.
+func item_layers(item_id: String, bt: String = "male") -> Array:
+	var it: Dictionary = Data.get_item(item_id)
+	var slot := str(it.get("slot", ""))
+	var base := {"skin": "light", "eyes": "brown", "hair_pal": "dark_brown"}
+	var out: Array = []
+	if slot == "weapon":
+		var v: Array = Looks.WEAPON_VISUALS.get(item_id, [str(it.get("family", "")), ""])
+		var wid := weapon_visual(str(v[0]))
+		var wr := _ramp(base, str(v[1]), "metal") if str(v[1]) != "" else _ramp(base, "")
+		for l in _cat.get("weapons", {}).get(wid, []):
+			out.append(_lay(l, wr))
+	elif slot in ["armor", "helmet", "boots", "shield"]:
+		var tiers: Array = _cat.get("equip", {}).get(slot, [])
+		if tiers.is_empty():
+			return []
+		var t := clampi(int(it.get("tier", 0)), 0, tiers.size() - 1)
+		var e: Dictionary = tiers[t]
+		var r := _ramp(base, str(e.get("palette", "")), str(e.get("material", "")))
+		for l in e.get("layers", {}).get(bt, []):
+			out.append(_lay(l, r))
+		if slot == "armor" and t >= 3:
+			var legs: Array = _cat.get("equip", {}).get("legs_heavy", [])
+			if not legs.is_empty():
+				for l in legs[0].get("layers", {}).get(bt, []):
+					out.append(_lay(l, r))
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["z"]) < int(b["z"]))
+	return out
+
+
+func _hero_bt() -> String:
+	return "female" if str(resolve(Looks.hero()).get("body", "male")) == "female" else "male"
+
+
+## Ícone LPC pronto (ou null enquanto monta / para itens sem visual no corpo).
+func item_icon(item_id: String) -> Texture2D:
+	if Data.slot_of(item_id) not in ICON_SLOTS or not available():
+		return null
+	var job := {"_item": item_id, "_bt": _hero_bt()}
+	var key := look_key(job, "item")
+	if _cache.has(key):
+		return _cache[key]
+	if not _waiting.has(key):
+		request(job, "item", func(_t: Texture2D) -> void: _icon_done())
+	return null
+
+
+## Monta os ícones de todo o equipamento de uma vez (chamado ao abrir o jogo).
+func prewarm_item_icons() -> void:
+	for id in Data.ITEMS:
+		item_icon(str(id))
+
+
+var _icon_signal_queued := false
+
+
+func _icon_done() -> void:
+	if _icon_signal_queued:
+		return
+	_icon_signal_queued = true
+	await get_tree().process_frame
+	_icon_signal_queued = false
+	item_icons_ready.emit()
+
+
+## Recorta a área desenhada e centraliza num quadrado (o ícone não estica).
+func _icon_crop(img: Image) -> Image:
+	var used := img.get_used_rect()
+	if used.size.x <= 0 or used.size.y <= 0:
+		return img
+	var side := maxi(used.size.x, used.size.y) + 2
+	var out := Image.create(side, side, false, Image.FORMAT_RGBA8)
+	out.blit_rect(img, used, Vector2i((side - used.size.x) / 2, (side - used.size.y) / 2))
+	return out
 
 
 # ================================================================== Créditos

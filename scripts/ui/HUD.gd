@@ -58,6 +58,7 @@ var _hotbar: Control
 var _hot_potion: UI.Slot
 var _hot_food: UI.Slot
 var _hot_skill: HotSkill
+var _hot_slots: Dictionary = {}    # "skill2"/"skill3" -> HotSkill (habilidades R e X da progressão)
 var _hot_dodge: HotSkill
 var _pomo_panel: Control
 var _pomo_time: Label
@@ -108,6 +109,7 @@ func _ready() -> void:
 	GameState.buffs_changed.connect(_refresh_buffs)
 	GameState.toast.connect(show_toast)
 	GameState.leveled_up.connect(_on_level_up)
+	GameState.skill_unlocked.connect(_on_skill_unlocked)
 	GameState.item_gained.connect(_on_item_gained)
 	Game.run_finished.connect(_on_run_finished)
 	set_scene_kind("")
@@ -206,6 +208,7 @@ func _build_card() -> void:
 	_card.add_child(_gold_label)
 	_credit_label = UI.label("", UI.C_ENERGY)
 	_credit_label.position = Vector2(46, 44)
+	_credit_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	_card.add_child(_credit_label)
 	_buff_box = UI.hbox(2)
 	_buff_box.position = Vector2(6, 68)
@@ -350,6 +353,12 @@ func _build_hotbar() -> void:
 	_hot_skill.position = Vector2(68, 0)
 	_hot_skill.key_text = "Q"
 	_hotbar.add_child(_hot_skill)
+	for slot in ["skill2", "skill3"]:
+		var hs := HotSkill.new()
+		hs.key_text = Data.SKILL_KEYS[slot]
+		hs.visible = false
+		_hotbar.add_child(hs)
+		_hot_slots[slot] = hs
 	_hot_dodge = HotSkill.new()
 	_hot_dodge.position = Vector2(96, 0)
 	_hot_dodge.key_text = "Shift"
@@ -380,10 +389,21 @@ func _refresh_hotbar() -> void:
 	var fid := GameState.quick_food()
 	_hot_food.set_item(fid, GameState.count_item(fid) if fid != "" else 0)
 	_hot_food.dim = fid == ""
+	var x := 96.0
 	if GameState.has_chosen_class():
 		var sk: Dictionary = Data.SKILLS[Data.CLASSES[GameState.player_class]["skill"]]
 		_hot_skill.icon_tex = Pix.skill_icon(sk["icon"])
 		_hot_skill.queue_redraw()
+	for slot in _hot_slots:
+		var hs: HotSkill = _hot_slots[slot]
+		var id := GameState.slot_skill(slot)
+		hs.visible = id != ""
+		if id != "":
+			hs.icon_tex = Pix.skill_icon(Data.SKILLS[id]["icon"])
+			hs.position = Vector2(x, 0)
+			x += 28.0
+			hs.queue_redraw()
+	_hot_dodge.position = Vector2(x, 0)
 	_hot_dodge.queue_redraw()
 
 
@@ -391,13 +411,22 @@ func _tick_hotbar() -> void:
 	var p := get_tree().get_first_node_in_group("player") as Player
 	if p == null or not GameState.has_chosen_class():
 		return
-	var sk: Dictionary = Data.SKILLS[Data.CLASSES[GameState.player_class]["skill"]]
-	var cd := float(sk["cd"])
+	var cd := maxf(GameState.skill_cooldown("skill"), 0.1)
 	var r := clampf(p.skill_cd_left / cd, 0.0, 1.0)
 	if r != _hot_skill.ratio or p.skill_cd_left > 0.0:
 		_hot_skill.ratio = r
 		_hot_skill.seconds_left = p.skill_cd_left
 		_hot_skill.queue_redraw()
+	for slot in _hot_slots:
+		var hs: HotSkill = _hot_slots[slot]
+		if not hs.visible:
+			continue
+		var left := float(p.slot_cd_left.get(slot, 0.0))
+		var r2 := clampf(left / maxf(GameState.skill_cooldown(slot), 0.1), 0.0, 1.0)
+		if r2 != hs.ratio or left > 0.0:
+			hs.ratio = r2
+			hs.seconds_left = left
+			hs.queue_redraw()
 	var dr := clampf(p.dodge_cd_left / Player.DODGE_COOLDOWN, 0.0, 1.0)
 	if dr != _hot_dodge.ratio or p.dodge_cd_left > 0.0:
 		_hot_dodge.ratio = dr
@@ -791,6 +820,26 @@ func _on_level_up(new_level: int) -> void:
 	Audio.jingle("levelup")
 	Audio.sfx("star", -6.0)
 	show_toast("Nível %d! Você ganhou pontos de talento (C)." % new_level, UI.C_GOLD)
+	_refresh_hotbar()
+
+
+## A cada 10 níveis: avisa a habilidade nova (ativa, passiva ou maestria).
+func _on_skill_unlocked(index: int) -> void:
+	var prog := GameState.class_progression()
+	if index < 0 or index >= prog.size():
+		return
+	var e: Dictionary = prog[index]
+	var title := ""
+	match str(e["type"]):
+		"active":
+			title = "%s  [%s]" % [Data.SKILLS[e["skill"]]["name"], Data.SKILL_KEYS[e["slot"]]]
+		"passive":
+			title = str(e["name"]) + " (passiva)"
+		_:
+			title = "Maestria [%s]" % Data.SKILL_KEYS[e["slot"]]
+	floor_banner("Habilidade nova!", title)
+	show_toast("Nível %d: %s. Detalhes em Personagem (C) > Habilidades." % [Data.SKILL_LEVELS[index], title], UI.C_XP)
+	_refresh_hotbar()
 
 
 func _on_item_gained(item_id: String, amount: int) -> void:
@@ -920,6 +969,7 @@ func _process(delta: float) -> void:
 	if _card.visible:
 		_tick_hotbar()
 		_tick_buff_labels()
+		_credit_label.tooltip_text = "Créditos de estudo: 1 por hora de foco.\nRecuperação: 1 a cada %d min (até %d). %s" % [Data.CREDIT_REGEN_MIN, Data.CREDIT_REGEN_CAP, Story.regen_text()]
 	if scene_kind == "dungeon":
 		if _minimap.dungeon == null or not is_instance_valid(_minimap.dungeon):
 			_minimap.bind(get_tree().get_first_node_in_group("dungeon"))
@@ -996,6 +1046,13 @@ func _refresh_objective() -> void:
 
 
 ## Esconde o cartão do jogador (fase final do Rei Demônio "apaga" o nome e os atributos).
+## Esconde a parte de baixo do HUD (teclas, dica, atalhos) enquanto algo usa a tela (modo Decorar).
+func set_bottom_hidden(hidden: bool) -> void:
+	for n in [_keys, _hotbar, _hint]:
+		if n != null:
+			(n as CanvasItem).visible = not hidden
+
+
 func set_card_hidden(hidden: bool) -> void:
 	if _card != null:
 		_card.modulate.a = 0.0 if hidden else 1.0

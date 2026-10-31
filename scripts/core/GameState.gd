@@ -13,6 +13,8 @@ signal toast(text: String, color: Color)
 signal item_gained(item_id: String, amount: int)
 signal buffs_changed
 signal energy_changed
+signal skill_unlocked(index: int)       # marco de habilidade (0 = nível 10 ... 9 = nível 100)
+signal promoted(tier: int)
 
 const SAVE_VERSION := 2
 
@@ -40,12 +42,14 @@ var inventory: Dictionary = {}        # item_id -> quantidade
 var equipped: Dictionary = {}         # slot -> item_id
 var upgrades: Dictionary = {}         # item_id -> nível de aprimoramento
 var furniture: Array = []             # ids de móveis comprados
-var furniture_layout: Dictionary = {} # id do móvel -> [x, y] na casa (px)
+var furniture_layout: Dictionary = {} # id do móvel -> [x, y, giro] na casa (px; giro 0..3)
+var furniture_stored: Array = []      # comprados mas guardados (fora da casa)
 # --- aparência do herói (LPC): moeda própria ganha estudando, peças compradas e o visual em uso
 var study_credits: int = 0             # créditos de estudo: 1 por minuto de foco concluído
 var looks_owned: Array = []            # ids de peças compradas (as de preço 0 são de graça)
 var look: Dictionary = {}
 var no_death: bool = false             # Arena: a vida para em 1 e emite knocked_out
+var promotion: Dictionary = {}         # {tier: 0..4, trial: {tier, base: {monsters, focus, bosses}}}
 var arena: Dictionary = {}             # {prestige, wins, losses, streak, best}              # ver Lpc.default_look()
 var story: Dictionary = {}             # história (ver Story.gd): nomes, capítulo, passo, rank, pets, créditos, Caderno
 var pomo_log: Array = []              # histórico de focos concluídos: {d: "AAAA-MM-DD", t: unix, m: minutos, s: cenário}
@@ -128,6 +132,7 @@ func _compute_stats() -> Dictionary:
 		"atk": 0.0, "max_hp": 100.0, "def": 0.0, "speed": 66.0, "crit": 0.0, "luck": 0.0, "regen": 0.0,
 		"xp_pct": 0.0, "gold_pct": 0.0, "crit_dmg": 1.5, "hunger_mult": 1.0, "focus_xp_pct": 0.0,
 		"daily_energy": 0.0, "dmg_taken_mult": 1.0, "atk_pct": 0.0, "def_pct": 0.0, "speed_pct": 0.0,
+		"hp_pct": 0.0, "cdr": 0.0,
 	}
 	if has_chosen_class():
 		var c: Dictionary = Data.CLASSES[player_class]
@@ -168,6 +173,10 @@ func _compute_stats() -> Dictionary:
 		s["speed"] += float(it.get("speed", 0.0)) * mult
 		s["crit"] += float(it.get("crit", 0.0)) * mult
 		s["luck"] += float(it.get("luck", 0.0)) * mult
+	# passivas da progressão (a cada 10 níveis) e bônus das promoções de classe
+	var ps := progression_stats()
+	for k2 in ps:
+		s[k2] = float(s.get(k2, 0.0)) + float(ps[k2])
 	for fid in furniture:
 		var f: Dictionary = Data.FURNITURE.get(fid, {})
 		var fs: Dictionary = f.get("stat", {})
@@ -200,6 +209,8 @@ func _compute_stats() -> Dictionary:
 	s["atk"] *= 1.0 + s["atk_pct"]
 	s["def"] *= 1.0 + s["def_pct"]
 	s["speed"] *= 1.0 + s["speed_pct"]
+	s["max_hp"] *= 1.0 + s["hp_pct"]
+	s["cdr"] = clampf(s["cdr"], 0.0, 0.4)
 	if hunger <= 0:
 		s["atk"] *= 0.8
 		s["regen"] = 0.0
@@ -274,6 +285,144 @@ func _check_level_up() -> void:
 		mark_dirty()
 		hp = mini(get_max_hp(), hp + int(get_max_hp() * 0.5))
 		leveled_up.emit(level)
+		if level % 10 == 0 and level <= 100 and has_chosen_class():
+			skill_unlocked.emit(level / 10 - 1)
+		_maybe_open_trial()
+
+
+# ======================================================= Habilidades por nível e promoção
+## Quantos marcos de habilidade já foram alcançados (um a cada 10 níveis, até 10).
+func skill_milestones() -> int:
+	return clampi(level / 10, 0, Data.SKILL_LEVELS.size())
+
+
+func class_progression() -> Array:
+	return Data.CLASS_PROGRESSION.get(player_class, [])
+
+
+## Habilidade ativa de uma tecla ("skill" = Q, "skill2" = R, "skill3" = X); "" se ainda não liberada.
+func slot_skill(slot: String) -> String:
+	if not has_chosen_class():
+		return ""
+	if slot == "skill":
+		return str(Data.CLASSES[player_class]["skill"])
+	var prog := class_progression()
+	for i in mini(skill_milestones(), prog.size()):
+		var e: Dictionary = prog[i]
+		if e["type"] == "active" and e["slot"] == slot:
+			return str(e["skill"])
+	return ""
+
+
+func skill_mastered(slot: String) -> bool:
+	var prog := class_progression()
+	for i in mini(skill_milestones(), prog.size()):
+		var e: Dictionary = prog[i]
+		if e["type"] == "mastery" and e["slot"] == slot:
+			return true
+	return false
+
+
+## Multiplicador de dano da habilidade (maestria).
+func skill_power(slot: String) -> float:
+	return Data.MASTERY_DMG if skill_mastered(slot) else 1.0
+
+
+## Recarga da habilidade em segundos (maestria e passivas de recarga).
+func skill_cooldown(slot: String) -> float:
+	var id := slot_skill(slot)
+	if id == "":
+		return 0.0
+	var cd := float(Data.SKILLS[id]["cd"])
+	if skill_mastered(slot):
+		cd *= Data.MASTERY_CD
+	return cd * (1.0 - stat("cdr"))
+
+
+## Bônus das passivas liberadas e das promoções, somados por chave.
+func progression_stats() -> Dictionary:
+	var out := {}
+	var prog := class_progression()
+	for i in mini(skill_milestones(), prog.size()):
+		var e: Dictionary = prog[i]
+		if e["type"] == "passive":
+			for k in e["stat"]:
+				out[k] = float(out.get(k, 0.0)) + float(e["stat"][k])
+	var tier := promotion_tier()
+	if tier > 0:
+		for k in Data.PROMOTION_BONUS:
+			out[k] = float(out.get(k, 0.0)) + float(Data.PROMOTION_BONUS[k]) * tier
+	return out
+
+
+func promotion_tier() -> int:
+	return int(promotion.get("tier", 0))
+
+
+## Nome da classe com o título da promoção ("Guardião Real").
+func class_title() -> String:
+	if not has_chosen_class():
+		return ""
+	var t := promotion_tier()
+	if t <= 0:
+		return str(Data.CLASSES[player_class]["name"])
+	return str(Data.PROMOTION_TITLES[player_class][t - 1])
+
+
+## Prova aberta: {tier, base}. Vazio se não há prova agora.
+func promotion_trial() -> Dictionary:
+	return promotion.get("trial", {})
+
+
+## Abre a próxima prova quando o nível chega no marco (25, 50, 75, 100) e a anterior já foi feita.
+func _maybe_open_trial() -> void:
+	if not has_chosen_class() or not promotion_trial().is_empty():
+		return
+	var tier := promotion_tier()
+	if tier >= Data.PROMOTION_LEVELS.size() or level < int(Data.PROMOTION_LEVELS[tier]):
+		return
+	promotion["trial"] = {"tier": tier + 1, "base": {"monsters": get_stat("monsters"), "focus": Story.focus_minutes(), "bosses": get_stat("bosses")}}
+	toast.emit("Prova de Promoção liberada! Veja na Guilda (G).", Color("ffd35a"))
+	_queue_save()
+
+
+## Progresso da prova: {monsters: [feito, meta], focus: [...], bosses: [...]}.
+func trial_progress() -> Dictionary:
+	var tr := promotion_trial()
+	if tr.is_empty():
+		return {}
+	var goal: Dictionary = Data.PROMOTION_TRIALS[int(tr["tier"]) - 1]
+	var base: Dictionary = tr["base"]
+	return {
+		"monsters": [get_stat("monsters") - int(base.get("monsters", 0)), int(goal["monsters"])],
+		"focus": [Story.focus_minutes() - int(base.get("focus", 0)), int(goal["focus"])],
+		"bosses": [get_stat("bosses") - int(base.get("bosses", 0)), int(goal["bosses"])],
+	}
+
+
+func can_promote() -> bool:
+	var p := trial_progress()
+	if p.is_empty():
+		return false
+	for k in p:
+		if int(p[k][0]) < int(p[k][1]):
+			return false
+	return true
+
+
+func promote() -> bool:
+	if not can_promote():
+		return false
+	promotion["tier"] = promotion_tier() + 1
+	promotion.erase("trial")
+	mark_dirty()
+	hp = get_max_hp()
+	promoted.emit(promotion_tier())
+	toast.emit("Promoção! Agora você é %s." % class_title(), Color("ffd35a"))
+	_maybe_open_trial()
+	_queue_save()
+	stats_changed.emit()
+	return true
 
 
 func add_gold(amount: int, apply_bonus: bool = false) -> int:
@@ -873,16 +1022,36 @@ func owns_furniture(furniture_id: String) -> bool:
 	return furniture.has(furniture_id)
 
 
-func set_furniture_pos(furniture_id: String, pos: Vector2) -> void:
-	furniture_layout[furniture_id] = [int(pos.x), int(pos.y)]
+## Móvel posto na casa (comprado e não guardado).
+func is_furniture_placed(furniture_id: String) -> bool:
+	return owns_furniture(furniture_id) and not furniture_stored.has(furniture_id)
+
+
+func set_furniture_pos(furniture_id: String, pos: Vector2, rot: int = 0) -> void:
+	furniture_layout[furniture_id] = [int(pos.x), int(pos.y), rot]
+	furniture_stored.erase(furniture_id)
 	_queue_save()
+
+
+## Tira o móvel da casa e guarda (continua seu; volta pelo modo Decorar).
+func store_furniture(furniture_id: String) -> void:
+	if owns_furniture(furniture_id) and not furniture_stored.has(furniture_id):
+		furniture_stored.append(furniture_id)
+		_queue_save()
 
 
 func furniture_pos(furniture_id: String) -> Variant:
 	var v: Variant = furniture_layout.get(furniture_id)
-	if typeof(v) == TYPE_ARRAY and (v as Array).size() == 2:
+	if typeof(v) == TYPE_ARRAY and (v as Array).size() >= 2:
 		return Vector2(float(v[0]), float(v[1]))
 	return null
+
+
+func furniture_rot(furniture_id: String) -> int:
+	var v: Variant = furniture_layout.get(furniture_id)
+	if typeof(v) == TYPE_ARRAY and (v as Array).size() >= 3:
+		return int(v[2]) % 4
+	return 0
 
 
 func buy_furniture(furniture_id: String) -> bool:
@@ -891,6 +1060,7 @@ func buy_furniture(furniture_id: String) -> bool:
 	if not spend_gold(int(Data.FURNITURE[furniture_id]["price"])):
 		return false
 	furniture.append(furniture_id)
+	furniture_stored.append(furniture_id)   # vai para a caixa de móveis; coloca no modo Decorar
 	mark_dirty()
 	_queue_save()
 	stats_changed.emit()
@@ -1017,8 +1187,8 @@ func save_now() -> void:
 		"level": level, "xp": xp, "xp_to_next": xp_to_next, "gold": gold, "hunger": hunger, "hp": hp,
 		"player_class": player_class, "talent_points": talent_points, "talents": talents,
 		"energy": energy, "energy_day": energy_day, "best_floor": best_floor, "playtime": playtime,
-		"inventory": inventory, "equipped": equipped, "upgrades": upgrades, "furniture": furniture, "furniture_layout": furniture_layout, "pomo_log": pomo_log,
-		"study_credits": study_credits, "looks_owned": looks_owned, "look": look, "story": story, "arena": arena,
+		"inventory": inventory, "equipped": equipped, "upgrades": upgrades, "furniture": furniture, "furniture_layout": furniture_layout, "furniture_stored": furniture_stored, "pomo_log": pomo_log,
+		"study_credits": study_credits, "looks_owned": looks_owned, "look": look, "story": story, "arena": arena, "promotion": promotion,
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
 		"music_volume": music_volume, "music_on": music_on, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
@@ -1099,10 +1269,12 @@ func load_game() -> void:
 		upgrades = _dict_of(d.get("upgrades", {}))
 		furniture = d.get("furniture", []) if typeof(d.get("furniture", [])) == TYPE_ARRAY else []
 		furniture_layout = _dict_of(d.get("furniture_layout", {}))
+		furniture_stored = d.get("furniture_stored", []) if typeof(d.get("furniture_stored", [])) == TYPE_ARRAY else []
 		study_credits = int(d.get("study_credits", 0))
 		looks_owned = d.get("looks_owned", []) if typeof(d.get("looks_owned", [])) == TYPE_ARRAY else []
 		look = _dict_of(d.get("look", {}))
 		arena = _dict_of(d.get("arena", {}))
+		promotion = _dict_of(d.get("promotion", {}))
 		story = _dict_of(d.get("story", {}))
 		pomo_log = d.get("pomo_log", []) if typeof(d.get("pomo_log", [])) == TYPE_ARRAY else []
 		counters = _dict_of(d.get("counters", {}))
@@ -1126,6 +1298,7 @@ func load_game() -> void:
 	mark_dirty()
 	hp = int(d.get("hp", get_max_hp()))
 	hp = clampi(hp, 1, get_max_hp()) if has_chosen_class() else hp
+	_maybe_open_trial.call_deferred()   # saves que já passaram do nível 25 ganham a prova
 	stats_changed.emit()
 
 
@@ -1232,11 +1405,13 @@ func _reset_defaults() -> void:
 
 ## Usado em testes: volta ao estado de jogo novo.
 func debug_reset() -> void:
+	promotion = {}
 	inventory = {}
 	equipped = {}
 	upgrades = {}
 	furniture = []
 	furniture_layout = {}
+	furniture_stored = []
 	study_credits = 0
 	looks_owned = []
 	look = {}

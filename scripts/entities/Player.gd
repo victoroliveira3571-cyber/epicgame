@@ -29,6 +29,7 @@ var invuln: float = 0.0
 var attack_cd_left: float = 0.0
 var dodge_cd_left: float = 0.0
 var skill_cd_left: float = 0.0
+var slot_cd_left: Dictionary = {"skill2": 0.0, "skill3": 0.0}   # recarga das habilidades R e X
 var combo: int = 0
 var combo_timer: float = 0.0
 var swing_time: float = 0.0
@@ -180,6 +181,8 @@ func _tick_timers(delta: float) -> void:
 	attack_cd_left = maxf(attack_cd_left - delta, 0.0)
 	dodge_cd_left = maxf(dodge_cd_left - delta, 0.0)
 	skill_cd_left = maxf(skill_cd_left - delta, 0.0)
+	for k in slot_cd_left:
+		slot_cd_left[k] = maxf(float(slot_cd_left[k]) - delta, 0.0)
 	swing_time = maxf(swing_time - delta, 0.0)
 	_anim_lock = maxf(_anim_lock - delta, 0.0)
 	if combo > 0:
@@ -204,6 +207,10 @@ func _handle_actions() -> void:
 	if Input.is_action_just_pressed("skill") and skill_cd_left <= 0.0:
 		_cast_skill()
 		return
+	for slot in slot_cd_left:
+		if Input.is_action_just_pressed(slot) and float(slot_cd_left[slot]) <= 0.0 and GameState.slot_skill(slot) != "":
+			_cast_slot(slot)
+			return
 	if Input.is_action_pressed("attack") and attack_cd_left <= 0.0:
 		_attack()
 	if Input.is_action_just_pressed("potion"):
@@ -421,7 +428,8 @@ func is_invulnerable() -> bool:
 # ================================================================== Habilidades
 func _cast_skill() -> void:
 	var skill_id: String = Data.CLASSES[GameState.player_class]["skill"]
-	var cd: float = float(Data.SKILLS[skill_id]["cd"])
+	var cd: float = GameState.skill_cooldown("skill")
+	var pw: float = GameState.skill_power("skill")   # maestria do nível 50
 	skill_cd_left = cd
 	skill_used.emit(cd)
 	var skill_anim: String = {"giro": "slash", "luz": "spellcast", "sombra": "thrust", "muralha": "spellcast",
@@ -435,7 +443,7 @@ func _cast_skill() -> void:
 			Audio.sfx("swing_combo", -2.0)
 			Fx.fx(world, "circular", center, 1.7, 0.0, Color(1, 0.95, 0.8))
 			Fx.ring(world, center, 30.0, Color(1, 0.9, 0.6), 0.25)
-			_area_damage(center, 30.0, 1.8, 140.0)
+			_area_damage(center, 30.0, 1.8 * pw, 140.0)
 			Fx.shake_camera(camera, 2.0, 0.15)
 			invuln = maxf(invuln, 0.15)
 		"luz":
@@ -444,7 +452,7 @@ func _cast_skill() -> void:
 			Fx.ring(world, center, 42.0, Color(1, 0.95, 0.6), 0.4)
 			GameState.heal(int(GameState.get_max_hp() * 0.3))
 			Fx.float_text(world, "+%d" % int(GameState.get_max_hp() * 0.3), center + Vector2(0, -14), Color("7ef08a"), 8)
-			_area_damage(center, 42.0, 1.2, 70.0)
+			_area_damage(center, 42.0, 1.2 * pw, 70.0)
 		"sombra":
 			Audio.sfx("spirit")
 			var dir := facing.normalized()
@@ -453,13 +461,13 @@ func _cast_skill() -> void:
 			skill_lock = 0.17
 			invuln = 0.3
 			Fx.fx(world, "smoke", global_position + Vector2(0, -4), 1.0, 0.0, Color(0.5, 0.4, 0.7, 0.8))
-			_dash_damage(dir)
+			_dash_damage(dir, 2.2 * pw)
 		"muralha":
 			Audio.sfx("magic2")
 			GameState.add_buff("muralha", 4.0)
 			Fx.fx(world, "shield", center, 1.5, 0.0, Color(0.7, 0.85, 1.0))
 			Fx.ring(world, center, 36.0, Color(0.6, 0.8, 1.0), 0.3)
-			_area_damage(center, 34.0, 0.6, 180.0)
+			_area_damage(center, 34.0, 0.6 * pw, 180.0)
 		"meteoro":
 			var t := _best_target(190.0, 70.0)
 			var target_pos: Vector2 = (t.global_position + Vector2(0, -4)) if t != null else (center + facing.normalized() * 70.0)
@@ -471,20 +479,98 @@ func _cast_skill() -> void:
 			Audio.sfx("explosion", -2.0)
 			Fx.fx(world, "explosion", target_pos + Vector2(0, -6), 1.6)
 			Fx.shake_camera(camera, 3.0, 0.2)
-			_area_damage(target_pos, 36.0, 2.6, 160.0)
+			_area_damage(target_pos, 36.0, 2.6 * pw, 160.0)
 		"chuva":
 			Audio.sfx("launch")
 			var base_dir := _aim_direction()
 			facing = base_dir
 			for i in 7:
 				var a := deg_to_rad(-42.0 + 14.0 * i)
-				var roll := _roll_damage(1.0)
+				var roll := _roll_damage(1.0 * pw)
 				var p := Projectile.make(world, global_position + Vector2(0, -14) + base_dir * 6.0, base_dir.rotated(a), Projectile.Kind.ARROW, roll[0], true)
 				p.crit = roll[1]
 				p.speed = 260.0
 				p.lifetime = 0.9
 				p.knockback = 60.0
 			_swing_visual(base_dir, false)
+
+
+## Habilidades liberadas pela progressão (R no nível 10, X no 30): o comportamento vem de
+## Data.SKILLS (kind nova/blast/dash/fan/buff) para balancear sem mexer aqui.
+func _cast_slot(slot: String) -> void:
+	var id := GameState.slot_skill(slot)
+	var sk: Dictionary = Data.SKILLS[id]
+	var pw := GameState.skill_power(slot)
+	var cd := GameState.skill_cooldown(slot)
+	slot_cd_left[slot] = cd
+	var anim := str(sk.get("anim", "spellcast"))
+	_attack_speed = 1.5
+	_anim_lock = sprite.anim_length(anim) / _attack_speed
+	sprite.play(anim + "_" + Pix.dir_name(facing), true)
+	var center := global_position + Vector2(0, -10)
+	var col: Color = sk.get("color", Color.WHITE)
+	var mult := float(sk.get("mult", 1.0)) * pw
+	if sk.has("buff"):
+		GameState.add_buff(str(sk["buff"]), float(sk.get("buff_time", 6.0)))
+	match str(sk.get("kind", "")):
+		"nova":
+			Audio.sfx("swing_combo" if anim == "slash" else "magic2", -2.0)
+			if sk.has("fx"):
+				Fx.fx(world, str(sk["fx"]), center, 1.7, 0.0, col)
+			Fx.ring(world, center, float(sk["radius"]), col, 0.3)
+			_area_damage(center, float(sk["radius"]), mult, float(sk.get("kb", 100.0)))
+			Fx.shake_camera(camera, 2.0, 0.15)
+			invuln = maxf(invuln, float(sk.get("invuln", 0.0)))
+		"blast":
+			var t := _best_target(190.0, 70.0)
+			var aim: Vector2 = (t.global_position + Vector2(0, -4)) if t != null else (center + facing.normalized() * float(sk.get("dist", 60.0)))
+			Audio.sfx("magic3")
+			for i in int(sk.get("repeat", 1)):
+				var at := aim + (Vector2(randf_range(-28.0, 28.0), randf_range(-18.0, 18.0)) if i > 0 else Vector2.ZERO)
+				Fx.fx(world, "circle_o", at, 1.2, 0.0, Color(col, 0.9))
+				await get_tree().create_timer(float(sk.get("delay", 0.2))).timeout
+				if state == State.DEAD or not is_inside_tree():
+					return
+				Audio.sfx("explosion", -4.0)
+				Fx.fx(world, str(sk.get("fx", "explosion")), at + Vector2(0, -6), 1.5, 0.0, col)
+				Fx.shake_camera(camera, 2.5, 0.15)
+				_area_damage(at, float(sk["radius"]), mult, float(sk.get("kb", 100.0)))
+		"dash":
+			var spd := float(sk.get("speed", 300.0))
+			var dir := facing.normalized() * signf(spd)
+			Audio.sfx("spirit")
+			state = State.SKILL
+			dash_dir = dir * absf(spd)
+			skill_lock = 0.17
+			invuln = maxf(invuln, 0.35)
+			Fx.fx(world, "smoke", global_position + Vector2(0, -4), 1.0, 0.0, Color(0.8, 0.8, 0.9, 0.8))
+			if mult > 0.0:
+				_dash_damage(dir, mult)
+		"fan":
+			Audio.sfx("launch")
+			var base_dir := _aim_direction()
+			facing = base_dir
+			var n := int(sk.get("count", 1))
+			var spread := float(sk.get("spread", 0.0))
+			for i in n:
+				var a := deg_to_rad(-spread / 2.0 + (spread * i / float(n - 1) if n > 1 else spread / 2.0))
+				var roll := _roll_damage(mult)
+				var kind: int = Projectile.Kind.get(str(sk.get("proj", "ARROW")), Projectile.Kind.ARROW)
+				var p := Projectile.make(world, global_position + Vector2(0, -14) + base_dir * 6.0, base_dir.rotated(a), kind, roll[0], true)
+				p.crit = roll[1]
+				p.speed = float(sk.get("speed", 260.0))
+				p.lifetime = float(sk.get("range", 0.8))
+				p.pierce = int(sk.get("pierce", 0))
+				p.knockback = 60.0
+			_swing_visual(base_dir, false)
+		"buff":
+			Audio.sfx("heal" if sk.has("heal_pct") else "magic2")
+			Fx.fx(world, str(sk.get("fx", "aura")), center, 1.5, 0.0, col)
+			Fx.ring(world, center, 36.0, col, 0.35)
+			if sk.has("heal_pct"):
+				var amount := int(GameState.get_max_hp() * float(sk["heal_pct"]))
+				GameState.heal(amount)
+				Fx.float_text(world, "+%d" % amount, center + Vector2(0, -14), Color("7ef08a"), 8)
 
 
 func _area_damage(center: Vector2, radius: float, mult: float, kb: float) -> void:
@@ -503,7 +589,7 @@ func _area_damage(center: Vector2, radius: float, mult: float, kb: float) -> voi
 		Game.hit_stop(0.04)
 
 
-func _dash_damage(dir: Vector2) -> void:
+func _dash_damage(dir: Vector2, mult: float = 2.2) -> void:
 	var hit: Dictionary = {}
 	var steps := 7
 	for i in steps:
@@ -517,7 +603,7 @@ func _dash_damage(dir: Vector2) -> void:
 				continue
 			if global_position.distance_to(e.global_position) <= 16.0 + float(e.get("body_radius")):
 				hit[e.get_instance_id()] = true
-				var roll := _roll_damage(2.2)
+				var roll := _roll_damage(mult)
 				e.take_hit(roll[0], dir * 100.0, roll[1], global_position)
 				Fx.fx(world, "cutx", e.global_position + Vector2(0, -6), 1.0)
 				Game.hit_stop(0.04)

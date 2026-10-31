@@ -21,6 +21,7 @@ var _base: String = "idle"
 var _dir: String = "down"
 var _t: float = 0.0
 var _idle_breath: float = 0.0
+var _want_key: String = ""
 
 
 static func make(parent: Node, look_in: Dictionary, all_anims: bool = false) -> LpcActor:
@@ -51,11 +52,20 @@ func refresh(new_look: Variant = null) -> void:
 	if sprite != null:
 		sprite.scale = Vector2(s, s)
 	var mode := "full" if full else "npc"
+	var key := LpcW.look_key(look, mode)
+	_want_key = key
 	var tex := LpcW.cached(look, mode)
 	if tex != null:
 		_set_texture(tex)
 	else:
-		LpcW.request(look, mode, _set_texture)
+		# só aplica a montagem do look atual: uma montagem antiga que termine depois não sobrescreve
+		# (método ligado, não lambda: o Godot invalida a chamada se o ator sair da cena)
+		LpcW.request(look, mode, _on_composed.bind(key))
+
+
+func _on_composed(tex: Texture2D, key: String) -> void:
+	if key == _want_key:
+		_set_texture(tex)
 
 
 func _set_texture(tex: Texture2D) -> void:

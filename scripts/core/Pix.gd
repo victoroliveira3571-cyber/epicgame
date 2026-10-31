@@ -39,6 +39,10 @@ static func item_icon(item_id: String) -> Texture2D:
 	var it: Dictionary = Data.get_item(item_id)
 	if it.is_empty():
 		return null
+	# equipamento: o mesmo desenho que o herói veste (LpcW monta a partir das camadas do personagem)
+	var lpc: Texture2D = LpcW.item_icon(item_id)
+	if lpc != null:
+		return lpc
 	var icon: String = it.get("icon", "")
 	if icon.begins_with("items/") and icon.count("/") == 1:
 		return tex("skill_icons/" + icon)

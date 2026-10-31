@@ -84,6 +84,15 @@ func _ready() -> void:
 	talk_cd = randf_range(1.0, 4.0)
 
 
+## Passa a usar o visual de outro personagem (ex.: o morador vira o Osvaldo da história).
+func use_look(key: String) -> void:
+	if not Looks.has(key) or key == look_key:
+		return
+	look_key = key
+	if actor != null:
+		actor.refresh(Looks.of(key))
+
+
 func _physics_process(delta: float) -> void:
 	if talking:
 		return

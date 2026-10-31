@@ -162,6 +162,39 @@ const SPEAKER_LOOK := {
 }
 
 
+## Quem fala e não é humano (ou é chefe): o retrato vem do mesmo desenho do mundo.
+const SPEAKER_BOSS := {"espirito": "espirito_cacador", "sentinela": "sentinela", "rei": "rei_demonio",
+	"cavaleiro": "cavaleiro_sem_nome", "bibliotecario": "bibliotecario"}
+
+
+## Fonte única do retrato de quem fala: {look, tint} para personagens LPC ou {face, tint} para os
+## demais. `live` = o personagem que está no mapa agora (se houver): o retrato usa o look dele.
+static func speaker_visual(who: String, live: LpcActor = null) -> Dictionary:
+	var tint := Color.WHITE
+	var boss_id: String = SPEAKER_BOSS.get(who, "")
+	var b: Dictionary = Data.boss_def(boss_id) if boss_id != "" else {}
+	if not b.is_empty():
+		var t: Color = b.get("tint", Color.WHITE)
+		tint = Color(t.r, t.g, t.b, 1.0)
+	if who == "heroi" or who == "espelho":
+		return {"look": hero(), "tint": tint}
+	if live != null and not live.look.is_empty():
+		var lk := live.look.duplicate(true)
+		lk.erase("scale")
+		return {"look": lk, "tint": tint}
+	var key: String = SPEAKER_LOOK.get(who, "")
+	if key != "":
+		return {"look": of(key), "tint": tint}
+	if Data.PETS.has(who):
+		var pet: Dictionary = Data.PETS[who]
+		var pt: Color = pet.get("tint", Color.WHITE)
+		return {"face": Pix.tex(str(pet["face"])), "tint": Color(pt.r, pt.g, pt.b, 1.0)}
+	if not b.is_empty():
+		var rel := "bosses/%s_Faceset.png" % b["folder"] if b.has("folder") else "chars/%s_face.png" % b.get("char", "")
+		return {"face": Pix.tex(rel), "tint": tint}
+	return {}
+
+
 ## Visual do herói no mundo: roupas do guarda-roupa + aparência + equipamento + arma da classe.
 static func hero() -> Dictionary:
 	var lk: Dictionary = GameState.look.duplicate(true)

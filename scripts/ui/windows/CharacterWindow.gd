@@ -1,7 +1,8 @@
 extends UIWindow
 
-## Personagem (C): atributos, habilidade da classe e talentos; aba "Pets e história" com o
-## rank, créditos de estudo, horas de foco e a escolha do pet que acompanha o herói.
+## Personagem (C): atributos, habilidade da classe e talentos; aba "Habilidades" com os marcos de
+## cada 10 níveis e a promoção de classe; aba "Pets e história" com o rank, créditos de estudo,
+## horas de foco e a escolha do pet que acompanha o herói.
 
 var mode: String = "atributos"
 
@@ -15,10 +16,17 @@ func build() -> void:
 	if mode == "pets" or not GameState.has_chosen_class():
 		_pets()
 		return
+	if mode == "habilidades":
+		_skills()
+		return
 	var sw := UI.button("Pets e história  >", func() -> void:
 		mode = "pets"
 		rebuild(), 120)
 	add_to_body(sw, Vector2(410, 244))
+	var sb := UI.button("Habilidades  >", func() -> void:
+		mode = "habilidades"
+		rebuild(), 100)
+	add_to_body(sb, Vector2(304, 244))
 	var cls: Dictionary = Data.CLASSES[GameState.player_class]
 	var st := GameState.get_stats()
 	# --- coluna esquerda: identidade e atributos
@@ -35,7 +43,7 @@ func build() -> void:
 	head.add_child(face)
 	var hv := UI.vbox(0)
 	head.add_child(hv)
-	hv.add_child(UI.label("%s  Nível %d" % [cls["name"], GameState.level], UI.C_ORANGE_L))
+	hv.add_child(UI.label("%s  Nível %d" % [GameState.class_title(), GameState.level], UI.C_ORANGE_L))
 	hv.add_child(UI.label("XP %s / %s" % [UI.fmt_int(GameState.xp), UI.fmt_int(GameState.xp_to_next)], UI.C_XP))
 	hv.add_child(UI.label(cls["passive_text"], UI.C_GOOD))
 	left.add_child(UI.hline())
@@ -101,6 +109,67 @@ func build() -> void:
 	rs.add_child(rb)
 
 
+# ------------------------------------------------------------------ Habilidades e promoção
+func _skills() -> void:
+	var back := UI.button("<  Atributos", func() -> void:
+		mode = "atributos"
+		rebuild(), 90)
+	add_to_body(back, Vector2(450, 244))
+	add_to_body(UI.label("Uma habilidade nova a cada 10 níveis (automática)", UI.C_DIM), Vector2(0, 0))
+	var col := scroll_column(Vector2(0, 16), Vector2(326, 246))
+	var prog := GameState.class_progression()
+	var got := GameState.skill_milestones()
+	for i in prog.size():
+		var e: Dictionary = prog[i]
+		var lv: int = Data.SKILL_LEVELS[i]
+		var title := ""
+		var desc := str(e.get("desc", ""))
+		var icon := ""
+		match str(e["type"]):
+			"active":
+				var sk: Dictionary = Data.SKILLS[e["skill"]]
+				title = "%s  [%s]" % [sk["name"], Data.SKILL_KEYS[e["slot"]]]
+				desc = "%s Recarga %ds." % [sk["desc"], int(sk["cd"])]
+				icon = sk["icon"]
+			"passive":
+				title = "%s (passiva)" % e["name"]
+				icon = e["icon"]
+			_:
+				var base: String = GameState.slot_skill(e["slot"]) if GameState.slot_skill(e["slot"]) != "" else str(Data.CLASSES[GameState.player_class]["skill"])
+				title = "Maestria [%s]" % Data.SKILL_KEYS[e["slot"]]
+				icon = Data.SKILLS[base]["icon"] if e["slot"] == "skill" else "spell/Upgrade"
+		var have := i < got
+		var card := UI.card(UI.C_PANEL, UI.C_ORANGE if have else UI.C_LINE)
+		card.custom_minimum_size = Vector2(316, 30)
+		var h := UI.hbox(6)
+		card.add_child(h)
+		var ic := UI.icon(Pix.skill_icon(icon), 18)
+		ic.modulate = Color.WHITE if have else Color(1, 1, 1, 0.35)
+		h.add_child(ic)
+		var v := UI.vbox(0)
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(v)
+		v.add_child(UI.label("Nv %d  %s" % [lv, title], UI.C_XP if have else UI.C_DIM))
+		v.add_child(UI.wrap_label(desc, UI.C_TEXT if have else UI.C_DIM, 240))
+		var st := UI.label("Liberada" if have else "Nível %d" % lv, UI.C_GOOD if have else UI.C_DIM)
+		h.add_child(st)
+		col.add_child(card)
+	# --- promoção
+	var right := UI.vbox(3)
+	add_to_body(right, Vector2(336, 0))
+	right.add_child(UI.label("Promoção de classe", UI.C_ORANGE_L))
+	right.add_child(UI.label(GameState.class_title(), UI.C_GOLD))
+	right.add_child(UI.hline())
+	var tier := GameState.promotion_tier()
+	var titles: Array = Data.PROMOTION_TITLES[GameState.player_class]
+	for i in titles.size():
+		var done := i < tier
+		right.add_child(UI.label("Nv %d  %s" % [Data.PROMOTION_LEVELS[i], titles[i]], UI.C_GOOD if done else (UI.C_TEXT if i == tier else UI.C_DIM)))
+	right.add_child(UI.wrap_label("Cada promoção: +5% de ataque, defesa e vida.", UI.C_DIM, 196))
+	right.add_child(UI.hline())
+	UIWindow.trial_box(right, 196)
+
+
 func _n(v: float) -> String:
 	if absf(v - round(v)) < 0.05:
 		return str(int(round(v)))
@@ -121,11 +190,12 @@ func _pets() -> void:
 	left.add_child(UI.hline())
 	left.add_child(UI.label("Créditos de estudo: %d" % Story.credits(), UI.C_ENERGY))
 	left.add_child(UI.label("Próximo crédito em %d min de foco" % Story.minutes_to_next_credit(), UI.C_DIM))
+	left.add_child(UI.label("Recuperação: %s" % Story.regen_text(), UI.C_DIM))
 	left.add_child(UI.label("Horas de foco na história: %s h" % Story._hours_text(), UI.C_XP))
 	var ad := Arena.data()
 	left.add_child(UI.label("Arena: %s  (%d prestígio, %dV / %dD)" % [Arena.rank_name(), Arena.prestige(), int(ad.get("wins", 0)), int(ad.get("losses", 0))], Arena.rank_color()))
 	left.add_child(UI.hline())
-	left.add_child(UI.wrap_label("1 hora de foco = 1 crédito. Pedágios: floresta 1 por dia; andar N da masmorra custa N por dia (máximo 5). Os chefes pedem horas de foco acumuladas.", UI.C_DIM, 220))
+	left.add_child(UI.wrap_label("1 hora de foco = 1 crédito; o tempo recupera 1 a cada %d min. Pedágio: floresta 1, andar N custa N (máx. 5); voltar ao mesmo lugar no mesmo dia sai mais caro (x3, depois +2x). Chefes pedem horas de foco." % Data.CREDIT_REGEN_MIN, UI.C_DIM, 220))
 	left.add_child(UI.hline())
 	left.add_child(UI.label("Objetivo:", UI.C_ORANGE_L))
 	left.add_child(UI.wrap_label(Story.objective_text(), UI.C_TEXT, 220))
@@ -142,8 +212,9 @@ func _pets() -> void:
 		right.add_child(card)
 		var h := UI.hbox(6)
 		card.add_child(h)
-		var ic := UI.icon(Pix.tex(pd["face"]) if has else null, 30)
-		ic.modulate = pd.get("tint", Color.WHITE) if pid == "corvin" else Color.WHITE
+		var vis := Looks.speaker_visual(pid)
+		var ic := UI.icon(vis.get("face") if has else null, 30)
+		ic.modulate = vis.get("tint", Color.WHITE)
 		h.add_child(ic)
 		var v := UI.vbox(0)
 		v.custom_minimum_size.x = 196

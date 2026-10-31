@@ -62,7 +62,9 @@ func run(d: Node) -> void:
 	await skip()
 	await dev.wait(2.0)
 	check_scene("Forest")
-	print("[story] créditos depois do pedágio: ", Story.credits(), " passe: ", Story.has_pass("floresta"))
+	print("[story] créditos depois do pedágio: ", Story.credits(), " entradas hoje: ", Story.entries_today("floresta"))
+	if Story.entries_today("floresta") != 1 or Story.entry_cost("floresta", 1) != 3:
+		fail("custo progressivo: depois da 1ª entrada a 2ª deveria custar 3")
 	await dev.shot(OUT + "story_05_floresta_borda.png")
 	# ---------------------------------------------------------------- capítulo 1 na floresta
 	var forest := get_tree().current_scene

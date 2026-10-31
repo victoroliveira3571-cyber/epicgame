@@ -41,10 +41,8 @@ var world: Node2D
 var player: Player
 var deco: Node2D
 var colliders: StaticBody2D
-var furniture_nodes: Dictionary = {}
-var edit_mode: bool = false
-var picked_id: String = ""
-var picked_from: Vector2 = Vector2.ZERO
+var housing: HousingEditor = null    # sua casa: modo Decorar (V)
+var _blockers: Array = []            # peças fixas da casa (o editor não deixa pôr móvel em cima)
 var _ending: bool = false
 var owner_id: String = ""          # dono do lugar (apresentação na primeira visita, ShopTalk)
 var owner_npc: NPC = null
@@ -270,8 +268,6 @@ func _process(_delta: float) -> void:
 	# andar para o vão da porta também sai
 	if player.global_position.y > rows * T - 4 and absf(player.global_position.x - float(cols / 2 * T)) < T:
 		_leave()
-	if edit_mode and picked_id != "" and furniture_nodes.has(picked_id):
-		furniture_nodes[picked_id].position = _snap(get_global_mouse_position())
 
 
 # ================================================================== Peças
@@ -287,6 +283,9 @@ func prop(name: String, foot: Vector2, solid: bool = true, flat: bool = false, p
 	s.offset = Vector2(-sz.x / 2.0, -sz.y)
 	holder.add_child(s)
 	if solid and not flat:
+		if id == "casa" and housing == null:
+			_blockers.append(Rect2(foot.round() + Vector2(-sz.x / 2.0 + 1.0, -clampf(roundf(sz.y * 0.35), 6.0, 12.0)),
+				Vector2(sz.x - 2.0, clampf(roundf(sz.y * 0.35), 6.0, 12.0))))
 		var body := StaticBody2D.new()
 		body.collision_layer = 1
 		body.collision_mask = 0
@@ -354,6 +353,7 @@ func sitter(look: String, pos: Vector2, dir: String, lines: Array) -> NPC:
 func shop_owner(look: String, talk_id: String, title: String, pos: Vector2, lines: Array, mode: String = "static") -> NPC:
 	var n := npc(look, pos, lines, mode, 30.0)
 	n.add_to_group("speaker_" + talk_id)
+	n.use_look(Looks.SPEAKER_LOOK.get(talk_id, look))
 	var p := Spot.new("Falar com " + title, func() -> void: ShopTalk.talk(talk_id), 22.0)
 	n.add_child(p)
 	owner_id = talk_id
@@ -415,12 +415,6 @@ func _build_library() -> void:
 
 
 # ================================================================== Casa do jogador
-const FURNITURE_DEFAULTS := {
-	"cama": Vector2(40, 104), "estante": Vector2(104, 64), "lareira": Vector2(192, 60), "trofeu": Vector2(254, 64),
-	"relogio": Vector2(300, 54), "planta": Vector2(360, 110), "tapete": Vector2(192, 168), "mesa": Vector2(300, 168),
-}
-
-
 func _build_home() -> void:
 	var w := cols * T
 	# decoração fixa da parede e o catálogo de móveis
@@ -442,130 +436,13 @@ func _build_home() -> void:
 	prop("p_vela", Vector2(152, 196), false)
 	prop("i_stool", Vector2(140, 220))
 	study_spot("casa", Vector2(140, 218))
-	_place_furniture()
+	# móveis: posição, giro e caixa de guardados ficam com o editor (HousingEditor)
+	housing = HousingEditor.new()
+	housing.setup(self, _blockers)
+	deco.add_child(housing)
 	light(Vector2(192, 120), Color(1.0, 0.85, 0.6), 1.8, 0.3)
 	light(Vector2(152, 190), Color(1.0, 0.75, 0.45), 0.6, 0.4)
-	if GameState.owns_furniture("relogio"):
-		Audio.emitter(world, FURNITURE_DEFAULTS["relogio"], "amb_relogio", -16.0, true, 0.0, 160.0)
-	HUD.set_hint("V  Organizar móveis")
-
-
-func _place_furniture() -> void:
-	for fid in Data.FURNITURE_ORDER:
-		if not GameState.owns_furniture(fid):
-			continue
-		var f: Dictionary = Data.FURNITURE[fid]
-		var stored: Variant = GameState.furniture_pos(fid)
-		var pos: Vector2 = stored if stored != null else FURNITURE_DEFAULTS.get(fid, Vector2(224, 140))
-		var flat: bool = fid == "tapete"
-		var node := prop(f["icon"], _clamp_to_floor(pos, fid), not flat, flat)
-		node.set_meta("fid", fid)
-		furniture_nodes[fid] = node
-		if fid == "cama":
-			var bed_spot := spot("Descansar", node.position + Vector2(0, 8), func() -> void:
-				GameState.full_heal()
-				Audio.sfx("sleep", -4.0)
-				HUD.show_toast("Você descansou. Vida cheia!", UI.C_GOOD), 22.0)
-			bed_spot.set_meta("fid", fid)
-		if fid == "lareira":
-			light(node.position + Vector2(0, -8), Color(1.0, 0.55, 0.25), 0.8, 0.9)
-
-
-func _snap(p: Vector2) -> Vector2:
-	return Vector2(roundf(p.x / 4.0) * 4.0, roundf(p.y / 4.0) * 4.0)
-
-
-func _clamp_to_floor(p: Vector2, fid: String) -> Vector2:
-	var tex := prop_tex(Data.FURNITURE[fid]["icon"])
-	var sz := tex.get_size() if tex != null else Vector2(16, 16)
-	var fr := floor_rect()
-	var min_y := fr.position.y + sz.y * (0.6 if fid != "tapete" else 1.0)
-	return Vector2(clampf(p.x, fr.position.x + sz.x / 2.0, fr.end.x - sz.x / 2.0), clampf(p.y, min_y, fr.end.y))
-
-
-func _unhandled_input(ev: InputEvent) -> void:
-	if id != "casa" or _ending:
-		return
-	if ev is InputEventKey and ev.pressed and not ev.echo:
-		if ev.keycode == KEY_V and not HUD.is_window_open():
-			get_viewport().set_input_as_handled()
-			_set_edit_mode(not edit_mode)
-		elif ev.keycode == KEY_ESCAPE and edit_mode:
-			get_viewport().set_input_as_handled()
-			if picked_id != "":
-				furniture_nodes[picked_id].position = picked_from
-				picked_id = ""
-			else:
-				_set_edit_mode(false)
-	elif edit_mode and ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-		get_viewport().set_input_as_handled()
-		var mp := get_global_mouse_position()
-		if picked_id == "":
-			_pick_at(mp)
-		else:
-			_drop()
-	elif edit_mode and ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_RIGHT and picked_id != "":
-		furniture_nodes[picked_id].position = picked_from
-		picked_id = ""
-		Audio.sfx("ui_back", -4.0)
-
-
-func _set_edit_mode(on: bool) -> void:
-	if on and furniture_nodes.is_empty():
-		HUD.show_toast("Compre móveis no catálogo para poder arrumar a casa.", UI.C_DIM)
-		return
-	edit_mode = on
-	picked_id = ""
-	Game.input_locked = on
-	Audio.sfx("ui_open" if on else "ui_close", -4.0)
-	if on:
-		HUD.set_hint("MODO ARRUMAR: clique num móvel para pegar e clique de novo para soltar  |  botão direito/Esc cancela  |  V termina")
-		HUD.set_prompt("")
-		for fid in furniture_nodes:
-			_outline(furniture_nodes[fid], true)
-	else:
-		HUD.set_hint("V  Organizar móveis")
-		for fid in furniture_nodes:
-			_outline(furniture_nodes[fid], false)
-
-
-func _outline(node: Node2D, on: bool) -> void:
-	for c in node.get_children():
-		if c is Sprite2D:
-			(c as Sprite2D).modulate = Color(1.25, 1.25, 1.1) if on else Color.WHITE
-
-
-func _pick_at(mp: Vector2) -> void:
-	var best := ""
-	var best_y := -INF
-	for fid in furniture_nodes:
-		var node: Node2D = furniture_nodes[fid]
-		var s := node.get_child(0) as Sprite2D
-		var rect := Rect2(node.position + s.offset, s.texture.get_size()).grow(3.0)
-		if rect.has_point(mp) and node.position.y > best_y:
-			best = fid
-			best_y = node.position.y
-	if best == "":
-		return
-	picked_id = best
-	picked_from = furniture_nodes[best].position
-	Audio.sfx("ui_move", -2.0)
-	var node2: Node2D = furniture_nodes[best]
-	var tw := create_tween()
-	tw.tween_property(node2, "scale", Vector2(1.08, 1.08), 0.08)
-	tw.tween_property(node2, "scale", Vector2.ONE, 0.08)
-
-
-func _drop() -> void:
-	var node: Node2D = furniture_nodes[picked_id]
-	node.position = _clamp_to_floor(_snap(get_global_mouse_position()), picked_id)
-	GameState.set_furniture_pos(picked_id, node.position)
-	# o ponto de "Descansar" acompanha a cama
-	for s in get_tree().get_nodes_in_group("interactable"):
-		if s.has_meta("fid") and s.get_meta("fid") == picked_id:
-			(s as Node2D).position = node.position + Vector2(0, 8)
-	Audio.sfx("ui_ok", -3.0)
-	picked_id = ""
+	HUD.set_hint("V  Decorar a casa")
 
 
 # ================================================================== Pousada Pão Quente
@@ -589,6 +466,7 @@ func _build_restaurant() -> void:
 	var cook := npc("OldWoman", Vector2(cx - 18, 76), ["Hoje tem pão quentinho!", "Estudou hoje?", "Chá e foco: receita de vó."])
 	cook.sprite.z_index = 0
 	cook.add_to_group("speaker_marta")
+	cook.use_look("marta")
 	spot("Falar com Dona Marta", Vector2(cx - 20, 110), func() -> void: Story.talk("marta"), 22.0)
 	prop("p_cha", Vector2(cx + 22, 88), false)
 	prop("i_mug", Vector2(cx - 50, 88), false)
@@ -645,6 +523,7 @@ func _build_guild() -> void:
 	_block(Rect2(cx - 70, 44, 140, 38))
 	var helena := npc("Princess", Vector2(cx, 84), ["Bem-vindo à Guilda!", "As missões do dia estão no quadro.", "Quem foca, conquista."])
 	helena.add_to_group("speaker_helena")
+	helena.use_look("helena")
 	prop("i_desk_paper", Vector2(cx - 50, 96), false)
 	prop("p_cofre", Vector2(cx + 50, 78))
 	prop("p_vaso_flores", Vector2(cx + 20, 96), false)

@@ -76,6 +76,149 @@ const SKILLS := {
 		"desc": "Detona uma explosão na direção da mira (260% de dano em área)."},
 	"chuva": {"name": "Chuva de Flechas", "icon": "items/Arrow", "cd": 5.0,
 		"desc": "Dispara 7 flechas em leque (100% de dano cada)."},
+	# ---- ativas liberadas pela progressão (nível 10 = tecla R, nível 30 = tecla X).
+	# kind: nova (área em volta), blast (área na mira, com atraso), dash (avanço), fan (projéteis em
+	# leque), buff (efeito em você). Os números ficam aqui para balancear sem mexer no Player.
+	"sismico": {"name": "Golpe Sísmico", "icon": "spell/RockSpike", "cd": 9.0, "kind": "blast", "anim": "slash",
+		"dist": 34.0, "radius": 34.0, "mult": 2.2, "kb": 150.0, "delay": 0.1, "fx": "rock", "color": Color(1, 0.9, 0.75),
+		"desc": "Racha o chão à frente: 220% de dano em área e empurrão."},
+	"grito": {"name": "Grito de Guerra", "icon": "spell/AttackUpgrade", "cd": 18.0, "kind": "nova", "anim": "spellcast",
+		"radius": 44.0, "mult": 0.8, "kb": 220.0, "fx": "boost", "color": Color(1, 0.75, 0.5), "buff": "forca", "buff_time": 8.0,
+		"desc": "Empurra todos em volta (80%) e dá Força (+15% de ataque) por 8s."},
+	"martelo": {"name": "Martelo da Justiça", "icon": "spell/BookLight", "cd": 9.0, "kind": "blast", "anim": "spellcast",
+		"dist": 80.0, "radius": 30.0, "mult": 2.4, "kb": 120.0, "delay": 0.3, "fx": "thunder", "color": Color(1, 0.95, 0.6),
+		"desc": "Um raio sagrado cai no inimigo mais próximo: 240% de dano em área."},
+	"egide": {"name": "Égide", "icon": "spell/DefenseUpgrade", "cd": 20.0, "kind": "buff", "anim": "spellcast",
+		"buff": "couraca", "buff_time": 8.0, "heal_pct": 0.2, "fx": "shield", "color": Color(1, 0.95, 0.7),
+		"desc": "Cura 20% da vida e dá Couraça (+25% de defesa) por 8s."},
+	"kunais": {"name": "Leque de Kunais", "icon": "items/Kunai", "cd": 6.0, "kind": "fan", "anim": "slash",
+		"count": 5, "spread": 56.0, "mult": 0.9, "proj": "ARROW", "speed": 280.0, "range": 0.6,
+		"desc": "Arremessa 5 kunais em leque (90% de dano cada)."},
+	"danca": {"name": "Dança das Lâminas", "icon": "spell/Cut", "cd": 12.0, "kind": "nova", "anim": "slash",
+		"radius": 36.0, "mult": 2.8, "kb": 90.0, "fx": "circular", "color": Color(0.8, 0.6, 1.0), "invuln": 0.4,
+		"desc": "Gira imune por um instante: 280% de dano em todos em volta."},
+	"investida": {"name": "Investida de Escudo", "icon": "items/Guard", "cd": 8.0, "kind": "dash", "anim": "thrust",
+		"mult": 1.6, "speed": 300.0, "desc": "Avança com o escudo, atravessando e empurrando (160% de dano)."},
+	"provocar": {"name": "Provocação", "icon": "spell/Counter", "cd": 16.0, "kind": "nova", "anim": "spellcast",
+		"radius": 56.0, "mult": 0.5, "kb": 280.0, "fx": "boost", "color": Color(0.7, 0.85, 1.0), "buff": "couraca", "buff_time": 6.0,
+		"desc": "Empurra longe quem está perto (50%) e dá Couraça (+25% de defesa) por 6s."},
+	"nova_gelida": {"name": "Nova Gélida", "icon": "spell/BookIce", "cd": 8.0, "kind": "nova", "anim": "spellcast",
+		"radius": 46.0, "mult": 1.7, "kb": 140.0, "fx": "circle", "color": Color(0.6, 0.85, 1.0),
+		"desc": "Explosão de gelo em volta de você: 170% de dano e empurrão."},
+	"meteoros": {"name": "Chuva de Meteoros", "icon": "spell/Fireball", "cd": 16.0, "kind": "blast", "anim": "thrust",
+		"dist": 90.0, "radius": 30.0, "mult": 1.8, "kb": 120.0, "delay": 0.35, "fx": "explosion", "color": Color(1, 0.7, 0.5), "repeat": 3,
+		"desc": "Três meteoros caem perto da mira (180% de dano cada)."},
+	"perfurante": {"name": "Flecha Perfurante", "icon": "spell/MagicWeapon", "cd": 7.0, "kind": "fan", "anim": "shoot",
+		"count": 1, "spread": 0.0, "mult": 3.2, "proj": "ARROW", "speed": 380.0, "range": 1.1, "pierce": 6,
+		"desc": "Uma flecha que atravessa até 6 inimigos (320% de dano)."},
+	"recuo": {"name": "Salto e Mira", "icon": "items/Boot", "cd": 12.0, "kind": "dash", "anim": "shoot",
+		"mult": 0.0, "speed": -280.0, "buff": "foco", "buff_time": 6.0,
+		"desc": "Salta para trás, imune, e ganha Foco (+12% de velocidade, +5% de crítico) por 6s."},
+}
+
+# ------------------------------------------------------------- Progressão de habilidades
+# A cada 10 níveis a classe ganha uma habilidade nova, automaticamente:
+#   "active": ativa nova numa tecla (R no nível 10, X no 30)
+#   "passive": bônus permanente nos atributos (mesmas chaves dos buffs; hp_pct = % de vida, cdr = recarga menor)
+#   "mastery": fortalece uma ativa (+30% de dano, -20% de recarga)
+const SKILL_KEYS := {"skill": "Q", "skill2": "R", "skill3": "X"}
+const MASTERY_DMG := 1.3
+const MASTERY_CD := 0.8
+const SKILL_LEVELS := [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+const CLASS_PROGRESSION := {
+	"cavaleiro": [
+		{"type": "active", "slot": "skill2", "skill": "sismico"},
+		{"type": "passive", "name": "Pele de Aço", "icon": "items/Armor", "stat": {"hp_pct": 0.08}, "desc": "+8% de vida máxima."},
+		{"type": "active", "slot": "skill3", "skill": "grito"},
+		{"type": "passive", "name": "Braço Firme", "icon": "items/Kunai", "stat": {"atk_pct": 0.08}, "desc": "+8% de ataque."},
+		{"type": "mastery", "slot": "skill", "desc": "Giro Cortante: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Veterano", "icon": "items/Guard", "stat": {"def_pct": 0.10, "cdr": 0.05}, "desc": "+10% de defesa e -5% de recarga."},
+		{"type": "mastery", "slot": "skill2", "desc": "Golpe Sísmico: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Coração de Leão", "icon": "spell/Heal", "stat": {"hp_pct": 0.10, "regen": 0.8}, "desc": "+10% de vida e +0,8 de regeneração."},
+		{"type": "mastery", "slot": "skill3", "desc": "Grito de Guerra: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Lenda do Reino", "icon": "spell/Upgrade", "stat": {"atk_pct": 0.15, "hp_pct": 0.15}, "desc": "+15% de ataque e +15% de vida."},
+	],
+	"paladino": [
+		{"type": "active", "slot": "skill2", "skill": "martelo"},
+		{"type": "passive", "name": "Bênção", "icon": "spell/Heal", "stat": {"regen": 0.6}, "desc": "+0,6 de regeneração."},
+		{"type": "active", "slot": "skill3", "skill": "egide"},
+		{"type": "passive", "name": "Fé Inabalável", "icon": "items/Guard", "stat": {"def_pct": 0.10}, "desc": "+10% de defesa."},
+		{"type": "mastery", "slot": "skill", "desc": "Luz Sagrada: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Aura Santa", "icon": "spell/OrbLight", "stat": {"hp_pct": 0.10, "cdr": 0.05}, "desc": "+10% de vida e -5% de recarga."},
+		{"type": "mastery", "slot": "skill2", "desc": "Martelo da Justiça: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Mão Justa", "icon": "spell/AttackUpgrade", "stat": {"atk_pct": 0.10}, "desc": "+10% de ataque."},
+		{"type": "mastery", "slot": "skill3", "desc": "Égide: -20% de recarga."},
+		{"type": "passive", "name": "Santo Guerreiro", "icon": "spell/Upgrade", "stat": {"regen": 1.5, "hp_pct": 0.15, "def_pct": 0.10}, "desc": "+15% de vida, +10% de defesa e +1,5 de regeneração."},
+	],
+	"assassino": [
+		{"type": "active", "slot": "skill2", "skill": "kunais"},
+		{"type": "passive", "name": "Olhar Frio", "icon": "spell/Vision", "stat": {"crit": 5.0}, "desc": "+5% de crítico."},
+		{"type": "active", "slot": "skill3", "skill": "danca"},
+		{"type": "passive", "name": "Passos Leves", "icon": "items/Boot", "stat": {"speed_pct": 0.08}, "desc": "+8% de velocidade."},
+		{"type": "mastery", "slot": "skill", "desc": "Investida Sombria: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Veneno", "icon": "spell/Death", "stat": {"atk_pct": 0.10, "cdr": 0.05}, "desc": "+10% de ataque e -5% de recarga."},
+		{"type": "mastery", "slot": "skill2", "desc": "Leque de Kunais: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Golpe Mortal", "icon": "spell/Cut", "stat": {"crit_dmg": 0.3, "crit": 4.0}, "desc": "+30% de dano crítico e +4% de crítico."},
+		{"type": "mastery", "slot": "skill3", "desc": "Dança das Lâminas: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Fantasma", "icon": "spell/Camouflage", "stat": {"atk_pct": 0.15, "crit": 6.0, "speed_pct": 0.06}, "desc": "+15% de ataque, +6% de crítico e +6% de velocidade."},
+	],
+	"escudeiro": [
+		{"type": "active", "slot": "skill2", "skill": "investida"},
+		{"type": "passive", "name": "Couro Grosso", "icon": "items/Armor", "stat": {"def_pct": 0.10}, "desc": "+10% de defesa."},
+		{"type": "active", "slot": "skill3", "skill": "provocar"},
+		{"type": "passive", "name": "Raiz", "icon": "items/Guard", "stat": {"hp_pct": 0.10}, "desc": "+10% de vida."},
+		{"type": "mastery", "slot": "skill", "desc": "Muralha: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Contra-ataque", "icon": "spell/Counter", "stat": {"atk_pct": 0.10, "cdr": 0.05}, "desc": "+10% de ataque e -5% de recarga."},
+		{"type": "mastery", "slot": "skill2", "desc": "Investida de Escudo: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Bastião", "icon": "spell/DefenseUpgrade", "stat": {"def_pct": 0.15, "regen": 0.6}, "desc": "+15% de defesa e +0,6 de regeneração."},
+		{"type": "mastery", "slot": "skill3", "desc": "Provocação: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Fortaleza Viva", "icon": "spell/Upgrade", "stat": {"def_pct": 0.20, "hp_pct": 0.20}, "desc": "+20% de defesa e +20% de vida."},
+	],
+	"mago": [
+		{"type": "active", "slot": "skill2", "skill": "nova_gelida"},
+		{"type": "passive", "name": "Mente Afiada", "icon": "spell/BookThunder", "stat": {"atk_pct": 0.08}, "desc": "+8% de ataque."},
+		{"type": "active", "slot": "skill3", "skill": "meteoros"},
+		{"type": "passive", "name": "Concentração", "icon": "spell/Vision", "stat": {"cdr": 0.08}, "desc": "-8% de recarga das habilidades."},
+		{"type": "mastery", "slot": "skill", "desc": "Explosão Arcana: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Escudo Arcano", "icon": "spell/OrbWater", "stat": {"hp_pct": 0.12, "def_pct": 0.10}, "desc": "+12% de vida e +10% de defesa."},
+		{"type": "mastery", "slot": "skill2", "desc": "Nova Gélida: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Erudito", "icon": "spell/BookLight", "stat": {"atk_pct": 0.10, "xp_pct": 0.05}, "desc": "+10% de ataque e +5% de XP."},
+		{"type": "mastery", "slot": "skill3", "desc": "Chuva de Meteoros: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Sábio Lendário", "icon": "spell/Upgrade", "stat": {"atk_pct": 0.18, "cdr": 0.07}, "desc": "+18% de ataque e -7% de recarga."},
+	],
+	"arqueiro": [
+		{"type": "active", "slot": "skill2", "skill": "perfurante"},
+		{"type": "passive", "name": "Mira Firme", "icon": "spell/Vision", "stat": {"crit": 5.0}, "desc": "+5% de crítico."},
+		{"type": "active", "slot": "skill3", "skill": "recuo"},
+		{"type": "passive", "name": "Corda Tensa", "icon": "items/Arrow", "stat": {"atk_pct": 0.08}, "desc": "+8% de ataque."},
+		{"type": "mastery", "slot": "skill", "desc": "Chuva de Flechas: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Andarilho", "icon": "items/Boot", "stat": {"speed_pct": 0.08, "hp_pct": 0.08}, "desc": "+8% de velocidade e +8% de vida."},
+		{"type": "mastery", "slot": "skill2", "desc": "Flecha Perfurante: +30% de dano, -20% de recarga."},
+		{"type": "passive", "name": "Olho de Águia", "icon": "spell/LuckUpgrade", "stat": {"crit": 5.0, "crit_dmg": 0.25}, "desc": "+5% de crítico e +25% de dano crítico."},
+		{"type": "mastery", "slot": "skill3", "desc": "Salto e Mira: -20% de recarga."},
+		{"type": "passive", "name": "Arqueiro Lendário", "icon": "spell/Upgrade", "stat": {"atk_pct": 0.15, "crit": 6.0, "cdr": 0.05}, "desc": "+15% de ataque, +6% de crítico e -5% de recarga."},
+	],
+}
+
+# ------------------------------------------------------------- Promoção de classe
+# Nos níveis 25, 50, 75 e 100 abre uma Prova de Promoção na Guilda. Ela conta a partir de quando
+# abre: monstros derrotados, minutos de foco e chefes. Concluída, a Helena promove: título novo e
+# bônus em ataque, defesa e vida (acumula).
+const PROMOTION_LEVELS := [25, 50, 75, 100]
+const PROMOTION_TRIALS := [
+	{"monsters": 40, "focus": 120, "bosses": 0},
+	{"monsters": 80, "focus": 240, "bosses": 1},
+	{"monsters": 120, "focus": 360, "bosses": 2},
+	{"monsters": 160, "focus": 480, "bosses": 3},
+]
+const PROMOTION_BONUS := {"atk_pct": 0.05, "def_pct": 0.05, "hp_pct": 0.05}   # por promoção
+const PROMOTION_TITLES := {
+	"cavaleiro": ["Cavaleiro de Elite", "Guardião Real", "Campeão do Reino", "Lenda Andante"],
+	"paladino": ["Cruzado", "Templário", "Arauto da Luz", "Santo Guerreiro"],
+	"assassino": ["Sombra", "Lâmina Noturna", "Mestre das Sombras", "Fantasma Lendário"],
+	"escudeiro": ["Guarda de Ferro", "Bastião", "Muralha Viva", "Fortaleza Lendária"],
+	"mago": ["Feiticeiro", "Arquimago", "Mestre Arcano", "Sábio Lendário"],
+	"arqueiro": ["Patrulheiro", "Atirador de Elite", "Olho de Águia", "Arqueiro Lendário"],
 }
 
 # --------------------------------------------------------------------- Talentos
@@ -472,6 +615,25 @@ func floor_toll(floor_n: int) -> int:
 	return clampi(floor_n, 1, MAX_TOLL)
 
 
+# ------------------------------------------------------------------- Viagens (custo progressivo)
+# Cada entrada no MESMO lugar no MESMO dia fica mais cara (vira o dia, zera):
+#   1ª entrada = pedágio base; 2ª = base x REENTRY_SECOND_MULT; da 3ª em diante soma base x REENTRY_STEP_MULT.
+#   Floresta (base 1): 1, 3, 5, 7...   Andar 3 (base 3): 3, 9, 15...
+const REENTRY_SECOND_MULT := 3
+const REENTRY_STEP_MULT := 2
+# Recuperação: 1 crédito a cada CREDIT_REGEN_MIN minutos de relógio (conta com o jogo fechado),
+# até CREDIT_REGEN_CAP. Créditos de foco somam acima do limite normalmente.
+const CREDIT_REGEN_MIN := 45
+const CREDIT_REGEN_CAP := 10
+
+
+## Custo de uma viagem: `base` = pedágio do lugar, `entries_before` = entradas já feitas hoje.
+func travel_cost(base: int, entries_before: int) -> int:
+	if entries_before <= 0:
+		return base
+	return base * REENTRY_SECOND_MULT + base * REENTRY_STEP_MULT * (entries_before - 1)
+
+
 # ------------------------------------------------------------------- Floresta
 # Zonas da floresta (ver Forest.gd). power = força dos monstros; rank = rank mínimo para entrar.
 const FOREST_ZONES := {
@@ -601,18 +763,29 @@ const DAILY_TEMPLATES := [
 ]
 
 # --------------------------------------------------------------------- Mobília
-# Cada móvel dá um bônus permanente. icon: recorte do tileset de elementos.
+# Móveis comprados ficam guardados até você colocá-los na casa (modo Decorar, tecla V). Os de bônus
+# valem desde a compra. icon: textura do móvel. flat: fica no chão (tapetes) e gira de 90 em 90 graus.
 const FURNITURE := {
 	"cama": {"name": "Cama Confortável", "price": 60, "desc": "+15 de vida máxima.", "stat": {"hp": 15.0}, "icon": "furn_cama"},
 	"mesa": {"name": "Mesa de Jantar", "price": 100, "desc": "A fome diminui 60% mais devagar.", "stat": {"hunger_mult": 0.4}, "icon": "furn_mesa"},
 	"estante": {"name": "Estante de Livros", "price": 120, "desc": "+5% de XP.", "stat": {"xp_pct": 0.05}, "icon": "furn_estante"},
 	"planta": {"name": "Vaso de Planta", "price": 80, "desc": "Regenera 0,4 de vida por segundo.", "stat": {"regen": 0.4}, "icon": "furn_planta"},
-	"tapete": {"name": "Tapete Dourado", "price": 150, "desc": "+5% de ouro.", "stat": {"gold_pct": 0.05}, "icon": "furn_tapete"},
+	"tapete": {"name": "Tapete Dourado", "price": 150, "desc": "+5% de ouro.", "stat": {"gold_pct": 0.05}, "icon": "furn_tapete", "flat": true},
 	"lareira": {"name": "Lareira", "price": 200, "desc": "Regenera 0,6 de vida por segundo.", "stat": {"regen": 0.6}, "icon": "furn_lareira"},
 	"trofeu": {"name": "Armário de Troféus", "price": 250, "desc": "+3% de crítico.", "stat": {"crit": 3.0}, "icon": "furn_trofeu"},
 	"relogio": {"name": "Relógio Antigo", "price": 300, "desc": "+10% de XP nas sessões de foco.", "stat": {"focus_xp_pct": 0.10}, "icon": "furn_relogio"},
+	# só decoração (sem bônus): para montar a casa do seu jeito no modo Decorar
+	"poltrona": {"name": "Poltrona de Leitura", "price": 70, "desc": "Decoração.", "stat": {}, "icon": "i_armchair"},
+	"sofa": {"name": "Sofá", "price": 110, "desc": "Decoração.", "stat": {}, "icon": "i_sofa"},
+	"comoda": {"name": "Cômoda", "price": 90, "desc": "Decoração.", "stat": {}, "icon": "i_dresser"},
+	"tapete_azul": {"name": "Tapete Azul", "price": 60, "desc": "Decoração (fica no chão, gira).", "stat": {}, "icon": "p_tapete_azul", "flat": true},
+	"tatame": {"name": "Tatame", "price": 50, "desc": "Decoração (fica no chão, gira).", "stat": {}, "icon": "p_tatame", "flat": true},
+	"vaso_flores": {"name": "Vaso de Flores", "price": 30, "desc": "Decoração.", "stat": {}, "icon": "p_vaso_flores"},
+	"planta_pequena": {"name": "Planta Pequena", "price": 25, "desc": "Decoração.", "stat": {}, "icon": "p_planta_pequena"},
+	"lampiao": {"name": "Lampião", "price": 45, "desc": "Decoração (ilumina).", "stat": {}, "icon": "lampiao", "light": true},
 }
-const FURNITURE_ORDER := ["cama", "mesa", "estante", "planta", "tapete", "lareira", "trofeu", "relogio"]
+const FURNITURE_ORDER := ["cama", "mesa", "estante", "planta", "tapete", "lareira", "trofeu", "relogio",
+	"poltrona", "sofa", "comoda", "tapete_azul", "tatame", "vaso_flores", "planta_pequena", "lampiao"]
 
 # ---------------------------------------------------------------------- Energia
 const ENERGY_MAX := 10

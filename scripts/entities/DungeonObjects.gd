@@ -29,9 +29,7 @@ class Stairs extends Interactable:
 			var next := floor_n + 1
 			if not Story.floor_unlocked(next):
 				return "Andar %d: ainda bloqueado pela história" % next
-			if Story.has_pass("andar_%d" % next):
-				return "[E] Descer para o andar %d (passe pago)" % next
-			return "[E] Descer para o andar %d (pedágio: %d créditos)" % [next, Data.floor_toll(next)]
+			return "[E] Descer para o andar %d (%s)" % [next, Story.entry_text("andar_%d" % next, Data.floor_toll(next))]
 		return "[E] Voltar para a cidade"
 
 	func can_interact(_player: Node) -> bool:

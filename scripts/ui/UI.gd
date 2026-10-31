@@ -320,7 +320,7 @@ class Slot extends Control:
 		if item_id != "":
 			var it: Texture2D = Pix.item_icon(item_id)
 			if it != null:
-				var isz := minf(size.x - 4.0, 16.0)
+				var isz := minf(size.x - 4.0, 20.0 if it.get_width() > 16 else 16.0)
 				var off := (size - Vector2(isz, isz)) / 2.0
 				draw_texture_rect(it, Rect2(off.round(), Vector2(isz, isz)), false, Color(1, 1, 1, 0.45) if dim else Color.WHITE)
 			var rc := UI.item_color(item_id)
