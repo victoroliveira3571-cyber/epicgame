@@ -91,6 +91,10 @@ static func presets() -> Dictionary:
 	p["recepcionista"] = _l("male", "elderly_male", "taupe", "brown", "gray", "cab_careca",
 		["camisa_social", "white"], ["calca_social", "navy"], ["sapato", "black"],
 		{"barba": ["npc_beards_french"], "wrinkles": true, "extras": [["npc_torso_jacket_frock", "navy"]]})
+	p["bibliotecario"] = _l("male", "gaunt", "zombie", "gray", "white", "cab_desalinhado",
+		["manga_longa", "tan"], ["calca_larga", "charcoal"], ["sandalia", "black"],
+		{"weapon": "s_staff", "expr": "closed", "wrinkles": true,
+		"extras": [["npc_cape_tattered", "white"], ["npc_belt_robe", "tan"], ["npc_neck_scarf", "white"]]})
 	p["bruna"] = _l("female", "human_female", "amber", "green", "carrot", "cab_rabo_alto",
 		["regata", "maroon"], ["calca", "leather"], ["bota", "black"],
 		{"weapon": "spear", "gear": {"armor": 1, "boots": 2}, "extras": [["npc_cape_trim", "red"], ["npc_belt_leather", "leather"]]})
@@ -154,7 +158,7 @@ const SPEAKER_LOOK := {
 	"pietro": "pietro", "ivo": "ivo", "lin": "lin", "aldric": "aldric", "vizinho": "vizinho",
 	"cavaleiro": "aldric", "ferreiro": "ferreiro", "armeiro": "armeiro", "costureira": "costureira",
 	"estalajadeiro": "estalajadeiro", "mestre_cla": "mestre_cla", "bibliotecaria": "bibliotecaria",
-	"recepcionista": "recepcionista", "guarda": "guarda", "arena": "bruna",
+	"recepcionista": "recepcionista", "guarda": "guarda", "arena": "bruna", "bibliotecario": "bibliotecario",
 }
 
 

@@ -93,11 +93,9 @@ static func make_ivo_trap() -> StoryProp:
 		else:
 			await Story.say("c3_ivo_segue")
 		me.vanish(), null, 22.0)
-	var ivo := Sprite2D.new()
-	ivo.texture = Pix.atlas("chars/NinjaBlue2.png", Rect2(0, 0, 16, 16))
-	ivo.rotation = PI / 2.0
-	ivo.position = Vector2(0, -6)
-	p.add_child(ivo)
+	var ivo := LpcActor.make(p, Looks.of("ivo"))
+	ivo.hold_last = true
+	ivo.play("hurt_down", true)
 	var shelf := Sprite2D.new()
 	shelf.texture = Interior.prop_tex("i_bookshelf_s")
 	shelf.rotation = 0.35

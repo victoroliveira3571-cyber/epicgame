@@ -4,7 +4,7 @@ extends Control
 ## Pergunta de memória dos chefes (MECANICAS_RECUPERACAO.md). Formatos:
 ##  bank  = lacuna com banco de palavras (3 opções + "Não lembro")
 ##  type  = digitar a palavra que falta
-##  free  = pergunta livre (Caderno do jogador ou banco embutido)
+##  free  = pergunta livre (banco embutido da história)
 ## Sem tempo limite. Dica gradual reduz o dano do acerto para 75%.
 ## Resultado: {"result": "full" | "partial" | "wrong" | "skip", "hints": n}
 
@@ -54,8 +54,7 @@ func _clear() -> void:
 func _ask() -> void:
 	_clear()
 	_body.add_child(UI.label(title_text, UI.C_ORANGE_L))
-	var src := "Do seu Caderno" if card.get("src", "") == "user" else "Do banco da história"
-	_body.add_child(UI.label("%s  -  caixa %d" % [src, Recall.box_of(card)], UI.C_DIM))
+	_body.add_child(UI.label("Responda de memória: lembrar com esforço é o que fixa.", UI.C_DIM))
 	_body.add_child(UI.hline())
 	_body.add_child(UI.wrap_label(Story.fmt(String(card.get("q", ""))), UI.C_TEXT, SIZE.x - 30))
 	_body.add_child(UI.spacer(4))
@@ -132,7 +131,7 @@ func _feedback(result: String, typed: String) -> void:
 		_body.add_child(UI.wrap_label("Sua resposta: " + typed, UI.C_DIM, SIZE.x - 30))
 	_body.add_child(UI.wrap_label("Resposta: " + Story.fmt(String(card.get("a", ""))), UI.C_TEXT, SIZE.x - 30))
 	if result != "full":
-		_body.add_child(UI.label("Esta carta volta para a caixa 1 e reaparece depois do próximo foco." if result != "partial" else "Esta carta fica na mesma caixa.", UI.C_DIM))
+		_body.add_child(UI.label("Essa pergunta pode voltar mais tarde: tentar de novo fortalece a lembrança.", UI.C_DIM))
 	_body.add_child(UI.spacer(4))
 	var res := {"result": result, "hints": hints}
 	var cont := UI.button("Continuar a luta", func() -> void: done.emit(res), 120)

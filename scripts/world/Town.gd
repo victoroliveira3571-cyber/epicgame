@@ -32,7 +32,7 @@ const BUILDING_DEFS := [
 		"npc": "Woman", "npc_dx": -30.0, "lines": ["Fome? Tenho pratos quentes!", "Comer bem rende mais foco.", "Hoje tem macarrão!"]},
 	{"id": "loja", "name": "Loja de Armas", "prop": "b_casa_empena", "tile": Vector2i(42, 25), "door_dx": 0.0,
 		"npc": "Villager2", "npc_dx": 30.0, "lines": ["O Otávio tem cada espada linda!", "Equipamento bom salva vidas.", "Vou juntar ouro para um escudo."]},
-	{"id": "forja", "name": "Ferreiro", "prop": "b_forja", "tile": Vector2i(51, 25), "door_dx": 0.0,
+	{"id": "forja", "name": "Ferraria do Brás", "prop": "b_forja", "tile": Vector2i(51, 25), "door_dx": 0.0,
 		"npc": "aventureiro_cacador", "npc_dx": -30.0, "lines": ["O Brás deixou meu arco novinho.", "Dá para ouvir a bigorna daqui!", "Ferro quente, trabalho bom."]},
 	{"id": "biblioteca", "name": "Biblioteca", "prop": "b_salao_vermelho", "tile": Vector2i(22, 17), "door_dx": 0.0, "tint": Color(0.72, 0.86, 1.0),
 		"npc": "Child", "npc_dx": 36.0, "lines": ["Silêncio, por favor... aqui se estuda.", "Cada livro é uma aventura.", "As mesas lá dentro estão livres."]},

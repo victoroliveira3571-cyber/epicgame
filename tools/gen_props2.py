@@ -522,6 +522,36 @@ def placa_arena():
     return im
 
 
+def tapete_ret(base, borda, detalhe, w=64, h=40):
+    """Tapete retangular com borda, franjas e losango no centro."""
+    im = canvas(w + 4, h)
+    for x in range(2, w + 2, 2):
+        px(im, x, 0, C("e8dcc0")); px(im, x, h - 1, C("e8dcc0"))
+    rect(im, 2, 1, w + 1, h - 2, OUT)
+    rect(im, 3, 2, w, h - 3, borda)
+    rect(im, 6, 5, w - 3, h - 6, base)
+    for x in range(8, w - 4, 4):
+        px(im, x, 3, detalhe); px(im, x, h - 4, detalhe)
+    for y in range(7, h - 6, 4):
+        px(im, 4, y, detalhe); px(im, w - 1, y, detalhe)
+    cx, cy = (w + 4) // 2, h // 2
+    poly(im, [(cx, cy - 9), (cx + 14, cy), (cx, cy + 9), (cx - 14, cy)], borda, OUT)
+    poly(im, [(cx, cy - 5), (cx + 8, cy), (cx, cy + 5), (cx - 8, cy)], detalhe)
+    px(im, cx, cy, base)
+    return im
+
+
+def tatame():
+    im = canvas(64, 40)
+    rect(im, 0, 0, 63, 39, OUT)
+    rect(im, 1, 1, 62, 38, C("2f4a2a"))
+    rect(im, 3, 3, 60, 36, C("c8b878"))
+    for y in range(5, 36, 3):
+        hline(im, 4, 59, y, C("b4a466"))
+    vline(im, 32, 3, 36, C("2f4a2a"))
+    return im
+
+
 ALL = {
     "bigorna": bigorna, "fornalha": fornalha, "rebolo": rebolo, "tina_agua": tina_agua, "ferramentas": ferramentas,
     "carvao": carvao, "lingotes": lingotes, "fole": fole, "rack_espadas": rack_espadas, "armadura": armadura,
@@ -534,6 +564,9 @@ ALL = {
     "arquibancada": arquibancada, "portao_arena": portao_arena, "tocha_parede": tocha_parede, "cofre": cofre,
     "cha": cha, "planta_pequena": planta_pequena, "mesa_redonda": mesa_redonda, "cama_simples": cama_simples,
     "placa_arena": placa_arena,
+    "tapete_grande": lambda: tapete_ret(C("8c2f39"), C("c7923e"), C("e8c070")),
+    "tapete_azul": lambda: tapete_ret(C("2f4a7a"), C("c7923e"), C("8ac4e8")),
+    "tatame": tatame,
 }
 
 if __name__ == "__main__":

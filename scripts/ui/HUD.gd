@@ -319,6 +319,18 @@ class KeyHints extends Control:
 
 
 var _keys: KeyHints
+var _keys_idle: float = 0.0
+
+
+## As teclas somem devagar enquanto o jogador anda (não cobrem o mapa) e voltam quando ele para.
+func _tick_keys(delta: float) -> void:
+	if _keys == null or not _keys.visible:
+		return
+	var p := get_tree().get_first_node_in_group("player") as Player
+	var moving := p != null and p.velocity.length() > 5.0
+	_keys_idle = 0.0 if moving else _keys_idle + delta
+	var want := 0.9 if _keys_idle > 1.5 else 0.22
+	_keys.modulate.a = move_toward(_keys.modulate.a, want, delta * 1.5)
 
 
 func _build_hotbar() -> void:
@@ -903,6 +915,7 @@ func confirm(text: String, on_yes: Callable) -> void:
 
 # ================================================================== Loop e atalhos
 func _process(delta: float) -> void:
+	_tick_keys(delta)
 	_tick_pomodoro(delta)
 	if _card.visible:
 		_tick_hotbar()

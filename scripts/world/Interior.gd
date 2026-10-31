@@ -403,7 +403,7 @@ func _build_library() -> void:
 	for t in tables:
 		table_set(t, false, "p_livros", true)
 		study_spot("livraria", t + Vector2(0, 14))
-	prop("i_rug_big", Vector2(cx, 190), false, true)
+	prop("p_tapete_azul", Vector2(cx, 200), false, true)
 	sitter("aventureira_maga", tables[1] + Vector2(16, 6), "left", ["Shhh! Estou revisando.", "Ler também é treinar."])
 	sitter("Villager", tables[2] + Vector2(-16, 6), "right", ["Mais uma página...", "Esse livro tem dragões!"])
 	# canto de leitura
@@ -614,7 +614,7 @@ func _build_restaurant() -> void:
 	sitter("OldMan", tables[2] + Vector2(16, 6), "left", ["Já foi à Guilda hoje?", "Uma boa refeição dá força de verdade."])
 	sitter("Villager2", tables[3] + Vector2(-16, 6), "right", ["A sopa da Marta cura tudo.", "Hoje é dia de folga!"])
 	sitter("aventureiro_cacador", tables[5] + Vector2(16, 6), "left", ["Caçada boa hoje.", "Lobos na Borda de novo."])
-	prop("i_rug_big", Vector2(cx, 196), false, true)
+	prop("p_tapete_grande", Vector2(cx, 196), false, true)
 	npc("Child", Vector2(cx + 30, 176), ["Quero um sushi!", "Mamãe disse pra eu comer tudo."], "wander", 40.0)
 	light(Vector2(cx, 70), Color(1.0, 0.8, 0.55), 2.2, 0.3)
 	light(Vector2(90, 150), Color(1.0, 0.8, 0.55), 1.2, 0.25)
@@ -665,7 +665,7 @@ func _build_guild() -> void:
 	for t in tables:
 		table_set(t, false, "i_mug", false)
 	prop("p_banco", Vector2(cx, 250))
-	prop("i_rug_big", Vector2(cx, 200), false, true)
+	prop("p_tapete_grande", Vector2(cx, 200), false, true)
 	sitter("aventureiro_samurai", tables[0] + Vector2(-16, 6), "right", ["Cheguei no andar 8 ontem.", "O chefe do pântano é duro."])
 	sitter("aventureira_maga", tables[2] + Vector2(16, 6), "left", ["Santuários dão bênçãos de verdade.", "Mago sem foco explode o próprio chapéu."])
 	npc("Hunter", Vector2(w - 190, 214), ["Arqueiros mantêm a distância.", "Baús no fundo das salas, sempre."], "wander", 50.0)
@@ -822,7 +822,7 @@ func _build_weapon_shop() -> void:
 	_block(Rect2(cx - 24, 50, 48, 46))
 	shop_owner("armeiro", "armeiro", "Otávio", Vector2(cx, 84), ["Espadas novas chegaram!", "Equipamento bom salva vidas.", "Só vendo o que presta."])
 	spot("Comprar equipamento", Vector2(cx, 116), func() -> void: HUD.open_window("loja"), 22.0)
-	prop("i_rug_big", Vector2(cx, 130), false, true)
+	prop("p_tapete_grande", Vector2(cx, 130), false, true)
 	prop("p_planta_pequena", Vector2(w - 40, 150), false)
 	light(Vector2(cx, 100), Color(1.0, 0.82, 0.55), 1.6, 0.3)
 
@@ -1003,7 +1003,7 @@ func _build_tailor(h: Dictionary, w: float) -> void:
 func _build_inn(h: Dictionary, w: float) -> void:
 	wall("p_janela", 60, 28)
 	wall("p_janela", w - 60, 28)
-	wall("i_painting", w / 2.0, 26)
+	wall("i_painting", w / 2.0 - 90, 26)
 	prop("furn_lareira", Vector2(w / 2.0, 58), true)
 	light(Vector2(w / 2.0, 50), Color(1.0, 0.55, 0.25), 0.9, 0.9)
 	# quartos: camas separadas por estantes
@@ -1028,28 +1028,36 @@ func _build_inn(h: Dictionary, w: float) -> void:
 func _build_lin(h: Dictionary, w: float) -> void:
 	prop("i_bookshelf_s", Vector2(36, 62), false)
 	prop("i_bookshelf_s", Vector2(w - 36, 62), false)
-	wall("p_janela", w / 2.0, 28)
+	wall("p_janela", w / 2.0 - 52, 28)
 	prop("h_estatua_pequena", Vector2(w / 2.0, 66), true)
-	prop("i_rug_big", Vector2(w / 2.0, 118), false, true)
+	prop("p_tapete_azul", Vector2(w / 2.0, 128), false, true)
 	for p in [Vector2(-34, 96), Vector2(34, 96), Vector2(-34, 136), Vector2(34, 136)]:
 		prop("p_vela", Vector2(w / 2.0, 0) + p, false)
 		light(Vector2(w / 2.0, -6) + p, Color(1.0, 0.75, 0.45), 0.45, 0.5)
 	prop("p_cha", Vector2(w / 2.0 + 50, 120), false)
 	prop("p_livros", Vector2(30, 120), false)
 	prop("p_planta_pequena", Vector2(w - 22, 136), false)
-	var lin := npc(h["npc"], Vector2(w / 2.0, 112), h["lines"], "static")
-	StoryProp.talker(lin, "lin", "Mestre Lin")
+	# Lin só está em casa quando a história não o colocou na floresta ou na Guilda
+	var away := Story.chapter() >= 3 or Story.step() in ["c2_lin", "c2_carta", "c2_ruinas", "c2_sentinela"]
+	if away:
+		prop("i_desk_paper", Vector2(w / 2.0 + 30, 120), false)
+		spot("Ler o bilhete na mesa", Vector2(w / 2.0 + 30, 132), func() -> void:
+			var where := "na Guilda" if Story.chapter() >= 3 else "perto da ponte da Mata Profunda"
+			await Story.say([["narr", "Um bilhete com letra caprichada: \"Saí. Estou %s. Respire antes de me procurar. - Lin\"" % where]]), 20.0)
+	else:
+		var lin := npc(h["npc"], Vector2(w / 2.0, 112), h["lines"], "static")
+		StoryProp.talker(lin, "lin", "Mestre Lin")
 	Audio.emitter(world, Vector2(w / 2.0, 60), "amb_relogio", -20.0, true, 0.0, 120.0)
 
 
 func _build_dojo(h: Dictionary, w: float) -> void:
 	wall("p_estandarte", 40, 34)
 	wall("p_estandarte_azul", w - 40, 34)
-	wall("p_escudos_parede", w / 2.0, 28)
+	wall("p_escudos_parede", w / 2.0 + 90, 28)
 	prop("p_lancas", Vector2(80, 64), false)
 	prop("p_rack_espadas", Vector2(w - 90, 64), false)
-	prop("i_rug_big", Vector2(w / 2.0 - 50, 140), false, true)
-	prop("i_rug_big", Vector2(w / 2.0 + 50, 140), false, true)
+	prop("p_tatame", Vector2(w / 2.0 - 40, 150), false, true)
+	prop("p_tatame", Vector2(w / 2.0 + 40, 150), false, true)
 	for x in [60.0, w - 60.0, w / 2.0]:
 		prop("p_boneco_treino", Vector2(x, 112))
 	shop_owner("mestre_cla", "mestre_cla", "Mestre Daichi", Vector2(w / 2.0, 86), h["lines"])

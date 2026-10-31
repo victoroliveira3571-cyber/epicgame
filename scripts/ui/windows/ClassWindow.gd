@@ -27,8 +27,20 @@ func build() -> void:
 		card.add_child(v)
 		var head := UI.hbox(6)
 		v.add_child(head)
-		var spr := UI.icon(Pix.atlas("chars/%s.png" % c["sheet"], Rect2(0, 0, 16, 16)), 32)
-		head.add_child(spr)
+		# o seu herói segurando a arma de madeira da classe
+		var pv := AppearanceEditor.Preview.new()
+		pv.custom_minimum_size = Vector2(36, 40)
+		pv.px = 0.62
+		pv.draw_frame = false
+		pv.fixed_row = 2
+		var lk := Looks.hero()
+		var start: Array = {"sword": ["arming", "ceramic"], "dagger": ["dagger", "ceramic"], "staff": ["gnarled", ""], "bow": ["recurve", ""]}.get(c["weapon"], ["", ""])
+		lk["weapon"] = start[0]
+		lk["weapon_pal"] = start[1]
+		if c["sheet"] in ["KnightGold", "Boy"]:
+			lk["gear"] = {"shield": 0}
+		pv.set_look(lk)
+		head.add_child(pv)
 		var names := UI.vbox(0)
 		head.add_child(names)
 		names.add_child(UI.label(c["name"], UI.C_ORANGE_L))

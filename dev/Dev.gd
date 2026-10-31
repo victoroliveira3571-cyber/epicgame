@@ -16,6 +16,12 @@ func _ready() -> void:
 	if scenario_name == "":
 		return
 	await get_tree().process_frame
+	# o menu inicial pula direto para a cidade nos testes: espera a troca de cena terminar
+	for i in 120:
+		var cs := get_tree().current_scene
+		if cs != null and cs.name != "Title":
+			break
+		await get_tree().process_frame
 	var path := "res://dev/scenarios/%s.gd" % scenario_name
 	var script: Script = load(path)
 	if script == null:

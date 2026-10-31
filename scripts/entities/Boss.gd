@@ -67,7 +67,24 @@ func _setup_stats() -> void:
 		_quiz_marks = [1.0, 0.66, 0.33]
 
 
+## Chefes humanos usam o personagem LPC (mesmo rosto dos diálogos); o sprite antigo fica
+## invisível só para a lógica de animação/efeitos, e o LPC copia brilho, cor e escala dele.
+const LPC_BOSSES := {"NinjaBlue2": "ivo", "Knight": "aldric", "NinjaMageBlack": "bibliotecario"}
+const LPC_BOSS_SCALE := 1.3
+var lpc: LpcActor = null
+var _lpc_tint: Color = Color.WHITE
+
+
 func _build_sprite() -> void:
+	if char_sheet != "" and LPC_BOSSES.has(char_sheet):
+		sprite.sprite_frames = Pix.actor_frames("chars/%s.png" % char_sheet)
+		frame_h = 31.0 * LPC_BOSS_SCALE
+		var lk := Looks.of(LPC_BOSSES[char_sheet])
+		lk["scale"] = LPC_BOSS_SCALE
+		lpc = LpcActor.make(self, lk, true)
+		_lpc_tint = boss_data.get("tint", Color.WHITE)
+		sprite.self_modulate = Color(1, 1, 1, 0)
+		return
 	if char_sheet != "":
 		sprite.sprite_frames = Pix.actor_frames("chars/%s.png" % char_sheet)
 		frame_h = 16.0 * base_scale
@@ -100,6 +117,8 @@ func _animate() -> void:
 		var anim := ("walk_" if velocity.length() > 8.0 else "idle_") + dn
 		if sprite.animation != anim:
 			sprite.play(anim)
+		if lpc != null:
+			_sync_lpc(dn)
 		return
 	var want := "walk" if velocity.length() > 8.0 else "idle"
 	if sprite.animation == "hit" and sprite.is_playing():
@@ -108,6 +127,24 @@ func _animate() -> void:
 		sprite.play(want)
 	if absf(facing.x) > 0.2:
 		sprite.flip_h = facing.x < 0.0
+
+
+func _sync_lpc(dn: String) -> void:
+	lpc.modulate = sprite.modulate * _lpc_tint
+	var k := sprite.scale.x / maxf(base_scale, 0.01)
+	lpc.scale = Vector2(k, k)
+	var base := lpc.base_anim()
+	if state == State.WINDUP:
+		lpc.play("combat_" + dn)
+	elif state == State.ATTACK and base != "slash" and base != "thrust" and base != "spellcast":
+		var w := str(lpc.look.get("weapon", ""))
+		lpc.speed_scale = 1.3
+		lpc.play(LpcW.weapon_anim(w) + "_" + dn, true)
+	elif base in ["slash", "thrust", "spellcast", "shoot"]:
+		pass   # deixa o golpe terminar
+	else:
+		lpc.speed_scale = 1.0
+		lpc.play(("walk_" if velocity.length() > 8.0 else "idle_") + dn)
 
 
 # ================================================================ Controle

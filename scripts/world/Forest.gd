@@ -471,7 +471,7 @@ func _build_story() -> void:
 	# Pietro: na trilha da Borda no capítulo 1, no acampamento depois
 	if s == "c1_ervas" and not Story.flag("pietro_c1"):
 		_pietro_c1 = NPC.create(world, "Hunter", _tile_pos(93, PATH_Y - 2), "static")
-	else:
+	elif s not in ["c1_volta", "c4_pietro"]:   # nesses passos ele está na Guilda
 		_npc("Hunter", Vector2(60, 41), "pietro", "Pietro")
 	NPC.create(world, "Hunter", _tile_pos(65, 41), "static").lines = ["Boa caça hoje.", "A Mata Profunda engole quem anda sem luz.", "Ervas boas nascem perto da trilha."]
 	# árvore marcada (norte da Borda)
