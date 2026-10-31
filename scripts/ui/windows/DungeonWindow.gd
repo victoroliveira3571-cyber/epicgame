@@ -59,6 +59,8 @@ func build() -> void:
 	var go := UI.button(label, func() -> void:
 		var floor_to_go := start_floor
 		HUD.close_window()
+		if Story.credits() >= Game.floor_entry_cost(floor_to_go) and Story.floor_unlocked(floor_to_go):
+			await Cutscene.play("toll", {"guard": "guarda", "setting": "gate_dungeon", "line": "-1 crédito de estudo. Boa sorte lá embaixo!"})
 		Game.enter_dungeon(floor_to_go), 160)
 	go.disabled = not can
 	bottom.add_child(go)

@@ -86,6 +86,18 @@ const OBJECTIVES := {
 	"fim": "Parte 1 concluída. As Profundezas (andar 6+) estão abertas.",
 }
 
+## Onde cada objetivo se cumpre: id de local do mapa (Town/Forest.map_landmarks). O mapa e o minimapa
+## destacam esse ponto.
+const OBJECTIVE_TARGET := {
+	"c1_marta": "restaurante", "c1_guilda": "guilda", "c1_portao": "trilha_floresta",
+	"c1_ervas": "borda", "c1_marca": "arvore_marcada", "c1_volta": "guilda",
+	"c2_exame": "guilda", "c2_pena": "clareira", "c2_entrega": "guilda", "c2_pietro": "acampamento",
+	"c2_brisa": "toca", "c2_lin": "ponte", "c2_ruinas": "ruinas", "c2_sentinela": "ruinas", "c2_marta": "restaurante",
+	"c3_lin": "guilda", "c3_paginas": "portao_masmorra", "c3_exame": "portao_masmorra", "c3_volta": "guilda",
+	"c4_torneio": "guilda", "c4_pietro": "guilda", "c4_cavaleiro": "portao_masmorra", "c4_volta": "guilda",
+	"c5_trono": "portao_masmorra",
+}
+
 # ============================================================================ Diálogos
 const DIALOGS := {
 	# --------------------------------------------------------------------- Capítulo 1

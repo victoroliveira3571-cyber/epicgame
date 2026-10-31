@@ -21,9 +21,32 @@ class Preview extends Control:
 	var _tex: Texture2D
 	var _key: String = ""
 	var _t: float = 0.0
+	var manual: bool = false         # true = o jogador escolheu o lado (arrasto, rodinha ou setas)
+	var dir_index: int = 0           # índice em ORDER quando manual
+	var _drag_x: float = 0.0
+	const ORDER := [2, 3, 0, 1]       # frente, direita, costas, esquerda
 
-	func _init() -> void:
-		mouse_filter = Control.MOUSE_FILTER_IGNORE
+	func _init(interactive: bool = false) -> void:
+		mouse_filter = Control.MOUSE_FILTER_STOP if interactive else Control.MOUSE_FILTER_IGNORE
+		if interactive:
+			tooltip_text = "Arraste (ou use as setas) para girar o personagem"
+
+	func turn(step: int) -> void:
+		if not manual:
+			dir_index = int(_t / 1.6) % 4
+			manual = true
+		dir_index = posmod(dir_index + step, 4)
+
+	func _gui_input(ev: InputEvent) -> void:
+		if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
+			_drag_x = ev.position.x
+		elif ev is InputEventMouseMotion and (ev.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+			var dx: float = ev.position.x - _drag_x
+			if absf(dx) >= 26.0:
+				turn(-1 if dx > 0.0 else 1)
+				_drag_x = ev.position.x
+		elif ev is InputEventMouseButton and ev.pressed and (ev.button_index == MOUSE_BUTTON_WHEEL_UP or ev.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+			turn(1 if ev.button_index == MOUSE_BUTTON_WHEEL_UP else -1)
 
 	func set_look(lk: Dictionary) -> void:
 		look = lk
@@ -49,8 +72,13 @@ class Preview extends Control:
 			draw_rect(Rect2(8, floor_y - 2, size.x - 16, 2), Color(0, 0, 0, 0.25))
 		if _tex == null:
 			return
-		var dirs := [2, 3, 0, 1]
-		var row: int = dirs[int(_t / 1.6) % 4] if fixed_row < 0 else fixed_row
+		var row: int
+		if fixed_row >= 0:
+			row = fixed_row
+		elif manual:
+			row = ORDER[dir_index]
+		else:
+			row = ORDER[int(_t / 1.6) % 4]
 		var col := 1 + int(_t * 9.0) % 8
 		var src := Rect2(col * 64, row * 64, 64, 64)
 		var dst := Rect2(Vector2((size.x - 64 * px) / 2.0, floor_y - 62 * px), Vector2(64, 64) * px)
@@ -63,10 +91,17 @@ func _init() -> void:
 
 func setup(initial: Dictionary) -> void:
 	look = LpcW.resolve(initial)
-	preview = Preview.new()
+	preview = Preview.new(true)
 	preview.custom_minimum_size = Vector2(110, 150)
 	preview.px = 1.7
-	add_child(preview)
+	var left := UI.vbox(3)
+	add_child(left)
+	left.add_child(preview)
+	var turn_row := UI.hbox(3)
+	left.add_child(turn_row)
+	turn_row.add_child(UI.button("<", func() -> void: preview.turn(-1), 22))
+	turn_row.add_child(UI.button("Auto", func() -> void: preview.manual = false, 42))
+	turn_row.add_child(UI.button(">", func() -> void: preview.turn(1), 22))
 	_rows = UI.vbox(2)
 	add_child(_rows)
 	_rebuild()

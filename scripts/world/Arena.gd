@@ -20,6 +20,9 @@ const CLASSES := [
 const DIFFS := [["Fácil", 0.75, Color("8ee28e")], ["Justo", 1.0, Color("ffd35a")], ["Difícil", 1.3, Color("ff7a6a")]]
 
 
+static var last_result: Dictionary = {}   # último duelo (quadro de resultado)
+
+
 static func data() -> Dictionary:
 	if GameState.arena.is_empty():
 		GameState.arena = {"prestige": 0, "wins": 0, "losses": 0, "streak": 0, "best": 0, "seed": 1}
@@ -94,6 +97,19 @@ static func _make(rng: RandomNumberGenerator, name: String, diff: int) -> Dictio
 	}
 
 
+## Morador que revida na floresta/masmorra: um duelista "Justo" com o visual dele, mais letal que o da Arena.
+static func npc_opponent(look: Dictionary, level: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var o := _make(rng, "Morador", 1)
+	o["look"] = look
+	o["name"] = "Morador hostil"
+	o["aggro"] = 0.9
+	o["dmg"] = float(o["dmg"]) * 1.35
+	o["hp"] = float(o["hp"]) * 0.9
+	return o
+
+
 static func _random_look(rng: RandomNumberGenerator, female: bool, weapon: String, power: int) -> Dictionary:
 	var skins := ["light", "amber", "olive", "taupe", "bronze", "brown", "black"]
 	var hairs_m := ["cab_espetado", "cab_baguncado", "cab_raspado", "cab_topete", "cab_moicano", "cab_dread", "cab_cacheado", "cab_rabo", "cab_flat_top"]
@@ -132,7 +148,9 @@ static func _random_look(rng: RandomNumberGenerator, female: bool, weapon: Strin
 static func record(opp: Dictionary, won: bool) -> Dictionary:
 	var d := data()
 	var before := rank_index()
-	var res := {"won": won, "gold": 0, "xp": 0, "prestige": 0, "rank_up": false}
+	var res := {"won": won, "gold": 0, "xp": 0, "prestige": 0, "rank_up": false, "opp": str(opp.get("name", "")),
+		"prestige_before": prestige(), "level_before": GameState.level, "xp_before": GameState.xp, "xp_need_before": GameState.xp_to_next,
+		"streak": 0}
 	if won:
 		d["wins"] = int(d.get("wins", 0)) + 1
 		d["streak"] = int(d.get("streak", 0)) + 1
@@ -151,6 +169,8 @@ static func record(opp: Dictionary, won: bool) -> Dictionary:
 		d["prestige"] = maxi(prestige() - int(opp["loss"]), 0)
 	d["seed"] = int(d.get("seed", 1)) + 1
 	res["rank_up"] = rank_index() > before
+	res["streak"] = int(d.get("streak", 0))
+	res["prestige_after"] = prestige()
 	GameState.arena = d
 	GameState.save_game()
 	return res

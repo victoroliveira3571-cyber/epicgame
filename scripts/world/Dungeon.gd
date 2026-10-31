@@ -317,7 +317,7 @@ func _spawn_enemy(c: Vector2i, elite: bool = false) -> void:
 	var pool := _enemy_pool()
 	var id: String = pool[rng.randi() % pool.size()]
 	var jitter := Vector2(rng.randf_range(-4, 4), rng.randf_range(-3, 3))
-	Enemy.spawn(world, id, cell_center(c) + jitter, power, elite)
+	Enemy.spawn(world, id, cell_center(c) + jitter, power, elite).respawn_s = Enemy.RESPAWN_TIME
 
 
 func _populate_rooms() -> void:

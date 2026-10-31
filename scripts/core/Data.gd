@@ -759,19 +759,20 @@ const DAILY_TEMPLATES := [
 # --------------------------------------------------------------------- Mobília
 # Móveis comprados ficam guardados até você colocá-los na casa (modo Decorar, tecla V). Os de bônus
 # valem desde a compra. icon: textura do móvel. flat: fica no chão (tapetes) e gira de 90 em 90 graus.
+# wall: móvel de parede (lareira, estante, troféus, relógio, cômoda): só desliza ao longo da parede de cima.
 const FURNITURE := {
 	"cama": {"name": "Cama Confortável", "price": 60, "desc": "+15 de vida máxima.", "stat": {"hp": 15.0}, "icon": "furn_cama"},
 	"mesa": {"name": "Mesa de Jantar", "price": 100, "desc": "A fome diminui 60% mais devagar.", "stat": {"hunger_mult": 0.4}, "icon": "furn_mesa"},
-	"estante": {"name": "Estante de Livros", "price": 120, "desc": "+5% de XP.", "stat": {"xp_pct": 0.05}, "icon": "furn_estante"},
+	"estante": {"name": "Estante de Livros", "price": 120, "desc": "+5% de XP.", "stat": {"xp_pct": 0.05}, "icon": "furn_estante", "wall": true},
 	"planta": {"name": "Vaso de Planta", "price": 80, "desc": "Regenera 0,4 de vida por segundo.", "stat": {"regen": 0.4}, "icon": "furn_planta"},
 	"tapete": {"name": "Tapete Dourado", "price": 150, "desc": "+5% de ouro.", "stat": {"gold_pct": 0.05}, "icon": "furn_tapete", "flat": true},
-	"lareira": {"name": "Lareira", "price": 200, "desc": "Regenera 0,6 de vida por segundo.", "stat": {"regen": 0.6}, "icon": "furn_lareira"},
-	"trofeu": {"name": "Armário de Troféus", "price": 250, "desc": "+3% de crítico.", "stat": {"crit": 3.0}, "icon": "furn_trofeu"},
-	"relogio": {"name": "Relógio Antigo", "price": 300, "desc": "+10% de XP nas sessões de foco.", "stat": {"focus_xp_pct": 0.10}, "icon": "furn_relogio"},
+	"lareira": {"name": "Lareira", "price": 200, "desc": "Regenera 0,6 de vida por segundo.", "stat": {"regen": 0.6}, "icon": "furn_lareira", "wall": true},
+	"trofeu": {"name": "Armário de Troféus", "price": 250, "desc": "+3% de crítico.", "stat": {"crit": 3.0}, "icon": "furn_trofeu", "wall": true},
+	"relogio": {"name": "Relógio Antigo", "price": 300, "desc": "+10% de XP nas sessões de foco.", "stat": {"focus_xp_pct": 0.10}, "icon": "furn_relogio", "wall": true},
 	# só decoração (sem bônus): para montar a casa do seu jeito no modo Decorar
 	"poltrona": {"name": "Poltrona de Leitura", "price": 70, "desc": "Decoração.", "stat": {}, "icon": "i_armchair"},
 	"sofa": {"name": "Sofá", "price": 110, "desc": "Decoração.", "stat": {}, "icon": "i_sofa"},
-	"comoda": {"name": "Cômoda", "price": 90, "desc": "Decoração.", "stat": {}, "icon": "i_dresser"},
+	"comoda": {"name": "Cômoda", "price": 90, "desc": "Decoração.", "stat": {}, "icon": "i_dresser", "wall": true},
 	"tapete_azul": {"name": "Tapete Azul", "price": 60, "desc": "Decoração (fica no chão, gira).", "stat": {}, "icon": "p_tapete_azul", "flat": true},
 	"tatame": {"name": "Tatame", "price": 50, "desc": "Decoração (fica no chão, gira).", "stat": {}, "icon": "p_tatame", "flat": true},
 	"vaso_flores": {"name": "Vaso de Flores", "price": 30, "desc": "Decoração.", "stat": {}, "icon": "p_vaso_flores"},

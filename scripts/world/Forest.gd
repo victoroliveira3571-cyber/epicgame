@@ -182,12 +182,38 @@ func _build_masks() -> void:
 			elif z == "clareira" and x < 54:
 				a = 30
 			dark[_idx(x, y)] = a
+	_blur_dark(6)
 	# reservas: caminhos e água com folga, bordas
 	for y in H:
 		for x in W:
 			if dirt[_idx(x, y)] != 0 or water[_idx(x, y)] != 0 or stone[_idx(x, y)] != 0:
 				_fill(reserved, x - 1, y - 1, x + 1, y + 1)
 	_fill(reserved, 52, 22, 76, 50)     # a clareira fica aberta (casas e acampamento)
+
+
+## Suaviza a sombra entre zonas (borda, clareira, mata, pântano): a luz muda aos poucos, sem degrau.
+func _blur_dark(radius: int) -> void:
+	for _pass in 2:
+		var tmp := PackedByteArray()
+		tmp.resize(W * H)
+		for y in H:
+			for x in W:
+				var sum := 0
+				var n := 0
+				for k in range(-radius, radius + 1):
+					var xx := clampi(x + k, 0, W - 1)
+					sum += dark[_idx(xx, y)]
+					n += 1
+				tmp[_idx(x, y)] = sum / n
+		for y in H:
+			for x in W:
+				var sum2 := 0
+				var n2 := 0
+				for k in range(-radius, radius + 1):
+					var yy := clampi(y + k, 0, H - 1)
+					sum2 += tmp[_idx(x, yy)]
+					n2 += 1
+				dark[_idx(x, y)] = sum2 / n2
 
 
 func _build_bounds() -> void:
@@ -289,6 +315,21 @@ func _random_spot(zone: String, min_d: float = 0.0, on_path_ok: bool = false) ->
 	return _tile_pos(64, PATH_Y)
 
 
+## Locais nomeados para o mapa grande (tecla M): [id, nome, posição em px].
+func map_landmarks() -> Array:
+	var out: Array = []
+	for id in buildings:
+		var b: Node2D = buildings[id]
+		out.append([str(id), str(b.get("display_name")), b.position])
+	for l in [["saida_cidade", "Saída para Focus Town", Vector2(W - 5, PATH_Y)], ["borda", "Borda da Floresta", Vector2(95, PATH_Y)],
+			["clareira", "Clareira das Casas", Vector2(64, 36)], ["acampamento", "Acampamento dos Caçadores", Vector2(62, 42)],
+			["arvore_marcada", "Árvore Marcada", Vector2(86, 11)], ["toca", "Toca da Loba", Vector2(62, 61)],
+			["ponte", "Ponte do Rio", Vector2(RIVER_X + 1, PATH_Y)], ["mata", "Mata Profunda", Vector2(30, 22)],
+			["pantano", "Pântano da Névoa", Vector2(30, 60)], ["ruinas", "Ruínas sob as Raízes", Vector2(9, 36)]]:
+		out.append([l[0], l[1], (l[2] as Vector2) * float(T) + Vector2(8, 8)])
+	return out
+
+
 # ================================================================== Casas e ruínas
 func _build_houses() -> void:
 	var defs := [
@@ -321,8 +362,8 @@ func _build_houses() -> void:
 		_add_prop(o[0], camp + o[1], 5.0)
 	_add_prop("quadro_missoes", camp + Vector2(0, -26), 6.0)
 	# varal e cercas perto das casas
-	for i in 5:
-		_add_prop("h_cerca_ferro", _tile_pos(53 + i * 1.0, 27) + Vector2(0, 0), 0.0, Color(0.75, 0.6, 0.45))
+	# cerca de ferro: uma peça só (ela já tem ~68 px; empilhar várias virava uma grade preta sobre a casa)
+	_add_prop("h_cerca_ferro", _tile_pos(52, 33), 4.0, Color(0.75, 0.6, 0.45))
 
 
 func _build_ruins() -> void:
@@ -389,11 +430,15 @@ func _build_decor() -> void:
 	for _i in 120:
 		var z2: String = ["borda", "clareira", "mata", "pantano"][rng.randi() % 4]
 		var p := _random_spot(z2, 18.0)
-		_add_prop(BUSHES[rng.randi() % BUSHES.size()], p)
+		var bush: String = BUSHES[rng.randi() % BUSHES.size()]
+		var btex := Interior.prop_tex(bush)
+		_add_prop(bush, p, clampf((btex.get_size().x if btex != null else 16.0) * 0.2, 3.0, 6.0))   # arbusto: pequeno obstáculo
 		placed_points.append(p)
 	for _i in 40:
 		var p2 := _random_spot("", 30.0)
-		_add_prop(ROCKS[rng.randi() % ROCKS.size()], p2, 4.0)
+		var rock: String = ROCKS[rng.randi() % ROCKS.size()]
+		var rtex := Interior.prop_tex(rock)
+		_add_prop(rock, p2, clampf((rtex.get_size().x if rtex != null else 16.0) * 0.3, 4.0, 10.0))
 		placed_points.append(p2)
 	for _i in 18:
 		var p3 := _random_spot("borda" if rng.randf() < 0.6 else "clareira", 30.0)
@@ -455,7 +500,7 @@ func _build_monsters() -> void:
 				continue   # nada colado na saída para a cidade
 			var id: String = enemies[rng.randi() % enemies.size()]
 			var elite: bool = rng.randf() < 0.06 and z != "borda"
-			Enemy.spawn(world, id, p, int(zone["power"]) + rng.randi_range(0, 1), elite)
+			Enemy.spawn(world, id, p, int(zone["power"]) + rng.randi_range(0, 1), elite).respawn_s = Enemy.RESPAWN_TIME
 
 
 # ================================================================== História

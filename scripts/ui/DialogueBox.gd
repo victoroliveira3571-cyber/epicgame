@@ -166,11 +166,22 @@ func _process(delta: float) -> void:
 		_text.visible_characters = int(shown)
 		if int(shown) / 4 != _last_tick:
 			_last_tick = int(shown) / 4
-			if _kind != "narr":
-				Audio.sfx("talk", -18.0, 0.25)
+			if _kind == "narr" or _kind == "think":
+				pass
+			elif _voiced_tick():
+				Audio.voice.blip(_who)
 		if _text.visible_characters >= _text.get_total_character_count():
 			_finish_typing()
 	_more.visible = not typing and not choosing and int(_blink * 2.5) % 2 == 0
+
+
+## Ritmo da voz: uma sílaba a cada 3 letras, pulando espaços e pausas, com variação.
+func _voiced_tick() -> bool:
+	var i := clampi(int(shown) - 1, 0, maxi(_text.get_total_character_count() - 1, 0))
+	var ch := _text.text.substr(i, 1) if i < _text.text.length() else ""
+	if ch == " " or ch == "." or ch == "," or ch == "!" or ch == "?" or ch == "\n":
+		return false
+	return randf() < 0.8
 
 
 func _finish_typing() -> void:
@@ -203,6 +214,7 @@ func _next() -> void:
 	index += 1
 	if index >= lines.size():
 		_release_actors()
+		Audio.voice.reset_speaker()
 		finished.emit()
 		return
 	var entry: Variant = lines[index]
@@ -266,12 +278,16 @@ func _show_line(kind: String, who: String, text: String, expr: String) -> void:
 	for n in [_balloon, _tail, _frame, _portrait, _tab]:
 		n.visible = not narr
 	if narr:
+		HUD.stage_focus("", {})
 		_layout_narration(text)
 		if index == 0 or (lines[index - 1] is Array and String(lines[index - 1][0]) != "narr"):
 			Audio.sfx2("gota", -14.0, 0.1)
 	else:
 		_layout_speech(kind, who, text, expr)
 		_direct(who, kind, expr, text)
+		HUD.stage_focus("" if thought else who, _speaker_visual(who))
+		if not thought:
+			Audio.voice.line_start(who, expr, text)
 	page = 0
 	_show_page()
 
@@ -298,7 +314,7 @@ func _layout_narration(text: String) -> void:
 
 
 func _layout_speech(kind: String, who: String, text: String, expr: String) -> void:
-	var sp: Dictionary = StoryData.SPEAKERS.get(who, {})
+	var sp: Dictionary = StoryData.SPEAKERS.get(who, Street.speaker_info(who))
 	var name_text := Story.fmt(String(sp.get("name", "")))
 	var tab_color := Color("8f5545")
 	var fill := Color("fbf3e2")

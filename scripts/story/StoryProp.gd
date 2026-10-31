@@ -108,6 +108,7 @@ static func make_ivo_trap() -> StoryProp:
 static func talker(npc_node: Node2D, npc_id: String, title: String) -> StoryProp:
 	var p := make("Falar com " + title, func(_me: StoryProp) -> void: Story.talk(npc_id), null, 22.0, false)
 	npc_node.add_child(p)
+	npc_node.set_meta("has_talker", true)
 	npc_node.add_to_group("speaker_" + npc_id)
 	# no mapa, o personagem tem o mesmo visual do retrato do diálogo
 	if npc_node is NPC and Looks.SPEAKER_LOOK.has(npc_id):

@@ -42,6 +42,7 @@ var _pomo_scene: String = ""
 var _playlist: Array = []
 var _pl_index: int = 0
 var _amb_players: Dictionary = {}     # id -> AudioStreamPlayer
+var voice: Voice                      # vozes dos diálogos (Voice.gd)
 
 
 func _ready() -> void:
@@ -51,6 +52,8 @@ func _ready() -> void:
 	_active_music = _music_a
 	for i in POOL_SIZE:
 		_pool.append(_make_player())
+	voice = Voice.new()
+	add_child(voice)
 	_apply_volume()
 	GameState.stats_changed.connect(_apply_volume)
 	_music_a.finished.connect(_on_music_finished.bind(_music_a))

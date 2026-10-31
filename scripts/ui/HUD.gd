@@ -25,8 +25,10 @@ const WINDOWS := {
 	"caderno": "res://scripts/ui/windows/NotebookWindow.gd",
 	"preocupacoes": "res://scripts/ui/windows/WorryWindow.gd",
 	"recall": "res://scripts/ui/windows/RecallWindow.gd",
+	"mapa": "res://scripts/ui/windows/MapWindow.gd",
 	"aparencia": "res://scripts/ui/windows/AppearanceWindow.gd",
 	"arena": "res://scripts/ui/windows/ArenaWindow.gd",
+	"arena_resultado": "res://scripts/ui/windows/ArenaResultWindow.gd",
 }
 
 var root: Control
@@ -68,6 +70,11 @@ var _pomo_bar: UI.Bar
 var _pomo_btn: Button
 var _pomo_mode: Button
 var _pomo_reset: Button
+var _pomo_bg: Panel
+var _pomo_frame: Panel
+var _pomo_mini: Label
+var _pomo_min_btn: Button
+var _obj_min_btn: Button
 var _minimap: Minimap
 var _boss_box: Control
 var _boss_name: Label
@@ -445,7 +452,9 @@ func _build_pomodoro() -> void:
 	bg.size = Vector2(158, 50)
 	bg.add_theme_stylebox_override("panel", UI.flat(Color(0.1, 0.08, 0.08, 0.82), UI.C_LINE, 1))
 	_pomo_panel.add_child(bg)
+	_pomo_bg = bg
 	var frame := Panel.new()
+	_pomo_frame = frame
 	frame.size = bg.size
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	frame.add_theme_stylebox_override("panel", UI.box_tex("nine_path_panel", 5, Vector4(0, 0, 0, 0), false))
@@ -469,6 +478,38 @@ func _build_pomodoro() -> void:
 	_pomo_reset.tooltip_text = "Parar: finalizar contando o tempo estudado"
 	_pomo_reset.position = Vector2(118, 7)
 	_pomo_panel.add_child(_pomo_reset)
+	_pomo_mini = UI.label("25:00", UI.C_TEXT)
+	_pomo_mini.position = Vector2(6, 4)
+	_pomo_panel.add_child(_pomo_mini)
+	_pomo_min_btn = UI.button("-", func() -> void: _set_pomo_min(not _pomo_minimized()), 14)
+	_pomo_min_btn.tooltip_text = "Minimizar / abrir o Pomodoro"
+	_pomo_panel.add_child(_pomo_min_btn)
+	_apply_pomo_min()
+
+
+func _pomo_minimized() -> bool:
+	return bool(GameState.pomo_cfg.get("hud_min", false))
+
+
+func _set_pomo_min(v: bool) -> void:
+	GameState.pomo_cfg["hud_min"] = v
+	_apply_pomo_min()
+
+
+## Minimizado: só o tempo numa tira pequena no canto (não atrapalha o cenário).
+func _apply_pomo_min() -> void:
+	var m := _pomo_minimized()
+	for n in [_pomo_status, _pomo_time, _pomo_bar, _pomo_mode, _pomo_btn, _pomo_reset]:
+		(n as CanvasItem).visible = not m
+	_pomo_mini.visible = m
+	var size_v := Vector2(62, 18) if m else Vector2(158, 50)
+	_pomo_bg.size = size_v
+	_pomo_frame.size = size_v
+	_pomo_panel.position = Vector2(UI.SIZE.x - 6 - size_v.x, 6)
+	_pomo_min_btn.text = "+" if m else "-"
+	_pomo_min_btn.position = Vector2(size_v.x - 18, 2) if m else Vector2(140, 7)
+	if _objective != null:
+		_objective.position.y = 28.0 if m else 60.0
 
 
 ## Cenário preso pelo lugar onde o Victor sentou para estudar ("" = livre para trocar).
@@ -658,6 +699,7 @@ func _refresh_pomodoro() -> void:
 		pomo_minutes = int(GameState.pomo_cfg.get("focus", 25))
 	var shown_left := pomo_left if pomo_state != "idle" else pomo_minutes * 60.0
 	_pomo_time.text = UI.fmt_time(shown_left)
+	_pomo_mini.text = UI.fmt_time(shown_left)
 	match pomo_state:
 		"idle":
 			_pomo_status.text = "POMODORO"
@@ -711,6 +753,12 @@ class Minimap extends Control:
 			var b: Node2D = town.buildings[id]
 			draw_rect(Rect2(Vector2(2, 2) + b.position * k - Vector2(3, 5), Vector2(6, 5)), Color("c8743a"))
 			draw_rect(Rect2(Vector2(2, 2) + b.position * k - Vector2(3, 5), Vector2(6, 5)), UI.C_LINE, false, 1.0)
+		var obj: Variant = Story.objective_world_pos(town)
+		if obj != null:
+			var op: Vector2 = Vector2(2, 2) + (obj as Vector2) * k
+			var beat := 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.006)
+			draw_circle(op, 4.0 + 2.0 * beat, Color(UI.C_GOLD, 0.35 + 0.35 * beat))
+			draw_circle(op, 2.0, UI.C_GOLD)
 		if town.player != null and is_instance_valid(town.player):
 			var pulse := 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.008)
 			var p: Vector2 = Vector2(2, 2) + town.player.global_position * k
@@ -1033,6 +1081,7 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 		return
 	var shortcuts := {
 		"inventory": "inventario", "character": "personagem", "habits": "habitos", "quests": "guilda", "pause": "pausa",
+		"map": "mapa",
 	}
 	if ev.keycode == KEY_N and not (is_window_open() and window_id != "caderno"):
 		get_viewport().set_input_as_handled()
@@ -1044,6 +1093,8 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 				return
 			if action == "pause" and is_window_open():
 				return  # a própria janela fecha com Esc
+			if action == "map" and scene_kind == "":
+				return  # dentro de prédios não há mapa
 			get_viewport().set_input_as_handled()
 			toggle_window(shortcuts[action])
 			return
@@ -1071,6 +1122,12 @@ func _build_objective() -> void:
 	_obj_text.size = Vector2(146, 12)
 	_objective.add_child(_obj_text)
 	_objective.visible = false
+	_obj_min_btn = UI.button("-", func() -> void:
+		GameState.pomo_cfg["obj_min"] = not bool(GameState.pomo_cfg.get("obj_min", false))
+		_refresh_objective(), 14)
+	_obj_min_btn.tooltip_text = "Minimizar / abrir o objetivo"
+	_obj_min_btn.position = Vector2(140, 1)
+	_objective.add_child(_obj_min_btn)
 
 
 func _refresh_objective() -> void:
@@ -1085,7 +1142,11 @@ func _refresh_objective() -> void:
 	_obj_text.text = Story.objective_text()
 	_obj_text.size = Vector2(146, 0)
 	var lines := maxi(1, int(ceil(Pix.font(1).get_string_size(_obj_text.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x / 128.0)))
-	(_objective.get_node("bg") as Panel).size = Vector2(158, 20 + 15 * lines)
+	_objective.position.y = 28.0 if _pomo_minimized() else 60.0
+	var omin := bool(GameState.pomo_cfg.get("obj_min", false))
+	_obj_text.visible = not omin
+	_obj_min_btn.text = "+" if omin else "-"
+	(_objective.get_node("bg") as Panel).size = Vector2(158, 18 if omin else 20 + 15 * lines)
 	_refresh_card()
 
 
@@ -1108,6 +1169,30 @@ func is_dialogue_open() -> bool:
 
 
 ## Mostra um diálogo da história (id de StoryData.DIALOGS ou lista de falas) e espera o fim.
+var _stage: Stage = null
+
+
+## Primeiro falante que não é o herói (define o cenário do palco, p. ex. o trono do Rei Demônio).
+func _first_npc_speaker(lines: Array) -> String:
+	for e in lines:
+		if e is Dictionary:
+			continue
+		var who := str((e as Array)[0])
+		if who.contains("@"):
+			who = who.get_slice("@", 0)
+		if who.contains(":"):
+			who = who.get_slice(":", 1)
+		if who not in ["narr", "heroi", "", "espelho"] and not who.begins_with("rua_"):
+			return who
+	return ""
+
+
+## Chamado pela DialogueBox a cada fala para o palco acompanhar quem fala.
+func stage_focus(who: String, vis: Dictionary) -> void:
+	if _stage != null and is_instance_valid(_stage):
+		_stage.focus(who, vis)
+
+
 func dialogue(entry: Variant) -> void:
 	var lines: Array = entry if entry is Array else StoryData.DIALOGS.get(String(entry), [])
 	if lines.is_empty():
@@ -1118,12 +1203,19 @@ func dialogue(entry: Variant) -> void:
 	var was_paused := get_tree().paused
 	get_tree().paused = true
 	Game.input_locked = true
+	if Stage.wanted(lines) and scene_kind != "":
+		_stage = Stage.new()
+		root.add_child(_stage)
+		_stage.open_stage(Stage.pick_setting(get_tree(), _first_npc_speaker(lines)))
 	_dialog = DialogueBox.new()
 	root.add_child(_dialog)
 	_keys.visible = false
 	_hotbar.visible = false
 	_dialog.start(lines)
 	await _dialog.finished
+	if _stage != null and is_instance_valid(_stage):
+		_stage.close_stage()
+	_stage = null
 	_dialog.queue_free()
 	_keys.visible = scene_kind != ""
 	_hotbar.visible = scene_kind != ""

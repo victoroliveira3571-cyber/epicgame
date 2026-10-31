@@ -291,7 +291,7 @@ func _melee(family: String, heavy: bool) -> void:
 	if state == State.DEAD:
 		return
 	var hit_any := false
-	for e in get_tree().get_nodes_in_group("enemy"):
+	for e in get_tree().get_nodes_in_group("enemy") + get_tree().get_nodes_in_group("npc_hit"):
 		if not is_instance_valid(e) or not e.has_method("take_hit"):
 			continue
 		if e.has_method("is_targetable") and not e.is_targetable():

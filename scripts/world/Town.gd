@@ -52,6 +52,8 @@ const WANDERERS := ["Villager", "Villager2", "Villager3", "Child", "OldMan", "Vi
 
 func _ready() -> void:
 	rng.seed = 20261030
+	if Law.is_jailed():
+		Game.go_to_jail.call_deferred(Law.jail_left(), "assault")   # reabriu o jogo com pena a cumprir
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--hour="):
 			forced_hour = float(arg.substr(7))
@@ -206,6 +208,20 @@ func _build_buildings() -> void:
 		door_spawns[key] = pos + Vector2(0, 24)
 
 
+## Locais nomeados para o mapa grande (tecla M): [id, nome, posição em px].
+func map_landmarks() -> Array:
+	var out: Array = []
+	for id in buildings:
+		var b: Node2D = buildings[id]
+		out.append([str(id), str(b.get("display_name")), b.position])
+	for i in HOUSE_DEFS.size():
+		var t: Vector2i = HOUSE_DEFS[i]["tile"]
+		out.append(["casa_npc_%d" % i, Interior.house_title(i), Vector2(t.x * T + 8, t.y * T)])
+	out.append(["portao_masmorra", "Portão da Masmorra", Vector2(SPINE_X * T + 8, GATE_Y * T)])
+	out.append(["trilha_floresta", "Trilha da Floresta", Vector2(4 * T, AVENUE_Y * T + 8)])
+	return out
+
+
 func _build_gate() -> void:
 	var pos := Vector2(SPINE_X * T + 8, GATE_Y * T)
 	_add_prop("h_torii", pos, 0.0)
@@ -255,7 +271,7 @@ class GateTrigger extends Interactable:
 ## Saída oeste da avenida: Osvaldo cobra o pedágio (1 crédito por dia) e leva à floresta.
 func _build_forest_gate() -> void:
 	var pos := Vector2(4 * T, AVENUE_Y * T + 8)
-	for dy in [-30.0, -18.0, 26.0, 38.0]:
+	for dy in [-34.0, 30.0]:
 		_add_prop("h_cerca_ferro", pos + Vector2(2, dy), 4.0)
 	_add_prop("i_board", pos + Vector2(26, -26), 4.0)
 	_add_prop("i_barrel", pos + Vector2(30, 30), 5.0)

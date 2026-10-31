@@ -23,6 +23,7 @@ var _dodge_dir: Vector2 = Vector2.ZERO
 var _knock: Vector2 = Vector2.ZERO
 var _facing: Vector2 = Vector2.LEFT
 var _shot_cd: float = 1.0
+var hostile_npc: bool = false      # morador que revida: sem barra de chefe, derrota = homicídio
 
 
 static func spawn(parent: Node, data: Dictionary, pos: Vector2) -> ArenaFighter:
@@ -199,7 +200,8 @@ func take_hit(amount: float, kb: Vector2, crit: bool, _from: Vector2 = Vector2.Z
 	Audio.sfx("hit_crit" if crit else ["hit1", "hit2", "hit3"][randi() % 3], -4.0)
 	if crit:
 		Audio.sfx2("impacto", -10.0, 0.1)
-	HUD.update_boss(clampf(hp / max_hp, 0.0, 1.0))
+	if not hostile_npc:
+		HUD.update_boss(clampf(hp / max_hp, 0.0, 1.0))
 	if state == State.WINDUP and crit:
 		state = State.RECOVER
 		_t = -0.3

@@ -58,6 +58,9 @@ var _wobble: float = randf() * 10.0
 var _bob_t: float = 0.0
 var base_scale: float = 1.0
 var charge_stunned: bool = false
+var respawn_s: float = 0.0        # > 0: renasce no mesmo lugar depois deste tempo (floresta e masmorra)
+const RESPAWN_RETRY := 4.0        # jogador em cima do ponto: tenta de novo depois disso
+const RESPAWN_TIME := 25.0
 
 
 static func spawn(parent: Node, id: String, pos: Vector2, floor_number: int, elite: bool = false) -> Enemy:
@@ -602,11 +605,43 @@ func _die() -> void:
 	Fx.burst(w, global_position + Vector2(0, -6), Color(1, 0.9, 0.6), 8, 50.0, 0.4)
 	_award_and_drop()
 	died.emit(self)
+	if respawn_s > 0.0 and not is_boss:
+		_schedule_respawn(get_parent(), def_id, position, floor_n, is_elite, respawn_s)
 	var tw := create_tween()
 	tw.set_parallel(true)
 	tw.tween_property(sprite, "scale", Vector2(base_scale * 1.3, 0.1), 0.18)
 	tw.tween_property(sprite, "modulate:a", 0.0, 0.2)
 	tw.chain().tween_callback(queue_free)
+
+
+## Monstro comum renasce no ponto de origem (MMORPG clássico): a cena segura o relógio, não o monstro morto.
+func _schedule_respawn(parent: Node, id: String, pos: Vector2, floor_number: int, elite: bool, wait: float) -> void:
+	if parent == null or not parent.is_inside_tree():
+		return
+	var tree := parent.get_tree()
+	tree.create_timer(wait).timeout.connect(func() -> void:
+		if not is_instance_valid(parent) or not parent.is_inside_tree():
+			return
+		var pl := parent.get_tree().get_first_node_in_group("player") as Node2D
+		if pl != null and pl.global_position.distance_to(parent.to_global(pos)) < 70.0:
+			Enemy._retry_respawn(parent, id, pos, floor_number, elite, wait)
+			return
+		var ne := Enemy.spawn(parent, id, pos, floor_number, elite)
+		ne.respawn_s = wait)
+
+
+static func _retry_respawn(parent: Node, id: String, pos: Vector2, floor_number: int, elite: bool, wait: float) -> void:
+	if not is_instance_valid(parent) or not parent.is_inside_tree():
+		return
+	parent.get_tree().create_timer(RESPAWN_RETRY).timeout.connect(func() -> void:
+		if not is_instance_valid(parent) or not parent.is_inside_tree():
+			return
+		var pl := parent.get_tree().get_first_node_in_group("player") as Node2D
+		if pl != null and pl.global_position.distance_to(parent.to_global(pos)) < 70.0:
+			Enemy._retry_respawn(parent, id, pos, floor_number, elite, wait)
+			return
+		var ne := Enemy.spawn(parent, id, pos, floor_number, elite)
+		ne.respawn_s = wait)
 
 
 func _award_and_drop() -> void:

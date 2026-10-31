@@ -24,6 +24,8 @@ var last_run_summary: Dictionary = {}
 
 var _fade_layer: CanvasLayer
 var _fade_rect: ColorRect
+var _card_title: Label
+var _card_sub: Label
 
 
 func _ready() -> void:
@@ -38,6 +40,17 @@ func _ready() -> void:
 	_fade_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_fade_rect.modulate.a = 0.0
 	_fade_layer.add_child(_fade_rect)
+	# cartão do lugar durante a transição (Floresta, Masmorra, cidade)
+	_card_title = UI.label("", UI.C_ORANGE_L, 3)
+	_card_sub = UI.label("", UI.C_TEXT)
+	for l in [_card_title, _card_sub]:
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.size = Vector2(UI.SIZE.x, 30)
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		l.modulate.a = 0.0
+		_fade_layer.add_child(l)
+	_card_title.position = Vector2(0, UI.SIZE.y / 2.0 - 28)
+	_card_sub.position = Vector2(0, UI.SIZE.y / 2.0 + 6)
 
 
 # ============================================================ Controles
@@ -88,17 +101,30 @@ func fade_in(duration: float = 0.35) -> void:
 	await tw.finished
 
 
-func change_scene(path: String, duration: float = 0.3) -> void:
+## `title`/`subtitle`: cartão do lugar mostrado no escuro (fade mais longo, para a passagem não ser seca).
+func change_scene(path: String, duration: float = 0.3, title: String = "", subtitle: String = "") -> void:
 	if transitioning:
 		return
 	transitioning = true
 	input_locked = true
-	await fade_out(duration)
+	var carded := title != ""
+	await fade_out(maxf(duration, 0.5) if carded else duration)
 	get_tree().paused = false
+	if carded:
+		_card_title.text = title
+		_card_sub.text = subtitle
+		var tw := create_tween().set_parallel(true)
+		tw.tween_property(_card_title, "modulate:a", 1.0, 0.25)
+		tw.tween_property(_card_sub, "modulate:a", 1.0, 0.25)
 	get_tree().change_scene_to_file(path)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	await fade_in(duration + 0.05)
+	if carded:
+		await get_tree().create_timer(0.8).timeout
+		var tw2 := create_tween().set_parallel(true)
+		tw2.tween_property(_card_title, "modulate:a", 0.0, 0.35)
+		tw2.tween_property(_card_sub, "modulate:a", 0.0, 0.35)
+	await fade_in(maxf(duration + 0.05, 0.7) if carded else duration + 0.05)
 	input_locked = false
 	transitioning = false
 
@@ -110,9 +136,27 @@ func go_to_title() -> void:
 
 
 func go_to_town(spawn: String = "start") -> void:
+	if Law.is_jailed():
+		go_to_jail(Law.jail_left(), "assault")
+		return
 	town_spawn = spawn
 	GameState.in_dungeon = false
-	change_scene(TOWN_SCENE)
+	if spawn == "forest":
+		change_scene(TOWN_SCENE, 0.5, "Focus Town", "De volta à cidade")
+	else:
+		change_scene(TOWN_SCENE)
+
+
+# ============================================================ Delegacia
+## Preso: leva à cela da delegacia com o cartão "PRESO!". A pena vem de Law (minutos de foco).
+func go_to_jail(fine_min: int, reason: String) -> void:
+	interior_id = "delegacia"
+	interior_return = "town"
+	town_spawn = "start"
+	GameState.in_dungeon = false
+	run = {}
+	var sub := "Multa: %d min de foco no Pomodoro" % fine_min
+	change_scene(INTERIOR_SCENE, 0.6, "PRESO!" if reason != "murder" else "PRESO POR HOMICÍDIO!", sub)
 
 
 # ============================================================ Interiores
@@ -134,9 +178,15 @@ func leave_interior() -> void:
 
 # ============================================================ Floresta
 func go_to_forest(spawn: String = "town") -> void:
+	if Law.is_jailed():
+		HUD.show_toast("Você está preso: cumpra a pena estudando.", UI.C_BAD)
+		return
 	forest_spawn = spawn
 	GameState.in_dungeon = false
-	change_scene(FOREST_SCENE)
+	if spawn.begins_with("door:"):
+		change_scene(FOREST_SCENE)
+	else:
+		change_scene(FOREST_SCENE, 0.5, "Floresta de Focus Town", "A trilha das ervas")
 
 
 # ============================================================ Masmorra
@@ -153,6 +203,9 @@ func floor_entry_cost(floor_n: int) -> int:
 
 
 func enter_dungeon(start_floor: int = 1) -> bool:
+	if Law.is_jailed():
+		GameState.toast.emit("Você está preso: cumpra a pena estudando.", Color("ff7a6a"))
+		return false
 	if not Story.floor_unlocked(start_floor):
 		GameState.toast.emit("Este andar ainda não está liberado pela história.", Color("ff7a6a"))
 		Audio.sfx("ui_error")
@@ -170,7 +223,7 @@ func enter_dungeon(start_floor: int = 1) -> bool:
 	GameState.register_floor_reached(start_floor)
 	Audio.sfx2("porta_metal", -6.0, 0.0)
 	run_updated.emit()
-	change_scene(DUNGEON_SCENE)
+	change_scene(DUNGEON_SCENE, 0.5, "Masmorra", "Andar %d" % start_floor)
 	return true
 
 

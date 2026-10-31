@@ -11,6 +11,8 @@ func run(dev: Node) -> void:
 	GameState.choose_class("arqueiro")
 	get_tree().reload_current_scene()
 	await dev.wait(1.0)
+	for f in ["intro_bibliotecaria", "intro_estalajadeiro", "intro_ferreiro"]:
+		Story.set_flag(f)
 	for pair in [["biblioteca", "livraria"], ["casa", "casa"], ["restaurante", "taverna"]]:
 		Game.enter_interior(pair[0])
 		await dev.wait(1.6)
@@ -23,7 +25,7 @@ func run(dev: Node) -> void:
 		ok = ok and found != null
 		if found != null:
 			found.interact(null)
-			await dev.wait(0.6)
+			await dev.wait(6.0)
 			ok = ok and HUD.window_id == "pomodoro" and str(GameState.pomo_cfg["scene"]) == pair[1] and HUD.pomo_place == pair[1]
 			await dev.shot(OUT + "place_%s_pomo.png" % pair[0])
 			HUD.pomodoro_start(25, 5)

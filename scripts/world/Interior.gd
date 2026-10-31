@@ -29,7 +29,7 @@ const ROOMS := {
 	"guilda": [32, 18, "floor_stone", "wall_stone"], "biblioteca": [26, 15, "floor_wood_dark", "wall_cream"],
 	"casa_familia": [20, 12, "floor_wood", "wall_cream"], "casa_pai": [16, 10, "floor_wood_dark", "wall_stone"],
 	"forja": [18, 11, "floor_stone", "wall_stone"], "loja": [16, 10, "floor_wood", "wall_red"],
-	"arena": [30, 18, "floor_sand", "wall_stone"],
+	"arena": [30, 18, "floor_sand", "wall_stone"], "delegacia": [22, 13, "floor_stone", "wall_stone"],
 }
 
 var id: String = "casa"
@@ -118,6 +118,8 @@ func _ready() -> void:
 		_build_weapon_shop()
 	elif id == "arena":
 		_build_arena()
+	elif id == "delegacia":
+		_build_jail()
 	else:
 		_build_resident_house()
 	_spawn_player()
@@ -239,6 +241,9 @@ func _build_exit() -> void:
 func _leave() -> void:
 	if _ending:
 		return
+	if id == "delegacia" and Law.is_jailed():
+		player.global_position.y -= 18.0
+		return
 	if id == "casa_familia" and Story.step() == "c1_casa":
 		HUD.set_prompt("")
 		HUD.show_toast("Fale com %s antes de partir." % Story.fmt("{mae}"), UI.C_ORANGE_L)
@@ -257,6 +262,8 @@ func _leave() -> void:
 
 func _spawn_player() -> void:
 	var pos := Vector2((cols / 2) * T, (rows - 2) * T + 4)
+	if id == "delegacia" and Law.is_jailed():
+		pos = Vector2(52, 138)   # dentro da cela
 	player = Player.spawn(world, pos)
 	player.set_camera_limits(Rect2(0, 0, cols * T, rows * T))
 	player.camera.reset_smoothing()
@@ -265,6 +272,8 @@ func _spawn_player() -> void:
 func _process(_delta: float) -> void:
 	if _ending or player == null:
 		return
+	if id == "delegacia":
+		_jail_tick()
 	# andar para o vão da porta também sai
 	if player.global_position.y > rows * T - 4 and absf(player.global_position.x - float(cols / 2 * T)) < T:
 		_leave()
@@ -329,7 +338,28 @@ func light(pos: Vector2, color: Color, size: float, energy: float) -> void:
 
 ## Mesa onde dá para estudar: abre o Pomodoro preso ao cenário deste lugar.
 func study_spot(scene: String, pos: Vector2) -> Spot:
-	return spot("Estudar aqui (Pomodoro)", pos, func() -> void: HUD.open_pomodoro_at(scene), 22.0)
+	return spot("Estudar aqui (Pomodoro)", pos, func() -> void:
+		if Game.transitioning or HUD.is_dialogue_open():
+			return
+		await Cutscene.play("sit", {"line": _study_line(), "setting": _study_setting()})
+		HUD.open_pomodoro_at(scene), 22.0)
+
+
+func _study_setting() -> String:
+	match id:
+		"biblioteca":
+			return "library"
+		"restaurante", "casa_npc_1":
+			return "inn"
+		"delegacia":
+			return "jail"
+		_:
+			return "home"
+
+
+func _study_line() -> String:
+	var lines := ["Respire fundo. Um bloco de cada vez.", "Celular longe. Livro aberto.", "Começar é a parte mais difícil. Você já começou.", "Só os próximos 25 minutos importam."]
+	return lines[randi() % lines.size()]
 
 
 ## Objeto preso na parede de cima (quadros, janelas, prateleiras): fica atrás de todo mundo.
@@ -353,6 +383,7 @@ func sitter(look: String, pos: Vector2, dir: String, lines: Array) -> NPC:
 func shop_owner(look: String, talk_id: String, title: String, pos: Vector2, lines: Array, mode: String = "static") -> NPC:
 	var n := npc(look, pos, lines, mode, 30.0)
 	n.add_to_group("speaker_" + talk_id)
+	n.set_meta("has_talker", true)
 	n.use_look(Looks.SPEAKER_LOOK.get(talk_id, look))
 	var p := Spot.new("Falar com " + title, func() -> void: ShopTalk.talk(talk_id), 22.0)
 	n.add_child(p)
@@ -706,6 +737,91 @@ func _build_weapon_shop() -> void:
 	light(Vector2(cx, 100), Color(1.0, 0.82, 0.55), 1.6, 0.3)
 
 
+# ================================================================== Delegacia
+var _jail_gate: Node2D = null
+var _jail_was_free: bool = false
+var _jail_guard: NPC = null
+
+
+## Cela à esquerda (grade que some quando a pena acaba), mesa do guarda no meio, bancos de espera.
+func _build_jail() -> void:
+	var w := cols * T
+	for x in [40.0, 100.0]:
+		wall("p_janela", x - 6, 28)
+	wall("p_estandarte", w / 2.0 + 20, 34)
+	wall("p_estandarte_azul", w - 40, 34)
+	# a cela: fundo, lateral e grade na frente do corredor
+	_block(Rect2(104, 70, 6, 150))
+	_jail_gate = Node2D.new()
+	world.add_child(_jail_gate)
+	for y in [100.0, 128.0, 156.0]:
+		var bars := prop("p_portao_arena", Vector2(107, y), false, false, _jail_gate)
+		bars.scale = Vector2(0.6, 0.8)
+	var gate_body := StaticBody2D.new()
+	gate_body.collision_layer = 1
+	gate_body.collision_mask = 0
+	var gc := CollisionShape2D.new()
+	var gr := RectangleShape2D.new()
+	gr.size = Vector2(8, 96)
+	gc.shape = gr
+	gc.position = Vector2(107, 128)
+	gate_body.add_child(gc)
+	_jail_gate.add_child(gate_body)
+	prop("p_banco", Vector2(30, 180))             # cama de pedra da cela
+	prop("i_barrel", Vector2(80, 100))
+	study_spot("estudo", Vector2(60, 148)).text = "Estudar na cela (cumprir a pena)"
+	# mesa do guarda
+	prop("i_desk_paper", Vector2(w / 2.0 + 30, 96))
+	prop("i_counter", Vector2(w / 2.0 + 6, 104))
+	prop("i_counter", Vector2(w / 2.0 + 54, 104))
+	_block(Rect2(w / 2.0 - 20, 80, 100, 30))
+	_jail_guard = npc("guarda", Vector2(w / 2.0 + 30, 86), ["Cumpra a pena e não volte aqui.", "Aqui, quem estuda sai mais rápido."], "static")
+	_jail_guard.use_look("guarda")
+	_jail_guard.add_to_group("speaker_guarda")
+	var talk := Spot.new("Falar com o guarda", func() -> void: _jail_talk(), 24.0)
+	_jail_guard.add_child(talk)
+	prop("p_banco", Vector2(w - 60, 190))
+	prop("i_stool", Vector2(w - 90, 210))
+	light(Vector2(60, 140), Color(1.0, 0.85, 0.6), 1.4, 0.3)
+	_jail_was_free = not Law.is_jailed()
+	_jail_apply()
+	if Law.is_jailed():
+		var d := Law.data()
+		await get_tree().create_timer(1.0).timeout
+		Story.say([["guarda@anger", "Alto lá! Agressão a morador é crime em Focus Town."],
+			["guarda", "A multa é de %d minutos de foco. Estude aqui na cela (mesa da cela) para pagar." % int(d.get("jail_total", 0))],
+			["tip:guarda", "Aqui dentro cada minuto de foco abate a pena antes de virar crédito. Cumprida a pena, a grade abre."]])
+
+
+func _jail_tick() -> void:
+	var free := not Law.is_jailed()
+	if free != _jail_was_free:
+		_jail_was_free = free
+		_jail_apply()
+		if free:
+			Audio.sfx2("porta_metal", -6.0, 0.0)
+			Story.say([["guarda", "Pena cumprida. Está livre. Comporte-se, cidadão."]])
+
+
+func _jail_apply() -> void:
+	if _jail_gate == null:
+		return
+	_jail_gate.visible = Law.is_jailed()
+	for c in _jail_gate.get_children():
+		if c is StaticBody2D:
+			(c as StaticBody2D).collision_layer = 1 if Law.is_jailed() else 0
+
+
+func _jail_talk() -> void:
+	if Story.is_busy() or HUD.is_dialogue_open():
+		return
+	if Law.is_jailed():
+		await Story.say([["guarda", "Faltam %d min de foco para quitar a pena. Use a mesa da cela." % Law.jail_left()]])
+	else:
+		var d := Law.data()
+		await Story.say([["guarda", "Você tem %d prisão(ões) no histórico. A próxima agressão custa %d min. Ande na linha." % [int(d.get("arrests", 0)), Law.next_fine()]]])
+
+
 # ================================================================== Arena
 func _build_arena() -> void:
 	var w := cols * T
@@ -719,10 +835,16 @@ func _build_arena() -> void:
 		light(Vector2(x, 20), Color(1.0, 0.6, 0.3), 0.8, 0.8)
 	prop("p_portao_arena", Vector2(22, 170), true)
 	prop("p_portao_arena", Vector2(w - 22, 170), true)
-	# torcida na arquibancada
+	# torcida na arquibancada: cresce com o prestígio (Bronze ~6 pessoas, Lenda lotada)
 	var crowd := ["Villager", "Villager2", "OldMan", "Villager5", "Child", "aventureiro_cacador"]
-	for i in crowd.size():
-		var cn := sitter(crowd[i], Vector2(40.0 + i * ((w - 80.0) / crowd.size()), 52.0 + (i % 2) * 8.0), "down", ["Vai! Vai!", "Que golpe!", "Rola, rola!"])
+	var total := clampi(6 + Arena.prestige() / 22, 6, 40)
+	var per_row := int(ceil(total / 2.0))
+	for i in total:
+		var row := i % 2
+		var col := i / 2
+		var x := lerpf(34.0, w - 34.0, (float(col) + 0.5) / float(per_row))
+		var cn := sitter(crowd[(i * 5 + i / 3) % crowd.size()], Vector2(x, 50.0 + row * 9.0), "down",
+			["Vai! Vai!", "Que golpe!", "Rola, rola!", "Esse é dos bons!", "Mais um round!"])
 		cn.add_to_group("arena_crowd")
 	# a mestra da arena perto da entrada
 	shop_owner("bruna", "arena", "Bruna", Vector2(cx - 60, rows * T - 52),
@@ -730,15 +852,48 @@ func _build_arena() -> void:
 	spot("Inscrever-se num duelo", Vector2(cx - 30, rows * T - 44), func() -> void: HUD.open_window("arena"), 20.0)
 	prop("p_placa_arena", Vector2(cx - 30, rows * T - 56), false)
 	prop("p_boneco_treino", Vector2(w - 60, rows * T - 46))
-	# linhas do ringue no chão
-	var ring := Line2D.new()
-	ring.width = 1.0
-	ring.default_color = Color(0.6, 0.45, 0.3, 0.5)
+	# ringue delimitado: poço de areia, cerca de madeira com estacas e colisão (ninguém sai da luta)
 	var c := Vector2(cx, 160)
-	for k in 33:
-		var a := TAU * k / 32.0
-		ring.add_point(c + Vector2(cos(a) * 150.0, sin(a) * 70.0))
-	deco.add_child(ring)
+	var pit := Polygon2D.new()
+	var pts := PackedVector2Array()
+	for k in 48:
+		var a := TAU * k / 48.0
+		pts.append(c + Vector2(cos(a) * 146.0, sin(a) * 66.0))
+	pit.polygon = pts
+	pit.color = Color(0.62, 0.48, 0.3, 0.55)
+	deco.add_child(pit)
+	var inner := Line2D.new()
+	inner.width = 1.0
+	inner.default_color = Color(0.45, 0.3, 0.18, 0.6)
+	for k in 49:
+		var a2 := TAU * k / 48.0
+		inner.add_point(c + Vector2(cos(a2) * 138.0, sin(a2) * 60.0))
+	deco.add_child(inner)
+	var fence := Line2D.new()
+	fence.width = 2.0
+	fence.default_color = Color(0.4, 0.26, 0.14)
+	var seg_n := 32
+	var ring_pts: Array = []
+	for k in seg_n + 1:
+		var a3 := TAU * k / float(seg_n)
+		var p := c + Vector2(cos(a3) * 152.0, sin(a3) * 72.0)
+		ring_pts.append(p)
+		fence.add_point(p)
+	deco.add_child(fence)
+	for k in seg_n:
+		var seg := CollisionShape2D.new()
+		var ss := SegmentShape2D.new()
+		ss.a = ring_pts[k]
+		ss.b = ring_pts[k + 1]
+		seg.shape = ss
+		colliders.add_child(seg)
+		if k % 2 == 0:
+			var post := ColorRect.new()
+			post.color = Color(0.55, 0.37, 0.2)
+			post.size = Vector2(3, 7)
+			post.position = (ring_pts[k] as Vector2) - Vector2(1.5, 6)
+			post.z_index = 1
+			world.add_child(post)
 	arena_center = c
 	light(Vector2(cx, 160), Color(1.0, 0.9, 0.7), 3.0, 0.3)
 
@@ -779,12 +934,17 @@ func start_duel(opp: Dictionary) -> void:
 	Audio.sfx2("impacto", -6.0)
 	Game.input_locked = false
 	_duel.begin()
+	while not _duel_over and is_inside_tree():
+		await get_tree().create_timer(2.4).timeout
+		if not _duel_over and is_inside_tree():
+			_crowd_cheer(18, 6)
 
 
-func _crowd_cheer(emote: int) -> void:
-	for n in get_tree().get_nodes_in_group("arena_crowd"):
-		if randf() < 0.7:
-			(n as NPC).show_emote(emote if randf() < 0.7 else 27)
+func _crowd_cheer(emote: int, how_many: int = 10) -> void:
+	var nodes := get_tree().get_nodes_in_group("arena_crowd")
+	nodes.shuffle()
+	for n in nodes.slice(0, how_many):
+		(n as NPC).show_emote(emote if randf() < 0.7 else 27)
 
 
 func _on_duel_won() -> void:
@@ -825,7 +985,7 @@ func _end_duel(won: bool) -> void:
 		Audio.sfx("powerup")
 		HUD.floor_banner("NOVO RANK: " + Arena.rank_name(), "A Arena inteira aplaude você")
 		_crowd_cheer(27)
-	await get_tree().create_timer(2.4).timeout
+	await get_tree().create_timer(2.0).timeout
 	if not is_inside_tree():
 		return
 	player.sprite.hold_last = false
@@ -835,8 +995,12 @@ func _end_duel(won: bool) -> void:
 		var tw := _duel.create_tween()
 		tw.tween_property(_duel, "modulate:a", 0.0, 0.5)
 		tw.tween_callback(_duel.queue_free)
+	player.global_position = arena_center + Vector2(20, 98)   # fora da cerca, perto da Bruna
+	player.camera.reset_smoothing()
 	Game.input_locked = false
 	Audio.play_music("interior_manor", 1.0)
+	Arena.last_result = res
+	HUD.open_window("arena_resultado")
 
 
 # ================================================================== Casa de morador

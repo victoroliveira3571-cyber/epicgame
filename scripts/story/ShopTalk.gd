@@ -81,6 +81,28 @@ const CHATS := {
 }
 
 
+## Depois da apresentação: conversa curta com um menu "o que você gostaria?".
+## [rótulo do serviço, ação] (ação: id de janela do HUD, ou "heal", "study", "tip").
+const MENU := {
+	"ferreiro": ["Aprimorar equipamento", "forja"],
+	"armeiro": ["Ver o balcão de armas", "loja"],
+	"costureira": ["Abrir o guarda-roupa", "guarda_roupa"],
+	"estalajadeiro": ["Descansar um pouco (vida cheia)", "heal"],
+	"mestre_cla": ["Uma dica de treino", "tip"],
+	"bibliotecaria": ["Sentar para estudar", "study"],
+	"arena": ["Inscrever-me num duelo", "arena"],
+}
+const LORE := {
+	"ferreiro": ["Meu avô dizia que o ferro lembra cada martelada. Eu acredito.", "Um aprendiz me perguntou quanto tempo leva para ficar bom. Respondi: o mesmo que a lâmina leva para esfriar bem."],
+	"armeiro": ["Um aventureiro me trouxe uma espada rachada e jurou que ela salvou a vida dele. Guardei no cofre.", "A melhor venda do mês foi um escudo para um rapaz que só queria sobreviver à primeira masmorra."],
+	"costureira": ["Fiz um manto para uma maga que nunca voltou da Mata. Ainda mantenho a linha da mesma cor.", "Uma menina me pediu um vestido 'de estudar'. Era azul e cheio de bolsos."],
+	"estalajadeiro": ["Um viajante dormiu aqui três dias seguidos só para terminar um livro. Pagou com um mapa.", "No inverno passado, o Pântano soltou uma névoa que cheirava a tinta. Ninguém soube explicar."],
+	"mestre_cla": ["Já tive um aluno que lutava sem ler o adversário. Aprendeu a ler no pior dia da vida dele.", "O verdadeiro golpe secreto é voltar amanhã."],
+	"bibliotecaria": ["Alguém deixou um marcador de página com a letra 'Z' e a frase 'continuo amanhã'. Está lá até hoje.", "Já vi um estudante dormir em cima de um livro e acordar sabendo a primeira página. Lenda, claro."],
+	"arena": ["Já perdi um duelo por me achar invencível. O rival me ofereceu a mão depois. Foi a melhor lição.", "A torcida da Arena cresce com o prestígio. Dizem que na lenda lota até o telhado."],
+}
+
+
 static func talk(id: String) -> void:
 	if Story.is_busy() or HUD.is_dialogue_open():
 		return
@@ -88,5 +110,35 @@ static func talk(id: String) -> void:
 		Story.set_flag("intro_" + id)
 		await Story.say(INTROS[id])
 		return
-	var lines: Array = CHATS.get(id, ["..."])
-	await Story.say([[id, lines[randi() % lines.size()]]])
+	var greet: Array = CHATS.get(id, ["..."])
+	var service: Array = MENU.get(id, ["", ""])
+	var options: Array = []
+	if str(service[0]) != "":
+		options.append(str(service[0]))
+	options.append("Conte-me uma história")
+	options.append("Só estou passando")
+	await Story.say([[id, str(greet[randi() % greet.size()]) + " O que gostaria?"], {"choice": options, "key": "shop_menu"}])
+	var picked := int(Story.flag("shop_menu", options.size() - 1))
+	var has_service := str(service[0]) != ""
+	if has_service and picked == 0:
+		await _do_service(id, str(service[1]))
+	elif picked == (1 if has_service else 0):
+		var lore: Array = LORE.get(id, ["..."])
+		await Story.say([[id, str(lore[randi() % lore.size()])]])
+	else:
+		await Story.say([[id, "Até logo. A porta está sempre aberta."]])
+
+
+static func _do_service(id: String, action: String) -> void:
+	match action:
+		"heal":
+			GameState.full_heal()
+			Audio.sfx("sleep", -4.0)
+			await Story.say([[id, "Sente aí, esquente as mãos. Pronto: vida cheia."]])
+		"tip":
+			await Story.say([["tip:" + id, "Treino e estudo pedem o mesmo: começar pequeno, repetir e descansar. Dormir bem fixa o que você aprendeu."]])
+		"study":
+			await Story.say([[id, "A mesa livre é a sua. Sente e abra o Pomodoro."]])
+			HUD.open_pomodoro_at("livraria")
+		_:
+			HUD.open_window(action)

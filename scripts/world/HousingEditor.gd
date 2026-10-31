@@ -8,6 +8,7 @@ extends Node2D
 ## Posição (x, y) e giro de cada móvel ficam no save (GameState.furniture_layout).
 
 const GRID := 8.0
+const WALL_FOOT := 8.0          # quanto da base do móvel de parede entra no piso (o resto sobe pela parede)
 ## Onde cada móvel aparece na primeira vez (saves antigos e móveis sem posição guardada).
 const DEFAULTS := {
 	"cama": Vector2(40, 104), "estante": Vector2(104, 64), "lareira": Vector2(192, 60), "trofeu": Vector2(254, 64),
@@ -54,6 +55,10 @@ func _info(fid: String) -> Dictionary:
 
 func _flat(fid: String) -> bool:
 	return bool(_info(fid).get("flat", false))
+
+
+func _wall(fid: String) -> bool:
+	return bool(_info(fid).get("wall", false))
 
 
 func _tex(fid: String) -> Texture2D:
@@ -120,6 +125,9 @@ func _snap(fid: String, want: Vector2, rot: int) -> Vector2:
 	var left := snappedf(want.x + fp.position.x, GRID)
 	left = clampf(left, fr.position.x, fr.end.x - fp.size.x)
 	var y := snappedf(want.y, GRID)
+	if _wall(fid):
+		# móvel de parede: encosta na parede de cima, só escolhe a posição ao longo dela
+		return Vector2(left - fp.position.x, fr.position.y + WALL_FOOT).round()
 	var sz := _size(fid)
 	var min_y := fr.position.y + (sz.y * 0.6 if not _flat(fid) else -fp.position.y)
 	y = clampf(y, ceilf(min_y / GRID) * GRID, fr.end.y - (fp.end.y if _flat(fid) else 0.0))
@@ -183,6 +191,8 @@ func _outline(node: Node2D, on: bool) -> void:
 func _take_from_box(fid: String) -> void:
 	if held != "":
 		_cancel()
+	if _wall(fid):
+		HUD.show_toast("%s é móvel de parede: ele encosta na parede de cima." % str(_info(fid).get("name", "")), UI.C_DIM)
 	held = fid
 	held_rot = GameState.furniture_rot(fid)
 	_held_new = true

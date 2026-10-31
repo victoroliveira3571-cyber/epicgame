@@ -57,6 +57,11 @@ func run(dev: Node) -> void:
 	check(not ed.is_free("comoda", bed, 0), "cômoda em cima da cama deveria ser recusada")
 	ed._cancel()
 	check(not ed.nodes.has("comoda") and not GameState.is_furniture_placed("comoda"), "cancelar devolve à caixa")
+	# móveis de parede encostam na parede de cima, mesmo com o mouse lá embaixo
+	var wall_y: float = home.floor_rect().position.y + HousingEditor.WALL_FOOT
+	for wf in ["lareira", "estante", "relogio", "trofeu"]:
+		check(ed._snap(wf, Vector2(200, 180), 0).y == wall_y, "%s deveria encostar na parede (y %s)" % [wf, ed._snap(wf, Vector2(200, 180), 0).y])
+	check(ed._snap("mesa", Vector2(200, 180), 0).y != wall_y, "mesa não é móvel de parede")
 	# tapete gira de 90 graus
 	ed._pick("tapete")
 	ed._rotate()

@@ -94,6 +94,22 @@ func objective_text() -> String:
 	return fmt(String(StoryData.OBJECTIVES.get(step(), "")))
 
 
+## Id do local do mapa onde o objetivo atual se cumpre ("" = sem ponto no mapa).
+func objective_target() -> String:
+	return str(StoryData.OBJECTIVE_TARGET.get(step(), ""))
+
+
+## Posição (px) do objetivo na cena `scene` (Town/Forest), ou null se ele não está nesta cena.
+func objective_world_pos(scene: Node) -> Variant:
+	var id := objective_target()
+	if id == "" or scene == null or not scene.has_method("map_landmarks"):
+		return null
+	for l in scene.map_landmarks():
+		if str(l[0]) == id:
+			return l[2]
+	return null
+
+
 func chapter_title() -> String:
 	var c: Dictionary = StoryData.CHAPTERS.get(chapter(), {})
 	return "%s: %s" % [c.get("title", ""), c.get("name", "")] if not c.is_empty() else ""
@@ -125,6 +141,7 @@ func add_focus_minutes(minutes: int) -> int:
 	if not started() or minutes <= 0:
 		return 0
 	st()["focus_min"] = focus_minutes() + minutes
+	minutes = Law.pay_with_focus(minutes)    # cumprindo pena: o foco paga a multa antes de virar crédito
 	var bank := int(st().get("credit_min", 0)) + minutes
 	var gained := bank / Data.MINUTES_PER_CREDIT
 	st()["credit_min"] = bank % Data.MINUTES_PER_CREDIT
@@ -375,6 +392,7 @@ func _talk_osvaldo() -> void:
 		await say("c1_osvaldo_paga")
 		set_flag("osvaldo_pago")
 	pay_entry("floresta", 1)
+	await Cutscene.play("toll", {"guard": "osvaldo", "setting": "gate_forest", "line": "-1 crédito de estudo. Boa trilha!"})
 	Game.go_to_forest("town")
 
 

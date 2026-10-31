@@ -60,7 +60,7 @@ func run(d: Node) -> void:
 	Story.talk("osvaldo")
 	await dev.wait(0.3)
 	await skip()
-	await dev.wait(2.0)
+	await dev.wait(7.0)
 	check_scene("Forest")
 	print("[story] créditos depois do pedágio: ", Story.credits(), " entradas hoje: ", Story.entries_today("floresta"))
 	if Story.entries_today("floresta") != 1 or Story.entry_cost("floresta", 1) != 1 or Story.credits() != 0:

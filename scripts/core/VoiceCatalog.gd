@@ -1,0 +1,58 @@
+# Gerado por tools/build_voices.py. Não edite à mão.
+class_name VoiceCatalog
+
+const CLIPS := {
+	"mage": {
+		"angry": ["res://assets/audio/voice/mage/angry_1.wav", "res://assets/audio/voice/mage/angry_2.wav", "res://assets/audio/voice/mage/angry_3.wav", "res://assets/audio/voice/mage/angry_4.wav"],
+		"ask": ["res://assets/audio/voice/mage/ask_1.wav", "res://assets/audio/voice/mage/ask_2.wav", "res://assets/audio/voice/mage/ask_3.wav", "res://assets/audio/voice/mage/ask_4.wav"],
+		"bye": ["res://assets/audio/voice/mage/bye_1.wav", "res://assets/audio/voice/mage/bye_2.wav", "res://assets/audio/voice/mage/bye_3.wav"],
+		"greet": ["res://assets/audio/voice/mage/greet_1.wav", "res://assets/audio/voice/mage/greet_2.wav", "res://assets/audio/voice/mage/greet_3.wav", "res://assets/audio/voice/mage/greet_4.wav"],
+		"happy": ["res://assets/audio/voice/mage/happy_1.wav", "res://assets/audio/voice/mage/happy_2.wav", "res://assets/audio/voice/mage/happy_3.wav", "res://assets/audio/voice/mage/happy_4.wav"],
+		"hurt": ["res://assets/audio/voice/mage/hurt_1.wav", "res://assets/audio/voice/mage/hurt_2.wav", "res://assets/audio/voice/mage/hurt_3.wav", "res://assets/audio/voice/mage/hurt_4.wav"],
+		"laugh": ["res://assets/audio/voice/mage/laugh_1.wav", "res://assets/audio/voice/mage/laugh_2.wav", "res://assets/audio/voice/mage/laugh_3.wav", "res://assets/audio/voice/mage/laugh_4.wav"],
+		"no": ["res://assets/audio/voice/mage/no_1.wav", "res://assets/audio/voice/mage/no_2.wav", "res://assets/audio/voice/mage/no_3.wav"],
+		"sad": ["res://assets/audio/voice/mage/sad_1.wav", "res://assets/audio/voice/mage/sad_2.wav", "res://assets/audio/voice/mage/sad_3.wav", "res://assets/audio/voice/mage/sad_4.wav"],
+		"yes": ["res://assets/audio/voice/mage/yes_1.wav", "res://assets/audio/voice/mage/yes_2.wav"],
+	},
+	"orc": {
+		"angry": ["res://assets/audio/voice/orc/angry_1.wav", "res://assets/audio/voice/orc/angry_2.wav", "res://assets/audio/voice/orc/angry_3.wav", "res://assets/audio/voice/orc/angry_4.wav"],
+		"ask": ["res://assets/audio/voice/orc/ask_1.wav", "res://assets/audio/voice/orc/ask_2.wav", "res://assets/audio/voice/orc/ask_3.wav", "res://assets/audio/voice/orc/ask_4.wav"],
+		"happy": ["res://assets/audio/voice/orc/happy_1.wav", "res://assets/audio/voice/orc/happy_2.wav", "res://assets/audio/voice/orc/happy_3.wav", "res://assets/audio/voice/orc/happy_4.wav"],
+		"hurt": ["res://assets/audio/voice/orc/hurt_1.wav", "res://assets/audio/voice/orc/hurt_2.wav", "res://assets/audio/voice/orc/hurt_3.wav", "res://assets/audio/voice/orc/hurt_4.wav"],
+		"laugh": ["res://assets/audio/voice/orc/laugh_1.wav", "res://assets/audio/voice/orc/laugh_2.wav", "res://assets/audio/voice/orc/laugh_3.wav", "res://assets/audio/voice/orc/laugh_4.wav"],
+		"no": ["res://assets/audio/voice/orc/no_1.wav", "res://assets/audio/voice/orc/no_2.wav", "res://assets/audio/voice/orc/no_3.wav"],
+		"sad": ["res://assets/audio/voice/orc/sad_1.wav", "res://assets/audio/voice/orc/sad_2.wav", "res://assets/audio/voice/orc/sad_3.wav", "res://assets/audio/voice/orc/sad_4.wav"],
+		"yes": ["res://assets/audio/voice/orc/yes_1.wav"],
+	},
+	"fem_bright": {
+		"ask": ["res://assets/audio/voice/fem_bright/ask_1.wav", "res://assets/audio/voice/fem_bright/ask_2.wav", "res://assets/audio/voice/fem_bright/ask_3.wav", "res://assets/audio/voice/fem_bright/ask_4.wav"],
+		"bye": ["res://assets/audio/voice/fem_bright/bye_1.wav", "res://assets/audio/voice/fem_bright/bye_2.wav", "res://assets/audio/voice/fem_bright/bye_3.wav", "res://assets/audio/voice/fem_bright/bye_4.wav"],
+		"greet": ["res://assets/audio/voice/fem_bright/greet_1.wav", "res://assets/audio/voice/fem_bright/greet_2.wav", "res://assets/audio/voice/fem_bright/greet_3.wav", "res://assets/audio/voice/fem_bright/greet_4.wav"],
+		"laugh": ["res://assets/audio/voice/fem_bright/laugh_1.wav", "res://assets/audio/voice/fem_bright/laugh_2.wav", "res://assets/audio/voice/fem_bright/laugh_3.wav"],
+		"no": ["res://assets/audio/voice/fem_bright/no_1.wav", "res://assets/audio/voice/fem_bright/no_2.wav", "res://assets/audio/voice/fem_bright/no_3.wav", "res://assets/audio/voice/fem_bright/no_4.wav"],
+		"sad": ["res://assets/audio/voice/fem_bright/sad_1.wav", "res://assets/audio/voice/fem_bright/sad_2.wav", "res://assets/audio/voice/fem_bright/sad_3.wav", "res://assets/audio/voice/fem_bright/sad_4.wav"],
+		"yes": ["res://assets/audio/voice/fem_bright/yes_1.wav", "res://assets/audio/voice/fem_bright/yes_2.wav", "res://assets/audio/voice/fem_bright/yes_3.wav", "res://assets/audio/voice/fem_bright/yes_4.wav"],
+	},
+	"fem_mid": {
+		"angry": ["res://assets/audio/voice/fem_mid/angry_1.wav", "res://assets/audio/voice/fem_mid/angry_2.wav", "res://assets/audio/voice/fem_mid/angry_3.wav", "res://assets/audio/voice/fem_mid/angry_4.wav"],
+		"ask": ["res://assets/audio/voice/fem_mid/ask_1.wav", "res://assets/audio/voice/fem_mid/ask_2.wav", "res://assets/audio/voice/fem_mid/ask_3.wav", "res://assets/audio/voice/fem_mid/ask_4.wav"],
+		"bye": ["res://assets/audio/voice/fem_mid/bye_1.wav", "res://assets/audio/voice/fem_mid/bye_2.wav", "res://assets/audio/voice/fem_mid/bye_3.wav"],
+		"greet": ["res://assets/audio/voice/fem_mid/greet_1.wav", "res://assets/audio/voice/fem_mid/greet_2.wav", "res://assets/audio/voice/fem_mid/greet_3.wav", "res://assets/audio/voice/fem_mid/greet_4.wav"],
+		"happy": ["res://assets/audio/voice/fem_mid/happy_1.wav", "res://assets/audio/voice/fem_mid/happy_2.wav", "res://assets/audio/voice/fem_mid/happy_3.wav", "res://assets/audio/voice/fem_mid/happy_4.wav"],
+		"hurt": ["res://assets/audio/voice/fem_mid/hurt_1.wav"],
+		"laugh": ["res://assets/audio/voice/fem_mid/laugh_1.wav", "res://assets/audio/voice/fem_mid/laugh_2.wav", "res://assets/audio/voice/fem_mid/laugh_3.wav"],
+		"no": ["res://assets/audio/voice/fem_mid/no_1.wav", "res://assets/audio/voice/fem_mid/no_2.wav", "res://assets/audio/voice/fem_mid/no_3.wav", "res://assets/audio/voice/fem_mid/no_4.wav"],
+		"sad": ["res://assets/audio/voice/fem_mid/sad_1.wav", "res://assets/audio/voice/fem_mid/sad_2.wav", "res://assets/audio/voice/fem_mid/sad_3.wav", "res://assets/audio/voice/fem_mid/sad_4.wav"],
+		"yes": ["res://assets/audio/voice/fem_mid/yes_1.wav", "res://assets/audio/voice/fem_mid/yes_2.wav", "res://assets/audio/voice/fem_mid/yes_3.wav", "res://assets/audio/voice/fem_mid/yes_4.wav"],
+	},
+	"male": {
+		"angry": ["res://assets/audio/voice/male/angry_1.wav", "res://assets/audio/voice/male/angry_2.wav"],
+		"ask": ["res://assets/audio/voice/male/ask_1.wav", "res://assets/audio/voice/male/ask_2.wav", "res://assets/audio/voice/male/ask_3.wav", "res://assets/audio/voice/male/ask_4.wav"],
+		"bye": ["res://assets/audio/voice/male/bye_1.wav", "res://assets/audio/voice/male/bye_2.wav", "res://assets/audio/voice/male/bye_3.wav", "res://assets/audio/voice/male/bye_4.wav"],
+		"greet": ["res://assets/audio/voice/male/greet_1.wav", "res://assets/audio/voice/male/greet_2.wav", "res://assets/audio/voice/male/greet_3.wav", "res://assets/audio/voice/male/greet_4.wav"],
+		"happy": ["res://assets/audio/voice/male/happy_1.wav", "res://assets/audio/voice/male/happy_2.wav", "res://assets/audio/voice/male/happy_3.wav", "res://assets/audio/voice/male/happy_4.wav"],
+		"no": ["res://assets/audio/voice/male/no_1.wav", "res://assets/audio/voice/male/no_2.wav", "res://assets/audio/voice/male/no_3.wav", "res://assets/audio/voice/male/no_4.wav"],
+		"sad": ["res://assets/audio/voice/male/sad_1.wav", "res://assets/audio/voice/male/sad_2.wav", "res://assets/audio/voice/male/sad_3.wav", "res://assets/audio/voice/male/sad_4.wav"],
+		"yes": ["res://assets/audio/voice/male/yes_1.wav", "res://assets/audio/voice/male/yes_2.wav", "res://assets/audio/voice/male/yes_3.wav", "res://assets/audio/voice/male/yes_4.wav"],
+	},
+}

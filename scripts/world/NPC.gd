@@ -32,6 +32,16 @@ var talk_cd: float = 3.0
 var stuck_time: float = 0.0
 var bubble: Control = null
 var emote: Sprite2D = null
+# --- agressão: moradores podem ser feridos (a lei cuida do resto, ver Law)
+var hp: float = 40.0
+var max_hp: float = 40.0
+var body_radius: float = 5.0
+var downed: bool = false
+var is_police: bool = false
+var retaliating: bool = false      # virou lutador hostil (floresta/masmorra)
+var _hits_taken: int = 0
+var _alarmed: bool = false
+var _chase_say_cd: float = 0.0
 
 
 static func create(parent: Node, sheet_name: String, pos: Vector2, npc_mode: String = "static", look_id: String = "") -> NPC:
@@ -82,6 +92,18 @@ func _ready() -> void:
 		add_child(sprite)
 	wait_time = randf_range(0.5, 3.0)
 	talk_cd = randf_range(1.0, 4.0)
+	if mode != "animal":
+		add_to_group("npc_hit")
+		_add_street_chat.call_deferred()
+
+
+## [E] "Conversar": gente comum conta uma história curta e uma frase motivacional (Street).
+## Quem já tem "Falar com" (história, dono de loja) marca meta "has_talker" e fica de fora.
+func _add_street_chat() -> void:
+	if not is_inside_tree() or has_meta("has_talker") or is_police or mode == "animal" or mode == "chase":
+		return
+	var p := StoryProp.make("Conversar", func(_me: StoryProp) -> void: Street.talk(self), null, 22.0, false)
+	add_child(p)
 
 
 ## Passa a usar o visual de outro personagem (ex.: o morador vira o Osvaldo da história).
@@ -94,7 +116,10 @@ func use_look(key: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if talking:
+	if talking or downed:
+		return
+	if mode == "chase":
+		_chase(delta)
 		return
 	if mode == "static":
 		_face_player_if_near()
@@ -223,6 +248,116 @@ func _play_idle() -> void:
 		(sprite as AnimatedSprite2D).play("idle")
 	else:
 		play_anim("idle_" + dir_name)
+
+
+# ================================================================== Agressão e lei
+func is_targetable() -> bool:
+	return not downed and not talking and not is_police and not retaliating and mode != "animal"
+
+
+func take_hit(amount: float, kb: Vector2, _crit: bool, _from: Vector2 = Vector2.ZERO) -> void:
+	if not is_targetable():
+		return
+	hp -= amount * 0.5
+	_hits_taken += 1
+	Fx.float_text(get_parent(), "%d" % int(round(amount * 0.5)), global_position + Vector2(randf_range(-4, 4), -34), Color("ffb0a0"), 1, 14.0)
+	Fx.flash(actor if actor != null else sprite, Color(2.4, 1.2, 1.2), 0.1)
+	Audio.sfx("hit1", -6.0)
+	if actor != null:
+		actor.shake()
+	show_emote(7 if _hits_taken < 2 else 13)
+	position += kb * 0.04
+	var scene := get_tree().current_scene
+	if scene != null and (scene.is_in_group("forest") or scene.is_in_group("dungeon")):
+		_start_retaliation()
+		return
+	if hp <= 0.0:
+		_go_down()
+		Law.on_npc_downed(self)
+	else:
+		Law.on_npc_hurt(self)
+
+
+## Desmaia (não morre): se regenera depois de um tempo.
+func _go_down() -> void:
+	downed = true
+	remove_from_group("npc_hit")
+	moving = false
+	velocity = Vector2.ZERO
+	if actor != null:
+		actor.hold_last = true
+		actor.play("hurt_down", true)
+	elif sprite is AnimatedSprite2D:
+		(sprite as AnimatedSprite2D).modulate = Color(1, 0.6, 0.6)
+	get_tree().create_timer(20.0).timeout.connect(_regenerate)
+
+
+func _regenerate() -> void:
+	if not is_instance_valid(self):
+		return
+	downed = false
+	hp = max_hp
+	_hits_taken = 0
+	_alarmed = false
+	add_to_group("npc_hit")
+	if actor != null:
+		actor.hold_last = false
+		actor.play("idle_down", true)
+	elif sprite is AnimatedSprite2D:
+		(sprite as AnimatedSprite2D).modulate = Color.WHITE
+	show_emote(22)
+
+
+## Floresta e masmorra: quem apanha revida de verdade (ArenaFighter hostil). Se cair, é homicídio.
+func _start_retaliation() -> void:
+	if retaliating:
+		return
+	retaliating = true
+	remove_from_group("npc_hit")
+	var opp := Arena.npc_opponent(Looks.of(look_key if look_key != "" else sheet), GameState.level)
+	var f := ArenaFighter.spawn(get_parent(), opp, global_position)
+	f.hostile_npc = true
+	visible = false
+	set_physics_process(false)
+	HUD.show_toast("O morador revida! Se derrubá-lo, você será preso por homicídio (3 h de foco).", UI.C_BAD)
+	f.begin()
+	f.defeated.connect(func() -> void:
+		Law.arrest("murder")
+		get_tree().create_timer(25.0).timeout.connect(_regenerate_after_fight))
+	f.tree_exited.connect(func() -> void:
+		if is_instance_valid(self) and retaliating and not downed and f.state != ArenaFighter.State.DOWN:
+			_regenerate_after_fight())
+
+
+func _regenerate_after_fight() -> void:
+	if not is_instance_valid(self):
+		return
+	retaliating = false
+	visible = true
+	set_physics_process(true)
+	hp = max_hp
+	_hits_taken = 0
+	add_to_group("npc_hit")
+
+
+# ================================================================== Polícia
+## Guarda que persegue o jogador depois de uma agressão e o prende ao alcançá-lo.
+func _chase(delta: float) -> void:
+	var p := get_tree().get_first_node_in_group("player") as Node2D
+	if p == null:
+		return
+	var v := p.global_position - global_position
+	_chase_say_cd -= delta
+	if v.length() < 14.0:
+		set_physics_process(false)
+		Law.arrest("assault" if not Law.wants_murder else "murder")
+		return
+	velocity = v.normalized() * 84.0
+	move_and_slide()
+	_play_walk(v)
+	if _chase_say_cd <= 0.0:
+		_chase_say_cd = 2.5
+		_say("Alto lá! Em nome da lei!")
 
 
 # --- fala e emotes quando o jogador chega perto
