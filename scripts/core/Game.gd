@@ -7,6 +7,7 @@ signal run_updated
 signal run_finished(summary: Dictionary)
 
 const TOWN_SCENE := "res://scenes/Main.tscn"
+const TITLE_SCENE := "res://scenes/Title.tscn"
 const DUNGEON_SCENE := "res://scenes/Dungeon.tscn"
 const INTERIOR_SCENE := "res://scenes/Interior.tscn"
 const FOREST_SCENE := "res://scenes/Forest.tscn"
@@ -98,6 +99,12 @@ func change_scene(path: String, duration: float = 0.3) -> void:
 	await fade_in(duration + 0.05)
 	input_locked = false
 	transitioning = false
+
+
+func go_to_title() -> void:
+	GameState.in_dungeon = false
+	Audio.pomo_update()
+	change_scene(TITLE_SCENE)
 
 
 func go_to_town(spawn: String = "start") -> void:

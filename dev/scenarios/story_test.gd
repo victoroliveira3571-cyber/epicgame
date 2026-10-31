@@ -48,6 +48,9 @@ func run(d: Node) -> void:
 	check("c1_portao")
 	print("[story] arma: ", GameState.equipped.get("weapon"), " rank: ", Story.rank_name())
 	# ---------------------------------------------------------------- Osvaldo sem crédito
+	if Story.credits() != 1:
+		fail("jogo novo deveria começar com 1 crédito de cortesia")
+	Story.st()["credits"] = 0   # testa também o caminho sem crédito
 	await talk("osvaldo")
 	check_scene("Town")
 	GameState.complete_focus_session(240, 120, 60)

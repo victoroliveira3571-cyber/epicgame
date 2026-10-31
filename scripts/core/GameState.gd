@@ -16,7 +16,9 @@ signal energy_changed
 
 const SAVE_VERSION := 2
 
-var save_path := "user://savegame.json"  # --save=nome.json (só testes) usa outro arquivo
+var save_path := ""                       # espaço ativo (user://slot_N.json); "" = no menu inicial
+var slot: int = 0                         # 1..3 = espaço de save em uso; 0 = nenhum; -1 = teste (--save=)
+const SLOT_COUNT := 3
 
 # --- progressão
 var level: int = 1
@@ -78,9 +80,13 @@ var _day_check_timer: float = 0.0
 func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--save="):
-			save_path = "user://" + arg.substr(7)
+			save_path = "user://" + arg.substr(7)   # testes: arquivo próprio, carregado já
+			slot = -1
 	get_tree().set_auto_accept_quit(false)
-	load_game()
+	if slot == -1:
+		load_game()
+	else:
+		_reset_defaults()   # o menu inicial escolhe o espaço (novo jogo ou carregar)
 	_ensure_habits()
 	check_daily_reset()
 
@@ -1002,6 +1008,10 @@ func save_game() -> void:
 
 func save_now() -> void:
 	_save_queued = false
+	if save_path == "":
+		return   # menu inicial: ainda não há espaço escolhido
+	if slot >= 1 and not bool(story.get("started", false)):
+		return   # espaço novo só é gravado depois de criar o personagem
 	var data := {
 		"version": SAVE_VERSION,
 		"level": level, "xp": xp, "xp_to_next": xp_to_next, "gold": gold, "hunger": hunger, "hp": hp,
@@ -1027,11 +1037,11 @@ func save_now() -> void:
 
 ## Uma cópia por dia em user://backups (guarda as 30 mais recentes).
 func _daily_backup(data: Dictionary) -> void:
-	if save_path.get_file() != "savegame.json":
+	if slot < 1:
 		return  # saves de teste não geram backup
 	var dir_path := save_path.get_base_dir() + "/backups"
 	DirAccess.make_dir_recursive_absolute(dir_path)
-	var target := "%s/savegame_%s.json" % [dir_path, _today()]
+	var target := "%s/slot%d_%s.json" % [dir_path, slot, _today()]
 	var f := FileAccess.open(target, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(data, "\t"))
@@ -1041,7 +1051,7 @@ func _daily_backup(data: Dictionary) -> void:
 		return
 	var names: Array = []
 	for n in dir.get_files():
-		if n.begins_with("savegame_") and n.ends_with(".json"):
+		if n.begins_with("slot%d_" % slot) and n.ends_with(".json"):
 			names.append(n)
 	names.sort()
 	while names.size() > 30:
@@ -1143,6 +1153,67 @@ func _migrate_v1(d: Dictionary) -> void:
 
 func _dict_of(v: Variant) -> Dictionary:
 	return v if typeof(v) == TYPE_DICTIONARY else {}
+
+
+# ============================================================ Espaços de save (menu inicial)
+static func slot_path(n: int) -> String:
+	return "user://slot_%d.json" % n
+
+
+## Resumo de um espaço para o menu: {} se vazio.
+func slot_info(n: int) -> Dictionary:
+	var path := slot_path(n)
+	if not FileAccess.file_exists(path):
+		return {}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return {"broken": true}
+	var d: Dictionary = parsed
+	var st: Dictionary = d.get("story", {}) if typeof(d.get("story", {})) == TYPE_DICTIONARY else {}
+	return {
+		"hero": str(st.get("hero", "Aventureiro")), "level": int(d.get("level", 1)), "gold": int(d.get("gold", 0)),
+		"class": str(d.get("player_class", "")), "chapter": int(st.get("chapter", 1)), "rank": int(st.get("rank", 0)),
+		"playtime": float(d.get("playtime", 0.0)), "look": d.get("look", {}), "gender": str(st.get("gender", "m")),
+		"saved": FileAccess.get_modified_time(path),
+	}
+
+
+## Começa um jogo novo no espaço `n` (o arquivo só é gravado ao criar o personagem).
+func use_new_slot(n: int) -> void:
+	slot = n
+	save_path = slot_path(n)
+	debug_reset()
+	playtime = 0.0
+	gold = 25
+
+
+## Carrega o espaço `n`. Devolve false se estiver vazio ou estragado.
+func use_slot(n: int) -> bool:
+	if not FileAccess.file_exists(slot_path(n)):
+		return false
+	slot = n
+	save_path = slot_path(n)
+	debug_reset()
+	load_game()
+	_ensure_habits()
+	check_daily_reset()
+	stats_changed.emit()
+	return true
+
+
+func delete_slot(n: int) -> void:
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(slot_path(n)))
+	if slot == n:
+		slot = 0
+		save_path = ""
+
+
+## Volta para o menu inicial: grava e solta o espaço.
+func leave_slot() -> void:
+	save_now()
+	_save_queued = false
+	slot = 0
+	save_path = ""
 
 
 func _reset_defaults() -> void:

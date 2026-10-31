@@ -16,6 +16,8 @@ var _rows: VBoxContainer
 class Preview extends Control:
 	var look: Dictionary = {}
 	var px: float = 2.0
+	var draw_frame: bool = true
+	var fixed_row: int = -1          # -1 = gira pelos 4 lados; 3 = só andando para a direita
 	var _tex: Texture2D
 	var _key: String = ""
 	var _t: float = 0.0
@@ -40,14 +42,15 @@ class Preview extends Control:
 		queue_redraw()
 
 	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), Color(0.08, 0.07, 0.1, 0.55))
-		draw_rect(Rect2(Vector2.ZERO, size), Color(UI.C_ORANGE, 0.6), false, 1.0)
 		var floor_y := size.y - 10.0
-		draw_rect(Rect2(8, floor_y - 2, size.x - 16, 2), Color(0, 0, 0, 0.25))
+		if draw_frame:
+			draw_rect(Rect2(Vector2.ZERO, size), Color(0.08, 0.07, 0.1, 0.55))
+			draw_rect(Rect2(Vector2.ZERO, size), Color(UI.C_ORANGE, 0.6), false, 1.0)
+			draw_rect(Rect2(8, floor_y - 2, size.x - 16, 2), Color(0, 0, 0, 0.25))
 		if _tex == null:
 			return
 		var dirs := [2, 3, 0, 1]
-		var row: int = dirs[int(_t / 1.6) % 4]
+		var row: int = dirs[int(_t / 1.6) % 4] if fixed_row < 0 else fixed_row
 		var col := 1 + int(_t * 9.0) % 8
 		var src := Rect2(col * 64, row * 64, 64, 64)
 		var dst := Rect2(Vector2((size.x - 64 * px) / 2.0, floor_y - 62 * px), Vector2(64, 64) * px)

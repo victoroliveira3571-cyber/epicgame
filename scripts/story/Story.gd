@@ -56,7 +56,7 @@ func start_new_game(hero: String, father: String, mother: String, gender: String
 	GameState.story = {
 		"started": true, "hero": hero, "father": father, "mother": mother, "gender": gender,
 		"chapter": 1, "step": "c1_casa", "flags": {}, "rank": 0, "pets": [], "pet": "",
-		"credits": 0, "credit_min": 0, "focus_min": 0, "passes": {}, "cards": [], "bank": {},
+		"credits": 1, "credit_min": 0, "focus_min": 0, "passes": {}, "cards": [], "bank": {},
 		"worries": [], "herbs": 0, "pages": 0,
 	}
 	_save()

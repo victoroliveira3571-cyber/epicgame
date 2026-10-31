@@ -51,8 +51,14 @@ func build() -> void:
 	_mother = _field(v, "Nome da mãe", "A mãe que ficou na floresta")
 	_error = UI.label("", UI.C_BAD)
 	v.add_child(_error)
-	var start := UI.button("Começar a aventura", func() -> void: _start(), 150)
-	v.add_child(start)
+	var row := UI.hbox(6)
+	v.add_child(row)
+	row.add_child(UI.button("Começar a aventura", func() -> void: _start(), 150))
+	var title_scene := get_tree().current_scene
+	if title_scene != null and title_scene.has_method("show_menu"):
+		row.add_child(UI.button("Voltar", func() -> void:
+			HUD.close_window()
+			title_scene.show_menu(), 60))
 	# aparência
 	var right := UI.vbox(3)
 	add_to_body(right, Vector2(240, 0))

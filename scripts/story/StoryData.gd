@@ -130,6 +130,7 @@ const DIALOGS := {
 		["helena", "Sua primeira missão é simples: colha cinco ervas na Borda da Floresta."],
 		["heroi", "Só isso?"],
 		["helena", "Só isso para começar. Ah, e tem o pedágio: entrar na floresta custa 1 crédito de estudo. Crédito não é ouro. Cada hora de foco concluída no Pomodoro vale 1 crédito."],
+		["helena@happy", "Como é a sua primeira missão, a Guilda te deu 1 crédito de cortesia. Ele já está no seu cartão. Os próximos, você conquista estudando."],
 		["tip:helena", "Créditos de estudo: 1 hora de foco concluída = 1 crédito. Eles pagam o pedágio da floresta e da masmorra. Abra o Pomodoro com a tecla P."],
 		["helena", "A trilha fica no fim da avenida, a oeste. O Osvaldo cuida do portão."],
 	],
