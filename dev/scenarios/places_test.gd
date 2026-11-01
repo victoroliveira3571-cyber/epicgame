@@ -31,12 +31,9 @@ func run(dev: Node) -> void:
 			HUD.pomodoro_start(25, 5)
 			await dev.wait(1.2)
 			await dev.shot(OUT + "place_%s_run.png" % pair[0])
-			HUD.pomodoro_toggle()
-			await dev.wait(0.2)
-			ok = ok and Audio._active_music.stream_paused
-			HUD.pomodoro_toggle()
-			await dev.wait(0.2)
-			ok = ok and not Audio._active_music.stream_paused
+			# v2.4: sem música no Pomodoro (só o relógio)
+			await dev.wait(2.0)
+			ok = ok and not Audio._active_music.playing
 			HUD.pomodoro_cancel()
 			HUD.close_window()
 		print("[places] ", pair[0], " mesa=", found != null, " ok=", ok)

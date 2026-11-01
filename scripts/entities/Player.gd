@@ -305,7 +305,6 @@ func _attack() -> void:
 		Audio.sfx("swing3" if heavy else ("swing1" if combo % 2 == 1 else "swing2"), -4.0)
 	else:
 		Audio.novo("ataque_espada", -4.0)
-	Audio.voice.hero("attack_big" if heavy else "attack", 0.85 if heavy else 0.3, 0.9 if heavy else 1.4)
 	if Data.CLASSES[GameState.player_class]["ranged"]:
 		_shoot(heavy)
 	else:
@@ -433,7 +432,6 @@ func _start_dodge() -> void:
 	dodge_time_left = DODGE_TIME
 	dodge_cd_left = DODGE_COOLDOWN
 	invuln = DODGE_TIME + 0.06
-	Audio.voice.hero("roll", 0.45, 1.2)
 	_ghost_timer = 0.0
 	knock = Vector2.ZERO
 	Audio.sfx2("whoosh", -6.0, 0.12)
@@ -690,7 +688,6 @@ func hurt(raw_damage: float, from_pos: Vector2, knockback_strength: float = 90.0
 	Fx.float_text(world, "-%d" % amount, global_position + Vector2(0, -36), Color("ff6a5a"), 8)
 	Fx.burst(world, global_position + Vector2(0, -14), Color(1, 0.35, 0.3), 5, 34.0, 0.3)
 	Audio.sfx("hurt", -2.0)
-	Audio.voice.hero("hurt", 0.8, 0.5)
 	Game.hit_stop(0.05)
 	return true
 
@@ -706,7 +703,6 @@ func _on_died() -> void:
 	sprite.play("hurt_down", true)
 	sprite.modulate = Color.WHITE
 	Audio.sfx("die")
-	Audio.voice.hero("death")
 	var tw := create_tween()
 	tw.tween_property(sprite, "modulate", Color(0.6, 0.6, 0.7, 0.9), 0.5)
 

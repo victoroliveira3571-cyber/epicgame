@@ -26,10 +26,11 @@ class DoorTrigger extends Interactable:
 		return "[E] " + building.display_name
 
 	func interact(_player: Node) -> void:
-		Audio.sfx("ui_open", -4.0)
 		if building.interior_id != "":
+			Audio.novo("entrar_casa", -4.0, 0.0)
 			Game.enter_interior(building.interior_id, building.return_scene)
 		else:
+			Audio.sfx("ui_open", -4.0)
 			HUD.open_window(building.building_id)
 
 

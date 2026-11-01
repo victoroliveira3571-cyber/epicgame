@@ -40,7 +40,6 @@ func build() -> void:
 	v.add_child(_slider("Volume geral", GameState.audio_volume, func(x: float) -> void: GameState.set_audio_volume(x)))
 	v.add_child(_slider("Volume da música", GameState.music_volume, func(x: float) -> void: GameState.set_music_volume(x)))
 	v.add_child(_slider("Efeitos", GameState.sfx_volume, func(x: float) -> void: GameState.set_sfx_volume(x)))
-	v.add_child(_slider("Vozes", GameState.voice_volume, func(x: float) -> void: GameState.set_voice_volume(x)))
 	# o botão é criado antes do clique ser ligado: a função precisa enxergar o botão já pronto
 	var mute := UI.button("Som: ligado" if not GameState.audio_muted else "Som: desligado", Callable(), 100)
 	mute.pressed.connect(func() -> void:
@@ -52,15 +51,9 @@ func build() -> void:
 		Audio.ui_click()
 		GameState.set_music_on(not GameState.music_on)
 		music.text = "Música: ligada" if GameState.music_on else "Música: desligada")
-	var voices := UI.button("Vozes: ligadas" if Audio.voice.enabled else "Vozes: desligadas", Callable(), 100)
-	voices.pressed.connect(func() -> void:
-		Audio.ui_click()
-		Audio.voice.set_enabled(not Audio.voice.enabled)
-		voices.text = "Vozes: ligadas" if Audio.voice.enabled else "Vozes: desligadas")
 	var toggles := UI.hbox(6)
 	toggles.add_child(mute)
 	toggles.add_child(music)
-	toggles.add_child(voices)
 	v.add_child(toggles)
 	v.add_child(UI.hline())
 	v.add_child(UI.label("Controles", UI.C_ORANGE_L))

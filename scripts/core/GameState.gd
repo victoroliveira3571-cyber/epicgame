@@ -65,7 +65,6 @@ var audio_muted: bool = false
 var audio_volume: float = 1.0
 var music_volume: float = 0.7
 var sfx_volume: float = 1.0  # efeitos (golpes, magias, passos, sons de ação)
-var voice_volume: float = 1.0  # vozes dos diálogos
 var music_on: bool = true    # liga/desliga só a música (Pomodoro e pausa)
 var clock_on: bool = true    # tique-taque do relógio durante o foco
 var tutorial_done: Dictionary = {}
@@ -769,7 +768,7 @@ func _tick_regen_and_hunger(delta: float) -> void:
 	if hp > 0 and hp < max_hp:
 		var rate := stat("regen")
 		if not in_dungeon and hunger > 0:
-			rate += max_hp * 0.06  # na cidade a vida volta rápido
+			rate += max_hp * 0.02  # v2.4: na cidade a vida volta mais devagar (era 6% por segundo)
 		if rate > 0.0:
 			_regen_accum += rate * delta
 			if _regen_accum >= 1.0:
@@ -1201,12 +1200,6 @@ func set_sfx_volume(volume: float) -> void:
 	stats_changed.emit()
 
 
-func set_voice_volume(volume: float) -> void:
-	voice_volume = clampf(volume, 0.0, 1.0)
-	_queue_save()
-	stats_changed.emit()
-
-
 func set_music_on(on: bool) -> void:
 	music_on = on
 	_queue_save()
@@ -1245,7 +1238,7 @@ func save_now() -> void:
 		"study_credits": study_credits, "looks_owned": looks_owned, "look": look, "story": story, "arena": arena, "promotion": promotion,
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
-		"music_volume": music_volume, "sfx_volume": sfx_volume, "voice_volume": voice_volume,
+		"music_volume": music_volume, "sfx_volume": sfx_volume,
 		"music_on": music_on, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
 	}
 	# grava num arquivo temporário e troca: uma queda de energia não corrompe o save
@@ -1314,7 +1307,6 @@ func load_game() -> void:
 	audio_muted = bool(d.get("audio_muted", false))
 	audio_volume = float(d.get("audio_volume", 1.0))
 	sfx_volume = float(d.get("sfx_volume", 1.0))
-	voice_volume = float(d.get("voice_volume", 1.0))
 	if version >= 2:
 		xp_to_next = int(d.get("xp_to_next", Data.xp_for_level(level)))
 		talent_points = int(d.get("talent_points", 0))

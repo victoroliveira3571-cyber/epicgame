@@ -39,10 +39,10 @@ const AMB_DB := -12.0
 var _scene_music: String = ""         # música pedida pelo lugar atual
 var _pomo_genre: String = ""          # playlist tocando ("" = nenhuma)
 var _pomo_scene: String = ""
+var _pomo_quiet: bool = false         # Pomodoro ativo: sem música nem ambiente, só o relógio
 var _playlist: Array = []
 var _pl_index: int = 0
 var _amb_players: Dictionary = {}     # id -> AudioStreamPlayer
-var voice: Voice                      # vozes dos diálogos (Voice.gd)
 
 
 func _ready() -> void:
@@ -52,8 +52,6 @@ func _ready() -> void:
 	_active_music = _music_a
 	for i in POOL_SIZE:
 		_pool.append(_make_player())
-	voice = Voice.new()
-	add_child(voice)
 	_apply_volume()
 	GameState.stats_changed.connect(_apply_volume)
 	_music_a.finished.connect(_on_music_finished.bind(_music_a))
@@ -113,7 +111,7 @@ func _load_stream(path: String, looping: bool = false) -> AudioStream:
 ## prioridade; quando o foco acaba, volta a música pedida aqui.
 func play_music(name: String, fade: float = 1.0) -> void:
 	_scene_music = name
-	if _pomo_genre != "":
+	if _pomo_genre != "" or _pomo_quiet:
 		return
 	_play_named(name, fade)
 
@@ -338,20 +336,18 @@ func pomo_update(fade: float = 1.5) -> void:
 	var active := HUD.pomo_state != "idle" and HUD.scene_kind != "dungeon"
 	var scene := str(GameState.pomo_cfg.get("scene", "cafeteria"))
 	_duck_world(active)
-	var genre := PomoSound.scene_genre(scene) if active else ""
-	if genre == "jogo" or (genre != "" and PomoSound.tracks(genre).is_empty()):
-		genre = ""
-	if genre != _pomo_genre:
-		_pomo_genre = genre
-		if genre == "":
+	# v2.4: durante o Pomodoro não há música nem ambiente, só o tique-taque do relógio.
+	var was_quiet := _pomo_quiet
+	_pomo_quiet = active
+	_pomo_genre = ""
+	if active:
+		if not was_quiet:
 			_current_music = ""
-			_play_named(_scene_music, fade)
-		else:
-			_playlist = PomoSound.tracks(genre).duplicate()
-			_playlist.shuffle()
-			_pl_index = 0
-			_play_track(fade)
-	_update_ambience(scene if active else "")
+			stop_music(fade)
+	elif was_quiet:
+		_current_music = ""
+		_play_named(_scene_music, fade)
+	_update_ambience("")
 	# timer pausado = música e ambiente pausados no mesmo ponto (voltam juntos com o tempo)
 	var hold := HUD.pomo_state == "paused" and _pomo_genre != ""
 	if _active_music != null:

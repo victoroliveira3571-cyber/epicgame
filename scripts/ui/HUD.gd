@@ -864,6 +864,9 @@ func _build_banner() -> void:
 	root.add_child(_banner)
 
 
+var _banner_tween: Tween
+
+
 func floor_banner(title: String, subtitle: String) -> void:
 	for c in _banner.get_children():
 		c.queue_free()
@@ -883,10 +886,13 @@ func floor_banner(title: String, subtitle: String) -> void:
 	s.size = Vector2(UI.SIZE.x, 12)
 	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_banner.add_child(s)
-	var tw := create_tween()
-	tw.tween_property(_banner, "modulate:a", 1.0, 0.35)
-	tw.tween_interval(1.8)
-	tw.tween_property(_banner, "modulate:a", 0.0, 0.6)
+	# v2.4: um aviso novo cancela o anterior (ao andar na divisa das zonas os tweens brigavam)
+	if _banner_tween != null and _banner_tween.is_valid():
+		_banner_tween.kill()
+	_banner_tween = create_tween()
+	_banner_tween.tween_property(_banner, "modulate:a", 1.0, 0.35)
+	_banner_tween.tween_interval(1.8)
+	_banner_tween.tween_property(_banner, "modulate:a", 0.0, 0.6)
 
 
 func show_toast(text: String, color: Color = Color.WHITE) -> void:
@@ -907,7 +913,6 @@ func show_toast(text: String, color: Color = Color.WHITE) -> void:
 
 func _on_level_up(new_level: int) -> void:
 	Audio.novo("lvl_up", -2.0)
-	Audio.voice.hero("victory", 1.0, 2.0)
 	Audio.sfx("star", -6.0)
 	show_toast("Nível %d! Você ganhou pontos de talento (C)." % new_level, UI.C_GOLD)
 	_refresh_hotbar()
@@ -1097,8 +1102,10 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 				return
 			if action == "pause" and is_window_open():
 				return  # a própria janela fecha com Esc
-			if action == "map" and scene_kind == "":
-				return  # dentro de prédios não há mapa
+			if action == "map" and scene_kind in ["", "interior"]:
+				# v2.4: dentro de prédios não há mapa. Antes só o menu inicial era barrado: no interior a janela
+				# abria, não achava cena, se fechava dentro do build e deixava o jogo pausado (engasgo ao apertar M)
+				return
 			get_viewport().set_input_as_handled()
 			toggle_window(shortcuts[action])
 			return

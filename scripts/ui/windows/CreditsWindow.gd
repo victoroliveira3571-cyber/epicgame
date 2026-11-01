@@ -24,12 +24,6 @@ const SECTIONS := [
 		"freesound_community, freesound_gamestudio, coghezzi, composiia, benvibrant, kaazoom, 666herohero e Ninja Adventure.",
 		"Sons de ambiente provisórios do Pomodoro: sintetizados (tools/gen_pomodoro_sfx.py).",
 	]],
-	["Vozes", [
-		"Herói masculino: RPG Male Adventurer voice clips (Brandon Song, OpenGameArt, CC0).",
-		"Vozes masculinas: RPG Male Vocal (konakuma, itch.io; crédito pedido pelo autor).",
-		"Vozes femininas: Female RPG Character voice pack (RiddlesYouThis, OpenGameArt; CC-BY 3.0, conferir na página).",
-		"Também: Mage e Orc Voice Pack (John Carroll) e Vocal Asset 01 - Female Mid Tone (witpop).",
-	]],
 ]
 
 

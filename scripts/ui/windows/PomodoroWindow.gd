@@ -8,7 +8,6 @@ const FOCUS_PRESETS := [15, 25, 45, 60]
 const BREAK_PRESETS := [5, 10, 15, 20]
 const VIEW := Vector2(600, 282)        # área da cena no modo foco
 const SCENE_CROP_TOP := 4.0            # corta só um fio do teto; o resto sai do chão, embaixo
-const MIXER_W := 232.0
 
 var focus_min: int = 25
 var break_min: int = 5
@@ -20,9 +19,6 @@ var _status_label: Label
 var _bar: UI.Bar
 var _pause_btn: Button
 var _finish_btn: Button
-var _mixer: Control
-var _mixer_open: bool = false
-var _track_label: Label
 var _worry_panel: Control
 var _worry_edit: TextEdit
 var _worry_open: bool = false
@@ -72,15 +68,11 @@ func build() -> void:
 		scene_id = "cafeteria"
 	_view_key = _current_key()
 	_scene = null
-	_mixer = null
-	_track_label = null
 	_worry_panel = null
 	if HUD.pomo_state == "idle":
 		_build_settings()
 	else:
 		_build_running()
-	if _mixer_open:
-		_open_mixer()
 	if _worry_open and _view_key == "run":
 		_toggle_worry(true)
 
@@ -97,9 +89,6 @@ func _process(_delta: float) -> void:
 	if _current_key() != _view_key and body != null:
 		rebuild()
 		return
-	if _track_label != null:
-		var title := Audio.pomo_track_title()
-		_track_label.text = ("Tocando: " + title) if title != "" else _no_track_text()
 	if _view_key == "run" and _time_label != null:
 		_time_label.text = UI.fmt_time(HUD.pomo_left)
 		var st := HUD.pomo_state
@@ -111,13 +100,6 @@ func _process(_delta: float) -> void:
 		if _scene != null and _scene.state != st:
 			_scene.state = st
 
-
-func _no_track_text() -> String:
-	if HUD.pomo_state == "idle":
-		return "A playlist toca quando o foco começa."
-	if PomoSound.scene_genre(scene_id) == "jogo":
-		return "Música do jogo."
-	return "Sem faixas neste estilo."
 
 
 # ------------------------------------------------------------------ configuração
@@ -170,7 +152,6 @@ func _build_settings() -> void:
 	var snd := UI.hbox(4)
 	left.add_child(snd)
 	_sound_toggles(snd)
-	snd.add_child(UI.button("Músicas e sons", func() -> void: _toggle_mixer(), 88))
 	# prévia viva do cenário
 	var preview := Control.new()
 	preview.position = Vector2(284, 0)
@@ -308,7 +289,6 @@ func _build_running() -> void:
 	var worry_btn := UI.button("Preocupações", func() -> void: _toggle_worry(not _worry_open), 78)
 	worry_btn.tooltip_text = "Anote o que está te distraindo sem sair do foco"
 	btns.add_child(worry_btn)
-	btns.add_child(UI.button("Sons", func() -> void: _toggle_mixer(), 40))
 	btns.add_child(UI.button("Histórico", func() -> void: HUD.open_window("historico"), 56))
 	btns.add_child(UI.button("Voltar ao jogo", func() -> void: HUD.close_window(), 78))
 	btns.position.x = roundf((VIEW.x - btns.get_combined_minimum_size().x) / 2.0)
@@ -321,15 +301,8 @@ func _sep() -> Control:
 	return c
 
 
-## Música (liga/desliga) e relógio (tique-taque) como botões com luz.
+## Relógio (tique-taque) como botão com luz.
 func _sound_toggles(row: HBoxContainer) -> void:
-	var music := Toggle.new("Música", "Música", GameState.music_on, 80)
-	music.tooltip_text = "Liga/desliga a música"
-	music.pressed.connect(func() -> void:
-		Audio.ui_click()
-		GameState.set_music_on(not GameState.music_on)
-		music.set_on(GameState.music_on))
-	row.add_child(music)
 	var clock := Toggle.new("Relógio", "Relógio", GameState.clock_on, 86)
 	clock.tooltip_text = "Tique-taque do relógio durante o foco"
 	clock.pressed.connect(func() -> void:
@@ -391,91 +364,3 @@ func _save_worry() -> void:
 		GameState.save_game()
 		HUD.show_toast("Preocupação guardada. De volta ao foco.", UI.C_GOOD)
 	_toggle_worry(false)
-
-
-func _toggle_mixer() -> void:
-	_mixer_open = not _mixer_open
-	if _mixer_open:
-		_open_mixer()
-	elif _mixer != null:
-		_mixer.queue_free()
-		_mixer = null
-		_track_label = null
-
-
-func _open_mixer() -> void:
-	if _mixer != null:
-		_mixer.queue_free()
-	var card := UI.card(Color(0.07, 0.06, 0.07, 0.94), UI.C_ORANGE)
-	card.custom_minimum_size.x = MIXER_W
-	body.add_child(card)
-	_mixer = card
-	var v := UI.vbox(3)
-	card.add_child(v)
-	var head := UI.hbox(4)
-	v.add_child(head)
-	var t := UI.label("Sons: " + StudyScene.SCENES[scene_id]["name"], UI.C_ORANGE_L)
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(t)
-	head.add_child(UI.button("X", func() -> void: _toggle_mixer(), 14))
-	v.add_child(UI.label("Música do cenário", UI.C_TEXT))
-	var gg := GridContainer.new()
-	gg.columns = 3
-	gg.add_theme_constant_override("h_separation", 3)
-	gg.add_theme_constant_override("v_separation", 3)
-	v.add_child(gg)
-	var cur := PomoSound.scene_genre(scene_id)
-	for g in PomoSound.GENRES:
-		var gid: String = g[0]
-		var n := PomoSound.tracks(gid).size()
-		var b := UI.button(g[1], func() -> void:
-			PomoSound.set_scene_genre(scene_id, gid)
-			Audio.pomo_update()
-			_open_mixer(), 66)
-		b.disabled = gid == cur
-		if gid != "jogo" and n == 0:
-			b.disabled = true
-			b.tooltip_text = "Sem faixas em assets/audio/pomodoro/musica/%s/" % gid
-		gg.add_child(b)
-	var tr := UI.hbox(4)
-	v.add_child(tr)
-	_track_label = UI.label("", UI.C_DIM)
-	_track_label.custom_minimum_size.x = MIXER_W - 62
-	_track_label.clip_text = true
-	_track_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	tr.add_child(_track_label)
-	var nxt := UI.button("Próxima", func() -> void: Audio.pomo_next(), 48)
-	nxt.disabled = HUD.pomo_state == "idle" or cur == "jogo"
-	tr.add_child(nxt)
-	var vr := UI.hbox(6)
-	v.add_child(vr)
-	var vl := UI.label("Volume", UI.C_TEXT)
-	vl.custom_minimum_size.x = 64
-	vr.add_child(vl)
-	var vs := UI.slider(GameState.music_volume, func(x: float) -> void: GameState.set_music_volume(x), MIXER_W - 82)
-	vs.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	vr.add_child(vs)
-	v.add_child(UI.hline())
-	v.add_child(UI.label("Sons do ambiente", UI.C_TEXT))
-	for l in PomoSound.scene_layers(scene_id):
-		var id: String = l["id"]
-		var row := UI.hbox(6)
-		v.add_child(row)
-		var tg := Toggle.new(l["name"], l["name"], l["on"], 132)
-		row.add_child(tg)
-		var sl := UI.slider(float(l["v"]), func(x: float) -> void:
-			PomoSound.set_layer(scene_id, id, tg.on, x)
-			Audio.pomo_update(), MIXER_W - 150)
-		sl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(sl)
-		tg.pressed.connect(func() -> void:
-			Audio.ui_click()
-			tg.set_on(not tg.on)
-			PomoSound.set_layer(scene_id, id, tg.on, sl.value)
-			Audio.pomo_update())
-	if HUD.pomo_state == "idle":
-		v.add_child(UI.wrap_label("Os sons tocam junto com o foco.", UI.C_DIM, MIXER_W - 10))
-	card.reset_size()
-	var sz := card.get_combined_minimum_size()
-	var avail_h := VIEW.y if _view_key == "run" else body.size.y
-	card.position = Vector2(body.size.x - sz.x - (8 if _view_key == "run" else 0), roundf(maxf(0.0, (avail_h - sz.y) / 2.0)))

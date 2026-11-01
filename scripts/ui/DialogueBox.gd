@@ -166,22 +166,9 @@ func _process(delta: float) -> void:
 		_text.visible_characters = int(shown)
 		if int(shown) / 4 != _last_tick:
 			_last_tick = int(shown) / 4
-			if _kind == "narr" or _kind == "think":
-				pass
-			elif _voiced_tick():
-				Audio.voice.blip(_who)
 		if _text.visible_characters >= _text.get_total_character_count():
 			_finish_typing()
 	_more.visible = not typing and not choosing and int(_blink * 2.5) % 2 == 0
-
-
-## Ritmo da voz: uma sílaba a cada 3 letras, pulando espaços e pausas, com variação.
-func _voiced_tick() -> bool:
-	var i := clampi(int(shown) - 1, 0, maxi(_text.get_total_character_count() - 1, 0))
-	var ch := _text.text.substr(i, 1) if i < _text.text.length() else ""
-	if ch == " " or ch == "." or ch == "," or ch == "!" or ch == "?" or ch == "\n":
-		return false
-	return randf() < 0.8
 
 
 func _finish_typing() -> void:
@@ -214,7 +201,6 @@ func _next() -> void:
 	index += 1
 	if index >= lines.size():
 		_release_actors()
-		Audio.voice.reset_speaker()
 		finished.emit()
 		return
 	var entry: Variant = lines[index]
@@ -287,7 +273,8 @@ func _show_line(kind: String, who: String, text: String, expr: String) -> void:
 		_direct(who, kind, expr, text)
 		HUD.stage_focus("" if thought else who, _speaker_visual(who))
 		if not thought:
-			Audio.voice.line_start(who, expr, text)
+			if expr == "shock":
+				Audio.novo("surpresa", -6.0)
 	page = 0
 	_show_page()
 

@@ -70,7 +70,21 @@ func build() -> void:
 
 ## Atualiza os valores quando o estado do jogo muda. Padrão: reconstrói tudo.
 func refresh() -> void:
+	# v2.4: comprar/vender reconstrói a janela; mantém a posição das listas roláveis (antes voltava ao topo)
+	var keep: Array = []
+	for c in body.get_children():
+		if c is ScrollContainer:
+			keep.append((c as ScrollContainer).scroll_vertical)
 	rebuild()
+	if keep.is_empty():
+		return
+	var restore := func() -> void:
+		var i := 0
+		for c in body.get_children():
+			if c is ScrollContainer and i < keep.size():
+				(c as ScrollContainer).scroll_vertical = int(keep[i])
+				i += 1
+	restore.call_deferred()
 
 
 func rebuild() -> void:

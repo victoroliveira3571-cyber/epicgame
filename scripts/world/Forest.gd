@@ -561,9 +561,11 @@ func _build_story() -> void:
 		_barrier.collision_layer = 1
 		var c := CollisionShape2D.new()
 		var r := RectangleShape2D.new()
-		r.size = Vector2(10, 7 * T)
+		# v2.4: a parede cobre o mapa todo (antes só 7 tiles em volta da trilha: dava para contornar
+		# pelo norte ou pelo sul e a Mata abria sem o Rank)
+		r.size = Vector2(10, H * T)
 		c.shape = r
-		c.position = Vector2((RIVER_X - 3) * T, PATH_Y * T + 8)
+		c.position = Vector2((RIVER_X - 3) * T, H * T / 2.0)
 		_barrier.add_child(c)
 		world.add_child(_barrier)
 		var sign := StoryProp.make("Ler a placa", func(_me: StoryProp) -> void:

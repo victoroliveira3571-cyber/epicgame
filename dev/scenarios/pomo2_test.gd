@@ -27,15 +27,12 @@ func run(dev: Node) -> void:
 	HUD.open_window("pomodoro")
 	await dev.wait(0.6)
 	await dev.shot(OUT + "p2_settings.png")
-	HUD.window._toggle_mixer()
-	await dev.wait(0.3)
-	await dev.shot(OUT + "p2_settings_mixer.png")
-	HUD.window._toggle_mixer()
 	# foco
 	HUD.pomodoro_start(25, 5)
 	await dev.wait(0.5)
-	check(Audio.pomo_genre_playing() == "lofi", "cafeteria toca a playlist lo-fi (tocando: %s)" % Audio.pomo_track_title())
-	check(Audio._amb_players.has("lareira") and Audio._amb_players.has("copos"), "ambiente da cafeteria: lareira e copos")
+	await dev.wait(2.0)
+	check(Audio.pomo_genre_playing() == "" and not Audio._active_music.playing, "Pomodoro sem música (v2.4)")
+	check(Audio._amb_players.is_empty(), "Pomodoro sem ambiente (v2.4)")
 	for sid in scenes:
 		GameState.pomo_cfg["scene"] = sid
 		Audio.pomo_update()
@@ -59,9 +56,6 @@ func run(dev: Node) -> void:
 		await dev.shot(OUT + "p2_%s_sip.png" % sid)
 		sc.state = "focus"
 		sc.reset_hold()
-	HUD.window._toggle_mixer()
-	await dev.wait(0.4)
-	await dev.shot(OUT + "p2_run_mixer.png")
 	# finalizar antes da hora: 7 min e 5 s estudados contam 7 min
 	var credits0 := GameState.study_credits
 	var logs0 := GameState.pomo_log.size()
