@@ -144,6 +144,9 @@ func _ellipse(mask: PackedByteArray, cx: float, cy: float, rx: float, ry: float,
 func zone_at(tx: int, ty: int) -> String:
 	if tx >= 78:
 		return "borda"
+	# v3.7: o alto do platô a leste do rio só se alcança pela Mata (escadaria e ponte): é Mata Profunda
+	if tx > RIVER_X + 2 and tx <= PLATEAU_X1 and high.size() == W * H and high[_idx(tx, ty)] != 0:
+		return "mata"
 	if tx > RIVER_X + 2:
 		return "clareira"
 	if tx <= RUINS_X and ty >= 24 and ty <= 48:
