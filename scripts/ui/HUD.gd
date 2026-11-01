@@ -1274,7 +1274,7 @@ const USE_STAGE := false
 
 
 func dialogue(entry: Variant) -> void:
-	var lines: Array = entry if entry is Array else StoryData.DIALOGS.get(String(entry), [])
+	var lines: Array = entry if entry is Array else StoryV4.dialog(String(entry))
 	if lines.is_empty():
 		return
 	while is_dialogue_open():

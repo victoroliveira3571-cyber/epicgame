@@ -57,7 +57,7 @@ const CITIES := {
 		# v3.7 (referências do Victor): Pedralta é a capital de Rocuetos. Muralha com portão, fosso e ponte no sul;
 		# castelo do rei no fim da avenida norte, com estátuas; hortas ao lado das casas.
 		"fort": {"wall_y": 40, "gate_x": 27, "moat": true, "flag": "FlagRed",
-			"guard_lines": ["Bem-vindo a Pedralta, capital de Rocuetos.", "Arma na bainha dentro dos muros.", "O portão fecha quando o sino da forja para."]},
+			"guard_lines": ["Boas-vindas a Pedralta, capital de Rocuetos.", "Arma na bainha dentro dos muros.", "O portão fecha quando o sino da forja para."]},
 		"castle": {"tile": [28, 11], "w": 15, "title": "Castelo de Rocuetos", "flag": "FlagRed", "statues": [[23, 14], [33, 14]],
 			"guard_lines": ["O rei só recebe com audiência marcada.", "Promoções saem da Comandante Brígida, não daqui.", "Nem pense em subir nas ameias."]},
 		"gardens": [[12, 33, 4, 3, "n_frutas_bush3"], [36, 35, 4, 3, "n_frutas_bush1"]],

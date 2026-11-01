@@ -159,8 +159,8 @@ const DIALOGS := {
 		{"when": [["despedida", 1], ["despedida_medo", 0]], "lines": [["mae", "Se a bússola girar sem rumo, pare e respire. Ela sempre volta a apontar."]]},
 		{"when": [["despedida", 1], ["despedida_medo", 1]], "lines": [["mae", "Tome também isto: tudo o que sei dele, eu escrevi num papel. Leia quando precisar se lembrar de quem ele era."]]},
 		{"when": [["despedida", 1], ["despedida_medo", 2]], "lines": [["mae", "A cada noite que você dormir longe, eu falo seu nome para a casa. Ela guarda."]]},
-		{"when": [["despedida", 2]], "lines": [["mae", "E durma. A luz fica acesa, mas não precisa ver você acordado."]]},
-		["mae", "E não esqueça: quando estiver cansado, descanse, mas não deixe de estudar. Seu pai achava que a cabeça aprende melhor um pouco por dia."],
+		{"when": [["despedida", 2]], "lines": [["mae", "E durma. A luz fica acesa, mas não precisa ver você acordad{o}."]]},
+		["mae", "E não esqueça: quando estiver cansad{o}, descanse, mas não deixe de estudar. Seu pai achava que a cabeça aprende melhor um pouco por dia."],
 		{"when": [["despedida", 0]], "lines": [["narr", "Bênção da {mae}: a promessa de voltar. +5% de XP nas sessões de foco."]]},
 		{"when": [["despedida", 1], ["despedida_medo", 0]], "lines": [["narr", "Bênção da {mae}: o conselho de ir devagar. +0,5 de regeneração."]]},
 		{"when": [["despedida", 1], ["despedida_medo", 1]], "lines": [["narr", "Bênção da {mae}: o papel com as lembranças dele. +4% de sorte."]]},
@@ -173,7 +173,7 @@ const DIALOGS := {
 	"c1_marta": [
 		["narr", "Um cheiro de pão quente sai da cozinha. Dona Marta está atrás do balcão."],
 		["marta", "Bem-vind{o}, querid{o}! Você deve ser da família que mora na floresta. Sente-se, tome um chá."],
-		["heroi", "Obrigado. Vim me registrar na Guilda."],
+		["heroi", "Obrigad{o}. Vim me registrar na Guilda."],
 		["marta", "Ótima ideia. Mas antes, uma coisa. Você sabe como estudar de verdade?"],
 		{"choice": ["Eu releio tudo.", "Eu tento lembrar sem olhar."], "key": "marta_estudo"},
 		["marta", "Reler dá uma sensação boa de aprender, mas fixa pouco. Tentar lembrar é o que funciona."],
@@ -256,7 +256,7 @@ const DIALOGS := {
 	],
 	"c2_pena": [
 		["narr", "A Pena Dourada brilha entre as raízes."],
-		["ivo", "Ah, não! Por um segundo! Da próxima vez eu chego antes, estudioso."],
+		["ivo", "Ah, não! Por um segundo! Da próxima vez eu chego antes, estudios{o}."],
 	],
 	"c2_entrega": [
 		["helena", "A Pena Dourada. Exame aprovado: agora você é Rank E."],
@@ -371,11 +371,11 @@ const DIALOGS := {
 		["mem:pai", "Se o Rei me levar as páginas, eu levo as páginas comigo. Ele não consegue apagar o que está na cabeça de quem estuda."],
 		["heroi", "Ele tentou proteger todo mundo."],
 		["lumen", "Hu. O caderno fala de um último andar. E de um nome riscado: Aldric."],
-		["narr", "Você foi aprovado no exame: agora é Rank D."],
+		["narr", "Você foi aprovad{o} no exame: agora é Rank D."],
 	],
 	"c3_volta": [
 		["helena", "Rank D! E esse caderno... Aldric era o parceiro de expedição do seu pai."],
-		["helena", "Daqui a pouco começa o Torneio das Guildas. Fale comigo quando estiver pronto."],
+		["helena", "Daqui a pouco começa o Torneio das Guildas. Fale comigo quando estiver pront{o}."],
 	],
 	# --------------------------------------------------------------------- Capítulo 4
 	"c4_torneio": [
@@ -403,7 +403,7 @@ const DIALOGS := {
 		["pietro", "Vá com cuidado. E estude antes de descer: não é só a força que faz alguém voltar."],
 	],
 	"c4_espelhos": [
-		["narr", "Corredores de espelhos. Em um, você desistiu. Em outro, está ferido e sozinho. No terceiro, você sorri com um livro na mão."],
+		["narr", "Corredores de espelhos. Em um, você desistiu. Em outro, está ferid{o} e sozinh{o}. No terceiro, você sorri com um livro na mão."],
 		["espelho", "Você não precisa lembrar de tudo. Basta lembrar o próximo passo."],
 	],
 	"c4_cavaleiro": [
@@ -457,7 +457,7 @@ const DIALOGS := {
 		["pai", "Eu não sei se lembro de você por inteiro. A Névoa me apagou devagar, e eu só guardei o suficiente para te reconhecer."],
 		["aldric", "Ele ainda respira. E ainda lembra de você."],
 		["pai", "Agora você precisa descobrir quem eu era antes da Névoa."],
-		{"when": [["despedida", 0]], "lines": [["heroi", "Eu prometi à {mae} que voltava logo. Estou atrasado, mas estou voltando."]]},
+		{"when": [["despedida", 0]], "lines": [["heroi", "Eu prometi à {mae} que voltava logo. Estou atrasad{o}, mas estou voltando."]]},
 		{"when": [["despedida", 1], ["despedida_medo", 0]], "lines": [["heroi", "Procurei devagar, como a {mae} pediu. Cheguei."]]},
 		{"when": [["despedida", 1], ["despedida_medo", 1]], "lines": [["heroi", "Você não é como no papel que a {mae} guardou. Mas eu quero conhecer esta versão."]]},
 		{"when": [["despedida", 1], ["despedida_medo", 2]], "lines": [["heroi", "A {mae} ficou em casa dizendo meu nome para as paredes. Vamos voltar juntos para ela."]]},
@@ -563,19 +563,19 @@ const CARDS_FREE := [   # Cavaleiro e Rei (perguntas livres)
 ## 3 fases da história (capítulo 1, capítulos 2 e 3, capítulos 4 e 5) com 2 variações cada.
 const MAE_VISITAS := {
 	"promessa": [
-		[[["mae", "Voltou! Estava contando as horas. Prometeu, lembra? E cumpriu, por hoje."]], [["mae", "Você parece cansado. Sente. Eu esquento a sopa enquanto você me conta tudo."]]],
+		[[["mae", "Voltou! Estava contando as horas. Prometeu, lembra? E cumpriu, por hoje."]], [["mae", "Você parece cansad{o}. Sente. Eu esquento a sopa enquanto você me conta tudo."]]],
 		[[["mae", "A carta chegou? Escrevi três linhas e apaguei duas. Ficou só 'volta logo'."]], [["mae", "Cada vez que você entra por essa porta, eu respiro de novo."]]],
 		[[["mae", "Você está mais alto. Ou eu estou mais velha. Prometa só mais uma vez: que volta."]], [["mae", "Eu já guardo o prato dele e o seu na mesa. Os dois. Não discuta."]]],
 	],
 	"medo_0": [
-		[[["mae", "Foi devagar, como combinamos? Que bom. Ele não está fugindo de você."]], [["mae", "Se pesar, volta aqui. Não precisa ter vencido nada para ser bem-vindo."]]],
+		[[["mae", "Foi devagar, como combinamos? Que bom. Ele não está fugindo de você."]], [["mae", "Se pesar, volta aqui. Não precisa ter vencido nada para ser bem-vind{o}."]]],
 		[[["mae", "Você procura com os olhos dele agora. Eu reconheço o jeito de franzir a testa."]], [["mae", "Descobriu alguma pista? Não me conte tudo. Só o que fizer você sorrir."]]],
 		[[["mae", "Se você o encontrar, não deixe de perguntar se ele sentiu minha falta. Ou não pergunte. Eu já sei."]], [["mae", "Andei arrumando o escritório dele. Achei um mapa que ele nunca terminou."]]],
 	],
 	"medo_1": [
 		[[["mae", "Leu o papel? Não é tudo dele. É só o que eu consegui guardar."]], [["mae", "Cada um de nós tem uma versão dele. A sua é a que importa para você."]]],
 		[[["mae", "Se descobrir algo que não combina com o que eu escrevi, me conte. Quero a verdade, não o que eu lembro."]], [["mae", "Gente muda. Você também. Eu continuo gostando de cada versão de você."]]],
-		[[["mae", "Seja qual for o homem que você encontrar, o filho que ele tem eu conheço. É você."]], [["mae", "Descansa. Amanhã você volta a buscar quem ele é. Hoje você só é meu."]]],
+		[[["mae", "Seja qual for o homem que você encontrar, {o filho|a filha} que ele tem eu conheço. É você."]], [["mae", "Descansa. Amanhã você volta a buscar quem ele é. Hoje você só é meu."]]],
 	],
 	"medo_2": [
 		[[["mae", "Falei seu nome para a casa a noite toda. Ela parece mais quente."]], [["mae", "Não precisa ter pena de mim. Estou bem. Só estou melhor quando você está aqui."]]],

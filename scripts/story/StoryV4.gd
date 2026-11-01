@@ -109,7 +109,7 @@ const SAIDA_CASA := [
 
 # ================================================================== Ato 2: Academia primária (Filus)
 const COCHEIRO_BOLSA := [
-	["cocheiro", "Aluno nov{o} da Academia? A bolsa de Fontelúcida paga a sua viagem. Suba!"],
+	["cocheiro", "Alun{o} nov{o} da Academia? A bolsa de Fontelúcida paga a sua viagem. Suba!"],
 ]
 const MATRICULA := [
 	["reitora", "Bem-vind{o} à Academia primária de aventureiros de Fontelúcida, o coração do reino de Filus."],
@@ -151,7 +151,7 @@ const JARDIM := [
 			["nina", "Ele sempre faz isso. Ignora."],
 		],
 		"end": [
-			["ivo", "Tá, você foi rápid{o}. Sorte de novato."],
+			["ivo", "Tá, você foi rápid{o}. Sorte de novat{o}."],
 			["nina@anger", "Sorte é ter estudado uma hora antes de vir, Ivo. Você estudou?"],
 			["ivo", "...Isso não é da sua conta."],
 			["lin", "Rivalidade é um bom combustível, desde que não queime quem está do seu lado."],
@@ -236,7 +236,7 @@ const MISSOES_EXERCITO := [
 	{"hours": 4.5, "kind": "patrulha", "zone": "ruinas", "count": 10, "title": "Reconhecimento das Ruínas",
 		"brief": [["brigida", "Reconhecimento nas Ruínas sob as Raízes. Dez guardiões de pedra e um relatório na minha mesa."]]},
 	{"hours": 5.5, "kind": "cruzada", "boss": "ogro_ancestral", "title": "Cruzada contra o Ogro Ancestral",
-		"brief": [["brigida", "Capitão, sua primeira cruzada: o Ogro Ancestral desceu das montanhas. O rei quer a cabeça dele, e um nome novo para quem trouxer."]],
+		"brief": [["brigida", "{Capitão|Capitã}, sua primeira cruzada: o Ogro Ancestral desceu das montanhas. O rei quer a cabeça dele, e um nome novo para quem trouxer."]],
 		"clue": [["soldado", "Um velho veterano me contou: anos atrás, um estudioso de bússola de latão pediu abrigo no nosso acampamento. Seguia para Masmoreum."]]},
 	{"hours": 6.5, "kind": "cruzada", "boss": "zumbi_colossal", "title": "Cruzada contra o Zumbi Colossal",
 		"brief": [["brigida", "Barão, há um colosso de carne morta nas Catacumbas Geladas. Leve os seus homens e a sua coragem."]],
@@ -245,7 +245,7 @@ const MISSOES_EXERCITO := [
 		"brief": [["brigida", "Visconde, o Demônio Abissal abriu uma fenda na fronteira. Feche a fenda; o reino lembra de quem fecha fendas."]],
 		"clue": [["narr", "Entre os destroços, uma página queimada com a letra do {pai}: 'a Névoa não queima, ela apaga'. Só isso. O resto virou cinza."]]},
 	{"hours": 8.0, "kind": "cruzada", "boss": "orc_senhor", "title": "Cruzada contra o Senhor da Guerra Orc",
-		"brief": [["brigida", "Conde, o Senhor da Guerra Orc reuniu as tribos. Esta é a cruzada que faz um Marquês."]],
+		"brief": [["brigida", "{Conde|Condessa}, o Senhor da Guerra Orc reuniu as tribos. Esta é a cruzada que faz {um Marquês|uma Marquesa}."]],
 		"clue": [["narr", "O Senhor da Guerra carregava um amuleto roubado de um viajante: dentro, um desenho a lápis de uma criança dormindo com um livro no peito."]]},
 ]
 
@@ -258,13 +258,13 @@ const ALISTAMENTO := [
 ]
 const PROMOVIDO := "Promovid{o} a %s!"
 const CRUZADA_FINAL := [
-	["brigida", "Marquês. Rocuetos lhe deve terras, e o rei cumpre o que deve: a sua terra fica ao sul, com vista para Filus."],
+	["brigida", "{Marquês|Marquesa}. Rocuetos lhe deve terras, e o rei cumpre o que deve: a sua terra fica ao sul, com vista para Filus."],
 	["brigida", "Mas antes da festa, a última ordem. O exército marcha até Masmoreum. O Rei Demônio vai cair pelas mãos de Rocuetos."],
 	["narr", "Tambores. Estandartes vermelhos. Mil botas na estrada de pedra. Tomé acena da segunda fileira."],
 	["heroi", "Pai, se você passou por aqui... eu estou indo pelo mesmo caminho. Com um exército inteiro."],
 ]
 const CRUZADA_FINAL_FALTA := [
-	["brigida", "A cruzada final pede 8 horas de foco acumuladas, Marquês. Um general cansado perde exércitos."],
+	["brigida", "A cruzada final pede 8 horas de foco acumuladas, {Marquês|Marquesa}. Um general cansado perde exércitos."],
 ]
 const VITORIA_B := [
 	["narr", "O Rei Demônio cai diante dos estandartes de Rocuetos. A névoa se desfaz sobre Masmoreum."],
@@ -298,5 +298,38 @@ static func has_step(step: String) -> bool:
 	return OBJECTIVES.has(step)
 
 
+const PATENTES_F := ["Recruta", "Soldado", "Cabo", "Sargento", "Tenente", "Capitã", "Baronesa", "Viscondessa", "Condessa", "Marquesa"]
+
+
 static func patente_name(i: int) -> String:
-	return PATENTES[clampi(i, 0, PATENTES.size() - 1)]
+	var fem := str(Story.st().get("gender", "m")) == "f"
+	return (PATENTES_F if fem else PATENTES)[clampi(i, 0, PATENTES.size() - 1)]
+
+
+## v3.7: conversas antigas reescritas para a história v4 (o herói já conhece Ivo e Lin da Academia).
+static func dialog(id: String) -> Array:
+	var base: Array = StoryData.DIALOGS.get(id, [])
+	if not Story.flag("v4"):
+		return base
+	match id:
+		"c2_exame":
+			return [base[0],
+				["narr", "Uma luva só, cabelo branco de pontas azuis: Ivo, seu colega da Academia, entra no salão como se fosse dono dele."],
+				["ivo", "Olha só, {o} formand{o} da Academia de novo na minha frente. Aqui não tem jardim nem Mestre Lin para te salvar."],
+				["heroi", "Ivo? Você também se registrou na Guilda?"],
+				["ivo", "Alguém precisa mostrar para esta cidade como se faz. Vou pegar essa pena antes de você piscar."],
+				base[base.size() - 1]]
+		"c2_lin":
+			if base.size() < 6:
+				return base
+			var out: Array = [
+				["narr", "Mestre Lin está sentado na ponte, lendo um livro velho, do mesmo jeito que lia no jardim da Academia."],
+				["lin", "{heroi}. Sente-se, ex-alun{o}. Antes de qualquer coisa, respire."],
+				base[2],
+				["lin", "Na Academia eu não te contei uma coisa, porque você precisava aprender sozinh{o} primeiro. Estudei com {pai}."],
+				["heroi", "Você conhecia meu pai? E nunca disse nada?"],
+				["lin", "Um professor ensina a pergunta, não a resposta. {pai} achava que a Névoa não era só um clima ruim. Ela come páginas, e às vezes as lembranças de quem chega perto demais."],
+			]
+			out.append_array(base.slice(5))
+			return out
+	return base

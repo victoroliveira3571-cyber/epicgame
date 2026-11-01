@@ -93,7 +93,7 @@ static func talk(_npc: String) -> void:
 			await Story.say(StoryV4.CRUZADA_FINAL)
 			Game.start_duel("rei_demonio", {"banner": ["Cruzada Final", "Masmoreum: o Trono Sem Luz"], "return": "pedralta"})
 		"fim_b":
-			await Story.say([["brigida", "Marquês. A casa ao sul está pronta e a sua mãe já plantou metade do jardim. O reino agradece."]])
+			await Story.say([["brigida", "{Marquês|Marquesa}. A casa ao sul está pronta e a sua mãe já plantou metade do jardim. O reino agradece."]])
 		_:
 			await Story.say([["brigida", "Pedralta treina quem estuda. Se um dia quiser servir Rocuetos, a porta do centro de treinamento está aberta."]])
 

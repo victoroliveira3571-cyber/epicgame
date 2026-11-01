@@ -76,6 +76,15 @@ func fmt(text: String) -> String:
 	t = t.replace("{mae}", String(st().get("mother", "Mãe")))
 	var fem := String(st().get("gender", "m")) == "f"
 	t = t.replace("{o}", "a" if fem else "o").replace("{O}", "A" if fem else "O").replace("{e}", "a" if fem else "e")
+	# v3.7: "{masculino|feminino}" para palavras inteiras (ex.: "{Capitão|Capitã}", "{o filho|a filha}")
+	if t.contains("|"):
+		var rx := RegEx.create_from_string("\\{([^{}|]*)\\|([^{}|]*)\\}")
+		var out := ""
+		var last := 0
+		for m in rx.search_all(t):
+			out += t.substr(last, m.get_start() - last) + (m.get_string(2) if fem else m.get_string(1))
+			last = m.get_end()
+		t = out + t.substr(last)
 	t = t.replace("{ervas}", str(mini(int(st().get("herbs", 0)), 5)))
 	t = t.replace("{paginas}", str(mini(int(st().get("pages", 0)), 3)))
 	t = t.replace("{horas}", _hours_text())
@@ -489,7 +498,7 @@ func _talk(npc: String) -> void:
 func _talk_helena(s: String) -> void:
 	match s:
 		"c1_marta", "c1_casa":
-			await say([["helena", "Bem-vindo! A Dona Marta, da pousada, sempre manda os novatos para cá. Passe lá primeiro."]])
+			await say([["helena", "Bem-vind{o}! A Dona Marta, da pousada, sempre manda os novatos para cá. Passe lá primeiro."]])
 		"c1_guilda":
 			if GameState.has_chosen_class():
 				# v4: a classe veio da criação; a Guilda só registra o formado da Academia
