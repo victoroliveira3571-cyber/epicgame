@@ -79,7 +79,7 @@ const SKILLS := {
 		"desc": "Detona uma explosão na direção da mira (260% de dano em área)."},
 	"chuva": {"name": "Chuva de Flechas", "icon": "items/Arrow", "cd": 5.0,
 		"desc": "Dispara 7 flechas em leque (100% de dano cada)."},
-	# ---- ativas liberadas pela progressão (nível 10 = tecla R, nível 30 = tecla X).
+	# ---- ativas liberadas pela progressão (nível 10 = tecla 2, nível 30 = tecla 3).
 	# kind: nova (área em volta), blast (área na mira, com atraso), dash (avanço), fan (projéteis em
 	# leque), buff (efeito em você). Os números ficam aqui para balancear sem mexer no Player.
 	"sismico": {"name": "Golpe Sísmico", "icon": "spell/RockSpike", "cd": 9.0, "kind": "blast", "anim": "slash",
@@ -117,7 +117,7 @@ const SKILLS := {
 	"recuo": {"name": "Salto e Mira", "icon": "items/Boot", "cd": 12.0, "kind": "dash", "anim": "shoot",
 		"mult": 0.0, "speed": -280.0, "buff": "foco", "buff_time": 6.0,
 		"desc": "Salta para trás, imune, e ganha Foco (+12% de velocidade, +5% de crítico) por 6s."},
-	# ---- magias dos Livros de Magia do laboratório (tecla Z, uma por vez)
+	# ---- magias dos Livros de Magia do laboratório (tecla 4, uma por vez)
 	"chamas": {"name": "Bola de Fogo", "icon": "spell/Fireball", "cd": 7.0, "kind": "blast", "anim": "spellcast",
 		"dist": 90.0, "radius": 28.0, "mult": 2.0, "kb": 120.0, "delay": 0.25, "fx": "explosion", "color": Color(1, 0.6, 0.3),
 		"desc": "Uma bola de fogo explode no inimigo mais próximo: 200% de dano em área."},
@@ -134,10 +134,10 @@ const SKILLS := {
 
 # ------------------------------------------------------------- Progressão de habilidades
 # A cada 10 níveis a classe ganha uma habilidade nova, automaticamente:
-#   "active": ativa nova numa tecla (R no nível 10, X no 30)
+#   "active": ativa nova numa tecla (2 no nível 10, 3 no 30)
 #   "passive": bônus permanente nos atributos (mesmas chaves dos buffs; hp_pct = % de vida, cdr = recarga menor)
 #   "mastery": fortalece uma ativa (+30% de dano, -20% de recarga)
-const SKILL_KEYS := {"skill": "Q", "skill2": "R", "skill3": "X", "skill_book": "Z"}
+const SKILL_KEYS := {"skill": "1", "skill2": "2", "skill3": "3", "skill_book": "4"}
 const MASTERY_DMG := 1.3
 const MASTERY_CD := 0.8
 const SKILL_LEVELS := [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -365,20 +365,20 @@ const LAB_DROP := {
 }
 const LAB_DROP_CHANCE := 0.4
 const LAB_CRYSTAL_CHANCE := 0.04       # elites: 0.3
-# Itens novos do laboratório. kind tonic = efeito no estudo; book = ensina uma magia (tecla Z).
+# Itens novos do laboratório. kind tonic = efeito no estudo; book = ensina uma magia (tecla 4).
 const LAB_ITEMS := {
 	"tonico_memoria": {"name": "Tônico da Memória", "icon": "res://assets/custom/icons/tonico_memoria.png", "price": 60, "kind": "tonic", "sessions": 3, "pct": 0.25,
 		"desc": "+25% de XP nas próximas 3 sessões de foco do Pomodoro."},
 	"elixir_sabedoria": {"name": "Elixir da Sabedoria", "icon": "res://assets/custom/icons/elixir_sabedoria.png", "price": 45, "kind": "tonic", "buff": "sabedoria", "buff_time": 600.0,
 		"desc": "Buff Sabedoria (+20% de XP) por 10 min."},
 	"livro_chamas": {"name": "Livro de Magia: Chamas", "icon": "res://assets/custom/icons/livro_chamas.png", "price": 150, "kind": "book", "spell": "chamas",
-		"desc": "Ensina Bola de Fogo (tecla Z)."},
+		"desc": "Ensina Bola de Fogo (tecla 4)."},
 	"livro_gelo": {"name": "Livro de Magia: Gelo", "icon": "res://assets/custom/icons/livro_gelo.png", "price": 150, "kind": "book", "spell": "gelo",
-		"desc": "Ensina Lanças de Gelo (tecla Z)."},
+		"desc": "Ensina Lanças de Gelo (tecla 4)."},
 	"livro_raio": {"name": "Livro de Magia: Raio", "icon": "res://assets/custom/icons/livro_raio.png", "price": 220, "kind": "book", "spell": "raio",
-		"desc": "Ensina Relâmpago (tecla Z)."},
+		"desc": "Ensina Relâmpago (tecla 4)."},
 	"livro_cura": {"name": "Livro de Magia: Cura", "icon": "res://assets/custom/icons/livro_cura.png", "price": 180, "kind": "book", "spell": "cura",
-		"desc": "Ensina Bênção Curativa (tecla Z)."},
+		"desc": "Ensina Bênção Curativa (tecla 4)."},
 }
 ## [resultado, quantidade, {ingrediente: qtd}, horas de foco exigidas (livros: estudo de verdade), fala do Dr. Faísca]
 const LAB_RECIPES := [
@@ -692,7 +692,7 @@ func boss_def(boss_id: String) -> Dictionary:
 
 # ------------------------------------------------------------------- Ranks e créditos
 const RANKS := ["F", "E", "D", "C", "B", "A", "S"]
-const MINUTES_PER_CREDIT := 45     # 1 crédito de estudo = 45 min de foco concluído
+const MINUTES_PER_CREDIT := 30     # 1 crédito de estudo = 30 min de foco concluído (v3.7; era 45)
 
 # ------------------------------------------------------------------- Masmorra da história
 # Os 5 andares da história. "power" = força dos monstros (equivale ao andar antigo).

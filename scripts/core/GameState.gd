@@ -309,7 +309,7 @@ func _check_level_up() -> void:
 # ======================================================= Habilidades por nível e promoção
 ## Quantos marcos de habilidade já foram alcançados (um a cada 10 níveis, até 10).
 func skill_milestones() -> int:
-	# toda classe nasce com a primeira magia (tecla R); as demais vêm a cada 10 níveis
+	# toda classe nasce com a primeira magia (tecla 2); as demais vêm a cada 10 níveis
 	return clampi(maxi(level / 10, 1 if has_chosen_class() else 0), 0, Data.SKILL_LEVELS.size())
 
 
@@ -317,7 +317,7 @@ func class_progression() -> Array:
 	return Data.CLASS_PROGRESSION.get(player_class, [])
 
 
-## Habilidade ativa de uma tecla ("skill" = Q, "skill2" = R, "skill3" = X); "" se ainda não liberada.
+## Habilidade ativa de uma tecla ("skill" = 1, "skill2" = 2, "skill3" = 3); "" se ainda não liberada.
 func slot_skill(slot: String) -> String:
 	if not has_chosen_class():
 		return ""
@@ -705,7 +705,7 @@ func use_item(item_id: String) -> bool:
 				return false
 			lab_data()["book_spell"] = str(it.get("spell", ""))
 			var sk: Dictionary = Data.SKILLS.get(str(it.get("spell", "")), {})
-			toast.emit("Magia aprendida: %s (tecla Z)." % sk.get("name", "?"), Color("c9a0ff"))
+			toast.emit("Magia aprendida: %s (tecla 4)." % sk.get("name", "?"), Color("c9a0ff"))
 			mark_dirty()
 			stats_changed.emit()
 			return true

@@ -311,7 +311,7 @@ func _unhandled_input(ev: InputEvent) -> void:
 	if room._ending or HUD.is_window_open() or HUD.is_dialogue_open():
 		return
 	if ev is InputEventKey and ev.pressed and not ev.echo:
-		if ev.keycode == KEY_V:
+		if ev.is_action("decorar"):
 			get_viewport().set_input_as_handled()
 			toggle()
 			return

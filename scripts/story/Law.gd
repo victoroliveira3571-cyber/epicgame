@@ -3,13 +3,13 @@ extends RefCounted
 
 ## A lei de Focus Town: bater em aldeões chama o guarda; matar um morador (ou seu duelo na floresta e na
 ## masmorra) é crime grave. A pena é paga em MINUTOS DE FOCO no Pomodoro, dentro da cela da delegacia:
-##  - agressão: multa de 30 min, +15 min a cada prisão anterior (30, 45, 60...);
+##  - agressão: cadeia de 90 min de foco (v3.7; antes 30 min, subindo 15 a cada prisão);
 ##  - morte de um NPC: 3 horas (180 min), o NPC se regenera, a pena fica.
 ## Enquanto houver pena, os minutos de foco pagam a pena primeiro e só o que sobra vira crédito de estudo
 ## (Story.add_focus_minutes). O estado fica em Story.st()["law"].
 
-const BASE_FINE := 30
-const FINE_STEP := 15
+const BASE_FINE := 90
+const FINE_STEP := 0
 const MURDER_FINE := 180
 
 

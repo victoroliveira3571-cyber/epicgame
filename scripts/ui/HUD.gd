@@ -373,7 +373,7 @@ func _build_hotbar() -> void:
 	_hotbar.add_child(_hot_food)
 	_hot_skill = HotSkill.new()
 	_hot_skill.position = Vector2(68, 0)
-	_hot_skill.key_text = "Q"
+	_hot_skill.key_text = "1"
 	_hotbar.add_child(_hot_skill)
 	for slot in ["skill2", "skill3", "skill_book"]:
 		var hs := HotSkill.new()
@@ -383,7 +383,7 @@ func _build_hotbar() -> void:
 		_hot_slots[slot] = hs
 	_hot_dodge = HotSkill.new()
 	_hot_dodge.position = Vector2(96, 0)
-	_hot_dodge.key_text = "Shift"
+	_hot_dodge.key_text = "R"
 	_hot_dodge.icon_tex = Pix.skill_icon("items/Boot")
 	_hotbar.add_child(_hot_dodge)
 	for pair in [[_hot_potion, "H"], [_hot_food, "F"]]:
@@ -631,7 +631,8 @@ func _tick_pomodoro(delta: float) -> void:
 	if _recall_t <= 0.0:
 		_recall_t = 1.5
 		_check_recall()
-	if pomo_state == "focus" or pomo_state == "break":
+	# o relógio para enquanto o recall está aberto: o tempo de escrita não conta como foco nem como pausa
+	if (pomo_state == "focus" or pomo_state == "break") and window_id != "recall":
 		pomo_left -= delta
 		if pomo_left <= 0.0:
 			_pomodoro_done()
@@ -1117,7 +1118,7 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 		"inventory": "inventario", "character": "personagem", "habits": "habitos", "quests": "guilda", "pause": "pausa",
 		"map": "mapa",
 	}
-	if ev.keycode == KEY_N and not (is_window_open() and window_id != "caderno"):
+	if ev.is_action("caderno") and not (is_window_open() and window_id != "caderno"):
 		get_viewport().set_input_as_handled()
 		toggle_window("caderno")
 		return
@@ -1134,7 +1135,7 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			toggle_window(shortcuts[action])
 			return
-	if ev.keycode == KEY_P:
+	if ev.is_action("pomodoro"):
 		toggle_window("pomodoro")
 
 

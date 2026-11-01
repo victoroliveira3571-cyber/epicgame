@@ -65,7 +65,7 @@ func _ready() -> void:
 
 ## Tecla B: o pet vem até o herói, dá um pulinho e fala.
 func _unhandled_key_input(ev: InputEvent) -> void:
-	if not (ev is InputEventKey and ev.pressed and not ev.echo and ev.keycode == KEY_B):
+	if not (ev is InputEventKey and ev.pressed and not ev.echo and ev.is_action("pet")):
 		return
 	if Game.input_locked or HUD.is_window_open() or HUD.is_dialogue_open() or _greet_t > 0.0:
 		return

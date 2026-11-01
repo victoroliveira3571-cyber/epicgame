@@ -63,11 +63,12 @@ func _setup_input() -> void:
 	_add_action("move_up", [KEY_W, KEY_UP])
 	_add_action("move_down", [KEY_S, KEY_DOWN])
 	_add_action("attack", [KEY_SPACE, KEY_J])
-	_add_action("dodge", [KEY_SHIFT, KEY_K])
-	_add_action("skill", [KEY_Q, KEY_L])
-	_add_action("skill2", [KEY_R])      # habilidade do nível 10
-	_add_action("skill3", [KEY_X])      # habilidade do nível 30
-	_add_action("skill_book", [KEY_Z])  # magia do Livro de Magia (laboratório)
+	# v3.7: esquiva na R (K também); as habilidades ficam nas teclas 1 a 4
+	_add_action("dodge", [KEY_R, KEY_K])
+	_add_action("skill", [KEY_1, KEY_KP_1])        # habilidade da classe
+	_add_action("skill2", [KEY_2, KEY_KP_2])       # habilidade do nível 10
+	_add_action("skill3", [KEY_3, KEY_KP_3])       # habilidade do nível 30
+	_add_action("skill_book", [KEY_4, KEY_KP_4])   # magia do Livro de Magia (laboratório)
 	_add_action("interact", [KEY_E])
 	_add_action("eat", [KEY_F])
 	_add_action("potion", [KEY_H])
@@ -77,15 +78,89 @@ func _setup_input() -> void:
 	_add_action("quests", [KEY_G])
 	_add_action("pause", [KEY_ESCAPE])
 	_add_action("map", [KEY_M])
+	# teclas que antes estavam fixas no código: agora também podem ser trocadas
+	_add_action("caderno", [KEY_N])
+	_add_action("pomodoro", [KEY_P])
+	_add_action("pet", [KEY_B])
+	_add_action("decorar", [KEY_V])
+	_load_keybinds()
+
+
+## Ações que o jogador pode trocar na tela de Pausa > Controles (id, nome na tela).
+const REBINDABLE := [
+	["move_up", "Andar para cima"], ["move_left", "Andar para a esquerda"], ["move_down", "Andar para baixo"],
+	["move_right", "Andar para a direita"], ["attack", "Atacar"], ["dodge", "Rolar (esquiva)"],
+	["skill", "Habilidade da classe"], ["skill2", "Habilidade do nível 10"], ["skill3", "Habilidade do nível 30"],
+	["skill_book", "Magia do livro"], ["interact", "Interagir / falar"], ["potion", "Tomar poção"], ["eat", "Comer"],
+	["inventory", "Inventário"], ["character", "Personagem e pets"], ["habits", "Hábitos"], ["quests", "Missões"],
+	["map", "Mapa"], ["caderno", "Caderno"], ["pomodoro", "Pomodoro"], ["pet", "Chamar o pet"], ["decorar", "Decorar a casa"],
+]
+const KEYBIND_FILE := "user://keybinds.cfg"
+var _default_keys := {}   # action -> [keycode, ...] (valores de fábrica, para "Restaurar teclas padrão")
 
 
 func _add_action(action: String, keys: Array) -> void:
 	if not InputMap.has_action(action):
 		InputMap.add_action(action, 0.3)
+	_default_keys[action] = keys
 	for k in keys:
 		var ev := InputEventKey.new()
 		ev.physical_keycode = k
 		InputMap.action_add_event(action, ev)
+
+
+## Troca a tecla de uma ação (substitui as anteriores) e grava na hora.
+func rebind(action: String, keycode: int) -> void:
+	_set_single_key(action, keycode)
+	_save_keybinds()
+
+
+func _set_single_key(action: String, keycode: int) -> void:
+	InputMap.action_erase_events(action)
+	var ev := InputEventKey.new()
+	ev.physical_keycode = keycode as Key
+	InputMap.action_add_event(action, ev)
+
+
+## Nome da tecla atual de uma ação, para mostrar na tela ("—" se não tiver).
+func key_name(action: String) -> String:
+	for ev in InputMap.action_get_events(action):
+		if ev is InputEventKey:
+			var code: int = ev.physical_keycode if ev.physical_keycode != 0 else ev.keycode
+			return OS.get_keycode_string(code as Key)
+	return "—"
+
+
+## Volta todas as teclas aos valores de fábrica e apaga o arquivo gravado.
+func reset_keybinds() -> void:
+	for action in _default_keys:
+		InputMap.action_erase_events(action)
+		for k in _default_keys[action]:
+			var ev := InputEventKey.new()
+			ev.physical_keycode = k
+			InputMap.action_add_event(action, ev)
+	if FileAccess.file_exists(KEYBIND_FILE):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(KEYBIND_FILE))
+
+
+func _save_keybinds() -> void:
+	var cfg := ConfigFile.new()
+	for action in _default_keys:
+		for ev in InputMap.action_get_events(action):
+			if ev is InputEventKey:
+				cfg.set_value("keys", action, int(ev.physical_keycode))
+				break
+	cfg.save(KEYBIND_FILE)
+
+
+func _load_keybinds() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(KEYBIND_FILE) != OK:
+		return
+	for action in cfg.get_section_keys("keys"):
+		var code := int(cfg.get_value("keys", action, 0))
+		if code > 0 and InputMap.has_action(action):
+			_set_single_key(action, code)
 
 
 func move_vector() -> Vector2:

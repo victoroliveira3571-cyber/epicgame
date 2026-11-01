@@ -65,7 +65,7 @@ const INTROS := {
 		["arena", "Cada vitória dá ouro, experiência e prestígio. Com prestígio você sobe de rank na Arena: Bronze, Prata, Ouro, Platina e Lenda."],
 		["arena", "Quanto mais alto o seu rank, mais fortes os oponentes e melhores os prêmios. Perder custa só um pouco de prestígio."],
 		["arena", "A Arena foi construída depois do primeiro Torneio das Guildas. O nome do campeão estava gravado no portão... até a Névoa apagar."],
-		["tip:arena", "Duelo é leitura do adversário: observe o golpe dele antes de atacar e role (Shift) no momento certo."],
+		["tip:arena", "Duelo é leitura do adversário: observe o golpe dele antes de atacar e role (R) no momento certo."],
 		["arena@happy", "Quando estiver pront{o}, fale comigo na placa de inscrição."],
 	],
 }

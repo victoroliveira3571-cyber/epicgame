@@ -55,15 +55,15 @@ func run(d: Node) -> void:
 	check_scene("Town")
 	GameState.complete_focus_session(240, 120, 60)
 	print("[story] créditos: ", Story.credits(), " horas: ", Story.focus_hours())
-	if Story.credits() != 1:
-		fail("crédito depois de 60 min (45 pagam 1, sobram 15)")
+	if Story.credits() != 2:
+		fail("crédito depois de 60 min (30 min = 1 crédito, dá 2)")
 	Story.talk("osvaldo")
 	await dev.wait(0.3)
 	await skip()
 	await dev.wait(7.0)
 	check_scene("Forest")
 	print("[story] créditos depois do pedágio: ", Story.credits(), " entradas hoje: ", Story.entries_today("floresta"))
-	if Story.entries_today("floresta") != 1 or Story.entry_cost("floresta", 1) != 1 or Story.credits() != 0:
+	if Story.entries_today("floresta") != 1 or Story.entry_cost("floresta", 1) != 1 or Story.credits() != 1:
 		fail("toda entrada na floresta deveria custar sempre 1 crédito")
 	await dev.shot(OUT + "story_05_floresta_borda.png")
 	# ---------------------------------------------------------------- capítulo 1 na floresta

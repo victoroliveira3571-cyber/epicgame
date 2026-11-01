@@ -29,7 +29,7 @@ var invuln: float = 0.0
 var attack_cd_left: float = 0.0
 var dodge_cd_left: float = 0.0
 var skill_cd_left: float = 0.0
-var slot_cd_left: Dictionary = {"skill2": 0.0, "skill3": 0.0, "skill_book": 0.0}   # recarga das habilidades R, X e da magia do livro (Z)
+var slot_cd_left: Dictionary = {"skill2": 0.0, "skill3": 0.0, "skill_book": 0.0}   # recarga das habilidades 2, 3 e da magia do livro (4)
 var combo: int = 0
 var combo_timer: float = 0.0
 var swing_time: float = 0.0
@@ -388,12 +388,13 @@ func _swing_visual(dir: Vector2, heavy: bool) -> void:
 
 ## Mira automática (corpo a corpo): vira para o inimigo mais próximo ao atacar.
 func _face_nearest_enemy() -> void:
-	var t := _best_target(64.0, 180.0)
+	# só distância: o inimigo mais perto é o que o golpe vai acertar (sem viés pelo ângulo atual)
+	var t := _best_target(64.0, 180.0, 0.0)
 	if t != null:
 		facing = ((t.global_position + Vector2(0, -4)) - (global_position + Vector2(0, -6))).normalized()
 
 
-func _best_target(max_dist: float, cone_deg: float) -> Node2D:
+func _best_target(max_dist: float, cone_deg: float, ang_weight: float = 70.0) -> Node2D:
 	if not GameState.auto_aim:
 		return null
 	var best: Node2D = null
@@ -411,7 +412,7 @@ func _best_target(max_dist: float, cone_deg: float) -> Node2D:
 		var ang := absf(facing.angle_to(v))
 		if ang > deg_to_rad(cone_deg):
 			continue
-		var score := d + ang * 70.0
+		var score := d + ang * ang_weight
 		if score < best_score:
 			best_score = score
 			best = e

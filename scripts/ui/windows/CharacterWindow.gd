@@ -75,7 +75,7 @@ func build() -> void:
 	skh.add_child(UI.icon(Pix.skill_icon(sk["icon"]), 20))
 	var skv := UI.vbox(0)
 	skh.add_child(skv)
-	skv.add_child(UI.label("%s  [Q]  recarga %ds" % [sk["name"], int(sk["cd"])], UI.C_XP))
+	skv.add_child(UI.label("%s  [1]  recarga %ds" % [sk["name"], int(sk["cd"])], UI.C_XP))
 	skv.add_child(UI.wrap_label(sk["desc"], UI.C_DIM, 190))
 	# --- coluna direita: talentos
 	var right := UI.vbox(4)
@@ -115,7 +115,7 @@ func _skills() -> void:
 		mode = "atributos"
 		rebuild(), 90)
 	add_to_body(back, Vector2(450, 244))
-	add_to_body(UI.label("Magia inicial [R] + uma habilidade nova a cada 10 níveis", UI.C_DIM), Vector2(0, 0))
+	add_to_body(UI.label("Magia inicial [2] + uma habilidade nova a cada 10 níveis", UI.C_DIM), Vector2(0, 0))
 	var col := scroll_column(Vector2(0, 16), Vector2(326, 246))
 	var prog := GameState.class_progression()
 	var got := GameState.skill_milestones()

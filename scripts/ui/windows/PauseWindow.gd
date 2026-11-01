@@ -79,27 +79,58 @@ func build() -> void:
 	v.add_child(toggles)
 	v.add_child(toggles2)
 	v.add_child(UI.hline())
-	v.add_child(UI.label("Controles", UI.C_ORANGE_L))
-	var keys := [
-		["WASD / setas", "Mover"], ["Espaço / J", "Atacar"], ["Shift / K", "Rolar"], ["Q / L", "Habilidade da classe"],
-		["E", "Interagir / falar"], ["H", "Poção"], ["F", "Comer"], ["I", "Inventário"], ["C", "Personagem e pets"],
-		["N", "Caderno"], ["T", "Hábitos"], ["G", "Missões"], ["P", "Pomodoro"], ["B", "Chamar o pet"], ["Esc", "Pausa"],
-	]
+	v.add_child(UI.label("Controles: clique na tecla e aperte a nova (Esc cancela)", UI.C_ORANGE_L))
 	var grid := GridContainer.new()
 	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 8)
 	grid.add_theme_constant_override("v_separation", 1)
 	v.add_child(grid)
-	for k in keys:
-		var kl := UI.label(k[0], UI.C_ORANGE_L)
-		kl.custom_minimum_size.x = 80
-		grid.add_child(kl)
-		var dl := UI.label(k[1], UI.C_DIM)
-		dl.custom_minimum_size.x = 120
+	for pair in Game.REBINDABLE:
+		var action: String = pair[0]
+		var dl := UI.label(pair[1], UI.C_DIM)
+		dl.custom_minimum_size.x = 150
 		grid.add_child(dl)
+		var btn := UI.button(Game.key_name(action), Callable(), 60)
+		btn.pressed.connect(func() -> void: _start_capture(action))
+		_key_btns[action] = btn
+		grid.add_child(btn)
+	v.add_child(UI.button("Restaurar teclas padrão", func() -> void:
+		Game.reset_keybinds()
+		_refresh_keys()
+		HUD.show_toast("Teclas voltaram ao padrão.", UI.C_GOOD), 180))
 
 
 var _saved_label: Label
+var _key_btns := {}    # ação -> botão com a tecla atual
+var _capturing := ""   # ação que está esperando a nova tecla
+
+
+func _start_capture(action: String) -> void:
+	_capturing = action
+	_key_btns[action].text = "..."
+	get_viewport().gui_release_focus()
+	HUD.show_toast("Aperte a nova tecla (Esc cancela).", UI.C_XP)
+
+
+func _refresh_keys() -> void:
+	for action in _key_btns:
+		_key_btns[action].text = Game.key_name(action)
+
+
+func _unhandled_key_input(ev: InputEvent) -> void:
+	if _capturing == "" or not (ev is InputEventKey) or not ev.pressed or ev.echo:
+		super(ev)
+		return
+	get_viewport().set_input_as_handled()
+	var action := _capturing
+	_capturing = ""
+	if ev.keycode != KEY_ESCAPE:
+		var key_txt := OS.get_keycode_string(ev.physical_keycode)
+		for pair in Game.REBINDABLE:
+			if pair[0] != action and Game.key_name(pair[0]) == key_txt:
+				HUD.show_toast("Atenção: %s também usa essa tecla." % pair[1], UI.C_GOLD)
+		Game.rebind(action, ev.physical_keycode)
+	_refresh_keys()
 
 
 func _slot_text() -> String:

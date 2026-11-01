@@ -164,7 +164,7 @@ func credits() -> int:
 	return int(st().get("credits", 0))
 
 
-## Chamado ao concluir (ou finalizar) um foco: soma as horas e dá 1 crédito a cada 45 min (Data.MINUTES_PER_CREDIT).
+## Chamado ao concluir (ou finalizar) um foco: soma as horas e dá 1 crédito a cada 30 min (Data.MINUTES_PER_CREDIT).
 func add_focus_minutes(minutes: int) -> int:
 	if not started() or minutes <= 0:
 		return 0
