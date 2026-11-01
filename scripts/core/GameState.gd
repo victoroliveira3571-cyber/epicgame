@@ -633,9 +633,13 @@ func upgrade_cost(item_id: String) -> Dictionary:
 	if lvl >= Data.UPGRADE_MAX:
 		return {}
 	var it: Dictionary = Data.get_item(item_id)
+	var material: String = Data.UPGRADE_MATERIAL[lvl]
+	var tier := int(it.get("tier", 0))
+	if it.get("kind", "") == "equip" and tier >= 5:
+		material = "barra_obsidiana" if tier == 5 else "barra_adamantium"   # v3.2: metal fino de Pedralta
 	return {
 		"gold": int(round(float(it.get("price", 20)) * 0.45 * float(lvl + 1))),
-		"material": Data.UPGRADE_MATERIAL[lvl],
+		"material": material,
 		"qty": Data.UPGRADE_MATERIAL_QTY[lvl],
 	}
 

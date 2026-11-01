@@ -11,9 +11,12 @@ const TITLE_SCENE := "res://scenes/Title.tscn"
 const DUNGEON_SCENE := "res://scenes/Dungeon.tscn"
 const INTERIOR_SCENE := "res://scenes/Interior.tscn"
 const FOREST_SCENE := "res://scenes/Forest.tscn"
+const CITY_SCENE := "res://scenes/City.tscn"
 
 var current_floor: int = 0
 var run: Dictionary = {}
+var city_id: String = ""            # v3.2: cidade atual ("porto" | "pedralta" | "academia")
+var city_spawn: String = "start"
 var town_spawn: String = "start"      # "start" | "gate" | "forest" | "door:<id do interior>"
 var forest_spawn: String = "town"     # "town" | "door:<id do interior>"
 var interior_id: String = ""
@@ -171,10 +174,29 @@ func enter_interior(id: String, from: String = "town") -> void:
 
 
 func leave_interior() -> void:
-	if interior_return == "forest":
+	if interior_return == "city":
+		go_to_city(city_id, "door:" + interior_id)
+	elif interior_return == "forest":
 		go_to_forest("door:" + interior_id)
 	else:
 		go_to_town("door:" + interior_id)
+
+
+# ============================================================ Cidades (v3.2)
+func go_to_city(id: String, spawn: String = "start") -> void:
+	if Law.is_jailed():
+		HUD.show_toast("Você está preso: cumpra a pena estudando.", UI.C_BAD)
+		return
+	if not CityData.CITIES.has(id):
+		return
+	city_id = id
+	city_spawn = spawn
+	GameState.in_dungeon = false
+	if spawn.begins_with("door:"):
+		change_scene(CITY_SCENE)
+	else:
+		var c := CityData.get_city(id)
+		change_scene(CITY_SCENE, 0.6, str(c["name"]), str(c["subtitle"]))
 
 
 # ============================================================ Floresta

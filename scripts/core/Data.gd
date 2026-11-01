@@ -336,6 +336,8 @@ const MATERIALS := {
 	"barra_prata": {"name": "Barra de Prata", "icon": "items/resource/BarSilver", "price": 80, "tier": 2},
 	"barra_ouro": {"name": "Barra de Ouro", "icon": "items/resource/BarGold", "price": 160, "tier": 3},
 	"barra_mithril": {"name": "Barra de Mithril", "icon": "items/resource/BarMithril", "price": 320, "tier": 4},
+	"barra_obsidiana": {"name": "Barra de Obsidiana", "icon": "items/resource/BarMithril", "price": 640, "tier": 5, "tint": Color(0.55, 0.42, 0.75)},
+	"barra_adamantium": {"name": "Barra de Adamantium", "icon": "items/resource/BarMithril", "price": 1300, "tier": 6, "tint": Color(0.45, 0.95, 0.8)},
 	"gema_verde": {"name": "Gema Verde", "icon": "items/resource/GemGreen", "price": 60, "tier": 1},
 	"gema_roxa": {"name": "Gema Roxa", "icon": "items/resource/GemPurple", "price": 120, "tier": 2},
 	"gema_vermelha": {"name": "Gema Vermelha", "icon": "items/resource/GemRed", "price": 240, "tier": 3},
@@ -463,7 +465,7 @@ func _build_items() -> void:
 	for mid in MATERIALS:
 		var m: Dictionary = MATERIALS[mid]
 		ITEMS[mid] = {"id": mid, "name": m["name"], "kind": "material", "tier": m["tier"], "icon": m["icon"], "price": m["price"],
-			"desc": "Material de aprimoramento (Ferreiro)."}
+			"tint": m.get("tint", Color.WHITE), "desc": "Material de aprimoramento (Ferreiro)."}
 	for lid in LAB_MATERIALS:
 		var lm: Dictionary = LAB_MATERIALS[lid]
 		ITEMS[lid] = {"id": lid, "name": lm["name"], "kind": "material", "tier": lm["tier"], "icon": lm["icon"], "price": lm["price"],

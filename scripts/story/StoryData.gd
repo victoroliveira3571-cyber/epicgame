@@ -47,6 +47,10 @@ const SPEAKERS := {
 	"cientista": {"name": "Dr. Faísca"},
 	"pipeta": {"name": "Pipeta"},
 	"tonico": {"name": "Tonico"},
+	"cocheiro": {"name": "Tobias, o cocheiro"},
+	"capitao": {"name": "Capitão Maré"},
+	"granito": {"name": "Mestre Granito"},
+	"reitora": {"name": "Reitora Aurora"},
 }
 
 const CHAPTERS := {

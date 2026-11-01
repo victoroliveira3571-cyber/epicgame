@@ -297,6 +297,9 @@ func boss_ready(boss_id: String) -> bool:
 func floor_unlocked(floor_n: int) -> bool:
 	if Data.STORY_FLOORS.has(floor_n):
 		return chapter() >= int(Data.STORY_FLOORS[floor_n]["chapter"])
+	# v3.2: das Profundezas em diante o herói precisa dos fragmentos de memória do pai (um por cidade)
+	if floor_n >= 11 and CityStory.fragments() < mini(3, (floor_n - 6) / 5):
+		return false
 	return chapter() >= 6 and GameState.best_floor >= floor_n - 1
 
 
@@ -356,7 +359,7 @@ func _talk(npc: String) -> void:
 		"ivo":
 			await say("ivo_livre")
 		_:
-			pass
+			await CityStory.talk(npc)
 
 
 func _talk_helena(s: String) -> void:

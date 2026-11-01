@@ -9,6 +9,7 @@ const T := 16
 const SPINE_X := 32          # tile central da estrada norte-sul
 const AVENUE_Y := 26         # linha central da avenida
 const GATE_Y := 47
+const STATION_TILE := Vector2i(58, 31)   # v3.2: carruagens para as cidades
 
 var rng := RandomNumberGenerator.new()
 var world: Node2D
@@ -78,6 +79,7 @@ func _ready() -> void:
 	_build_buildings()
 	_build_gate()
 	_build_forest_gate()
+	_build_station()
 	_build_decor()
 	_build_npcs()
 	_build_ambient()
@@ -269,6 +271,30 @@ class GateTrigger extends Interactable:
 	func interact(_player: Node) -> void:
 		Audio.sfx("ui_open", -4.0)
 		HUD.open_window("dungeon")
+
+
+# ============================================================ Estação de Carruagens (v3.2)
+## Depois da Parte 1: Tobias leva a Porto Névoa, Pedralta e Academia de Fontelúcida (1 crédito por viagem).
+func _build_station() -> void:
+	var pos := Vector2(STATION_TILE.x * T + 8, STATION_TILE.y * T)
+	_add_prop("i_board", pos + Vector2(-22, -4), 4.0)
+	_add_prop("i_crate", pos + Vector2(26, -2), 5.0)
+	_add_prop("i_barrel", pos + Vector2(34, 8), 5.0)
+	var tob := NPC.create(world, "OldMan2", pos + Vector2(8, -6), "static")
+	tob.lines = ["Carruagem para onde o estudo levar.", "Porto, montanha ou academia. Escolha."]
+	StoryProp.talker(tob, "cocheiro", "Tobias (Carruagens)")
+	var l := Label.new()
+	l.text = "Carruagens"
+	l.add_theme_font_override("font", Pix.font(1))
+	l.add_theme_font_size_override("font_size", 12)
+	l.add_theme_color_override("font_color", Color("ffe9a8"))
+	l.add_theme_color_override("font_outline_color", Color("2a1810"))
+	l.add_theme_constant_override("outline_size", 3)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.size = Vector2(160, 14)
+	l.position = pos + Vector2(-72, -48)
+	l.z_index = 60
+	world.add_child(l)
 
 
 # ============================================================ Trilha da Floresta
@@ -475,6 +501,8 @@ func _spawn_player() -> void:
 		spawn = Vector2(SPINE_X * T + 8, (GATE_Y - 3) * T)
 	elif Game.town_spawn == "forest":
 		spawn = Vector2(6 * T, AVENUE_Y * T + 8)
+	elif Game.town_spawn == "city":
+		spawn = Vector2(STATION_TILE.x * T + 8, (STATION_TILE.y + 3) * T)
 	elif Game.town_spawn.begins_with("door:"):
 		spawn = door_spawns.get(Game.town_spawn.substr(5), spawn)
 	player = Player.spawn(world, spawn)

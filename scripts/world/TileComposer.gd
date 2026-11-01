@@ -262,3 +262,33 @@ static func compose_town(w: int, h: int, dirt: PackedByteArray, water: PackedByt
 	autotile(canvas, stone if stone != null else floor_set, dirt, w, h, Vector2i(0, 7))
 	autotile(canvas, water_set, water, w, h, Vector2i(0, 6))
 	return canvas
+
+
+# ===================================================================== Cidades novas (v3.2)
+## Chão de uma cidade: `base_row` é a linha do tile liso do bioma no TilesetFloor (grama 12, areia 5, neve 19),
+## `layers` empilha manchas pela ordem: [{"mask": PackedByteArray, "set": "floor"|"stone"|"water", "origin": Vector2i}].
+## `tint` colore o bioma inteiro (usado para dar clima: névoa do porto, frio da montanha).
+static func compose_city(w: int, h: int, base_row: int, layers: Array, rng: RandomNumberGenerator, tint: Color = Color.WHITE) -> Image:
+	var canvas := new_canvas(w, h)
+	var floor_set := tileset("TilesetFloor")
+	var water_set := tileset("TilesetWater")
+	var nature := tileset("TilesetNature")
+	for y in h:
+		for x in w:
+			blit(canvas, floor_set, rng.randi() % 5, base_row, x, y)
+	var stone_img := src_img("res://assets/custom/tiles/TilesetFloorStone.png")
+	for l in layers:
+		var set_img: Image = floor_set
+		match str(l["set"]):
+			"water":
+				set_img = water_set
+			"stone":
+				set_img = stone_img if stone_img != null else floor_set
+		autotile(canvas, set_img, l["mask"], w, h, l["origin"])
+	if tint != Color.WHITE:
+		for y in canvas.get_height():
+			for x in canvas.get_width():
+				var c := canvas.get_pixel(x, y)
+				canvas.set_pixel(x, y, Color(c.r * tint.r, c.g * tint.g, c.b * tint.b, c.a))
+	return canvas
+
