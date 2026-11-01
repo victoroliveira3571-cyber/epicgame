@@ -50,7 +50,7 @@ const CITIES := {
 	},
 	"pedralta": {
 		"name": "Pedralta", "subtitle": "Onde o martelo conta o tempo",
-		"W": 56, "H": 46, "base_row": 19, "tint": Color(0.93, 0.97, 1.06), "path_origin": Vector2i(0, 7), "path_set": "stone",
+		"W": 56, "H": 46, "base_row": 19, "tint": Color(0.93, 0.97, 1.06), "path_origin": Vector2i(0, 7), "path_set": "stone_snow",
 		"music": "town", "ambience": "",
 		"exit": "south", "spawn": Vector2i(28, 37),
 		"paths": [[27, 27, 29, 45], [10, 26, 46, 28], [27, 11, 29, 26], [24, 12, 32, 13]],
@@ -140,7 +140,7 @@ const CITIES := {
 	# tileset do jogo, casas do Kenney e pedras/árvores do Ninja Adventure, até entrarem os packs de neve e deserto.
 	"vila_neve": {
 		"name": "Vila da Neve", "subtitle": "Onde o frio ensina paciência",
-		"W": 40, "H": 34, "base_row": 19, "tint": Color(0.92, 0.96, 1.08), "path_origin": Vector2i(0, 7), "path_set": "stone",
+		"W": 40, "H": 34, "base_row": 19, "tint": Color(0.92, 0.96, 1.08), "path_origin": Vector2i(0, 7), "path_set": "stone_snow",
 		"music": "town_night", "ambience": "",
 		"exit": "south", "spawn": Vector2i(20, 30),
 		"paths": [[19, 8, 20, 33], [8, 18, 32, 19]],
@@ -172,7 +172,7 @@ const CITIES := {
 		"music": "town", "ambience": "amb_margem",
 		"exit": "west", "spawn": Vector2i(3, 18),
 		"paths": [[0, 17, 43, 18], [21, 7, 22, 16]],
-		"water": [[16, 21, 27, 27]],
+		"water": [[18, 21, 25, 21], [17, 22, 26, 22], [16, 23, 27, 25], [17, 26, 26, 26], [18, 27, 25, 27]],
 		"piers": [],
 		"buildings": [
 			{"id": "loja", "title": "Bazar das Caravanas", "prop": "b_casa_empena", "tile": [12, 16], "tint": [1.0, 0.92, 0.78]},
@@ -186,7 +186,10 @@ const CITIES := {
 			{"sheet": "Woman", "tile": [22, 29], "mode": "wander", "lines": ["A miragem mostra o que você quer ver. Estudar mostra o que é.", "À noite o deserto conta estrelas."]},
 		],
 		"decor": [
-			["n_arvore_seca", [14, 22]], ["n_arvore_seca", [29, 21]], ["n_arvore_seca", [15, 28]], ["n_arvore_seca", [28, 28]],
+			# v3.7 (análise): oásis = anel verde em volta da água; árvores secas só no deserto, longe do lago
+			["n_arvore_redonda", [14, 22]], ["n_arvore_redonda2", [29, 21]], ["n_arvore_redonda3", [15, 28]], ["n_arvore_redonda", [28, 28]],
+			["n_arbusto2", [17, 20]], ["n_arbusto4", [26, 20]], ["n_mato2", [15, 25]], ["n_mato3", [29, 25]], ["n_arbusto1", [21, 29]],
+			["n_arvore_seca", [4, 30]], ["n_arvore_seca", [39, 29]],
 			["n_pedra_marrom_g", [5, 8]], ["n_pedra_marrom_alta", [38, 9]], ["n_pedra_marrom", [8, 28]], ["n_pedra_marrom_g", [40, 22]],
 			["i_barrel", [18, 19]], ["i_crate", [26, 19]], ["i_sack", [27, 20]], ["k_placa", [6, 16]],
 		],

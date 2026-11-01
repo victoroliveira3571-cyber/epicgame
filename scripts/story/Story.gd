@@ -205,6 +205,12 @@ func objective_world_pos(scene: Node) -> Variant:
 	for l in scene.map_landmarks():
 		if str(l[0]) == id:
 			return l[2]
+	# v3.7: já no destino da viagem (a estação fica em Focus Town), a seta aponta para quem se procura lá
+	var alt := str(StoryV4.TARGETS_AT_DEST.get(step(), ""))
+	if alt != "":
+		for l2 in scene.map_landmarks():
+			if str(l2[0]) == alt:
+				return l2[2]
 	return null
 
 
@@ -220,6 +226,21 @@ func chapter_title() -> String:
 		return "%s: %s" % [StoryV4.PHASES["exercito"]["title"], ArmyStory.patente_name()]
 	var c: Dictionary = StoryData.CHAPTERS.get(chapter(), {})
 	return "%s: %s" % [c.get("title", ""), c.get("name", "")] if not c.is_empty() else ""
+
+
+## v3.7: nome curto da fase para o painel de objetivo (o título inteiro não cabe). Na história v4 o prólogo, a
+## Academia e o Exército não são capítulos numerados: antes o painel mostrava só " - Objetivo".
+func chapter_short() -> String:
+	var s := step()
+	if s.begins_with("p_"):
+		return StoryV4.PHASES["prologo"]["title"]
+	if s.begins_with("a_"):
+		return StoryV4.PHASES["academia"]["title"]
+	if s == "fim_b":
+		return StoryV4.PHASES["fim_b"]["title"]
+	if path() == "exercito":
+		return "Exército"
+	return String((StoryData.CHAPTERS.get(chapter(), {}) as Dictionary).get("title", ""))
 
 
 func start_chapter(n: int) -> void:

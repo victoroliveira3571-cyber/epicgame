@@ -17,6 +17,9 @@ const PHASES := {
 	"fim_b": {"title": "Epílogo", "name": "O Marquês de Vicerus"},
 }
 
+## v3.7: alvo da seta quando o herói já chegou à cidade de destino (o alvo normal é a estação de Focus Town).
+const TARGETS_AT_DEST := {"b_alistar": "centro_treino", "a_viagem": "reitoria", "a_matricula": "reitoria"}
+
 const OBJECTIVES := {
 	"p_prologo": "Assista às lembranças da sua infância",
 	"a_casa": "Converse com {mae} antes de partir para a Academia",
@@ -26,7 +29,7 @@ const OBJECTIVES := {
 	"a_jardim": "{missao_jardim}",
 	"a_formatura": "Formatura: estude 2 horas seguidas no Pomodoro ({sequencia}) e fale com a Reitora",
 	"a_escolha": "Fale com a Reitora Aurora: Guilda dos Aventureiros ou Exército de Rocuetos?",
-	"b_alistar": "Vá a Pedralta (carruagem do Tobias) e apresente-se à Comandante Brígida",
+	"b_alistar": "Apresente-se à Comandante Brígida no Centro de Treinamento de Pedralta (carruagem do Tobias)",
 	"b_missao": "{missao_exercito}",
 	"b_cruzada_final": "Cruzada final: fale com a Comandante Brígida em Pedralta ({horas}/8 h de foco)",
 	"fim_b": "Fim do caminho do Exército. Você é Marquês de Rocuetos.",

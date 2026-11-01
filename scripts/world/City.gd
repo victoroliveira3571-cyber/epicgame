@@ -580,6 +580,11 @@ func _build_exit() -> void:
 	var pos := _tile_pos(sp.x, sp.y)
 	var txt := "Estrada para Focus Town"
 	var off := Vector2(0, -52)
+	var f: Dictionary = city.get("fort", {})
+	if not f.is_empty():
+		# v3.7: com muralha, a placa da estrada fica do lado de fora, depois da ponte
+		pos = Vector2((int(f["gate_x"]) + 1) * T, (int(f["wall_y"]) + 5) * T - 2)
+		off = Vector2.ZERO
 	_label(txt, pos + off, Color("d9ffc2"))
 
 

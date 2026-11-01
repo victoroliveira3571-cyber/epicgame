@@ -444,6 +444,10 @@ static func compose_city(w: int, h: int, base_row: int, layers: Array, rng: Rand
 				set_img = water_set
 			"stone":
 				set_img = stone_img if stone_img != null else floor_set
+			"stone_snow":
+				# v3.7: calçada com borda de neve (cidades de neve; tools/gen_stone_path_snow.py)
+				var snow_img := src_img("res://assets/custom/tiles/TilesetFloorStoneSnow.png")
+				set_img = snow_img if snow_img != null else (stone_img if stone_img != null else floor_set)
 		autotile(canvas, set_img, l["mask"], w, h, l["origin"])
 	if tint != Color.WHITE:
 		for y in canvas.get_height():

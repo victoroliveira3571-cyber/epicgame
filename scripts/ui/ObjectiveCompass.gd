@@ -27,7 +27,8 @@ func play_gain() -> void:
 
 
 func has_compass() -> bool:
-	return Story.started() and (bool(Story.flag("bussola", false)) or Story.step() != "c1_casa")
+	# v3.7: na história v4 o prólogo (p_prologo) e a casa (a_casa) também vêm antes da bússola da mãe
+	return Story.started() and (bool(Story.flag("bussola", false)) or not (Story.step() in ["c1_casa", "p_prologo", "a_casa"]))
 
 
 func _process(delta: float) -> void:

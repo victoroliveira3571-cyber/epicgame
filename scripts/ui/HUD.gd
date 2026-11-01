@@ -1183,8 +1183,7 @@ func _refresh_objective() -> void:
 		_objective.visible = false
 		return
 	_objective.visible = true
-	var ch: Dictionary = StoryData.CHAPTERS.get(Story.chapter(), {})
-	_obj_title.text = String(ch.get("title", "")) + "  -  Objetivo"
+	_obj_title.text = Story.chapter_short() + "  -  Objetivo"
 	_obj_text.text = Story.objective_text()
 	_obj_text.size = Vector2(146, 0)
 	var lines := maxi(1, int(ceil(Pix.font(1).get_string_size(_obj_text.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x / 128.0)))
