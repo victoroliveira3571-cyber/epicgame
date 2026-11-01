@@ -57,4 +57,43 @@ func run(dev: Node) -> void:
 	await dev.wait(0.4)
 	check(HUD.window_id == "bau", "janela do baú abre")
 	HUD.close_window()
+	# v2.8: 8 tiers
+	check(Data.TIER_NAMES.size() == 8 and Data.TIER_UNLOCK_LEVEL.size() == 8, "8 tiers de material")
+	check(Data.TIER_UNLOCK_LEVEL[7] == 100, "Supremo no nível 100")
+	check(Data.RARITY_NAMES.size() >= 8 and Data.RARITY_COLORS.size() >= 8, "raridades para 8 tiers")
+	var all_ok := true
+	for slot in Data.EQUIP_SLOTS:
+		var per := 0
+		for it in Data.ITEMS.values():
+			if it["kind"] == "equip" and it["slot"] == slot and int(it["tier"]) == 7:
+				per += 1
+				all_ok = all_ok and float(it.get("atk", 0)) + float(it.get("def", 0)) + float(it.get("crit", 0)) > 0.0
+		all_ok = all_ok and per >= 1
+	check(all_ok, "todo espaço tem item Supremo com atributos")
+	check(Data.max_tier_for_level(99) == 6 and Data.max_tier_for_level(100) == 7, "Supremo libera no nível 100")
+	check(Data.ITEMS["armadura_suprema"]["def"] > Data.ITEMS["couraca_draconica"]["def"], "Supremo supera Obsidiana")
+	check(Loot._roll_tier(30) <= 7, "drop sorteia até o tier 7")
+	# v2.8: personas únicas e persistentes
+	var seen := {}
+	var dup := false
+	for k in 10:
+		var idx := Street.persona_index("teste_m_%d" % k, false)
+		dup = dup or seen.has(idx)
+		seen[idx] = true
+	check(not dup, "10 moradores sem persona repetida")
+	check(Street.persona_index("teste_m_3", false) == Street.persona_index("teste_m_3", false), "persona estável por morador")
+	check(str(Street.PERSONAS[12][0]) == "Kilian" and str(Street.PERSONAS[13][0]) == "Dame Cora", "nomes anglo-medievais")
+	# v2.8: minério na floresta
+	Game.go_to_forest("town")
+	await dev.wait(2.0)
+	var veins := 0
+	for n in get_tree().get_nodes_in_group("player")[0].get_parent().get_children():
+		if n is StoryProp and str((n as StoryProp).text).begins_with("Minerar"):
+			veins += 1
+			if veins == 1:
+				var b0 := GameState.count_item("barra_cobre") + GameState.count_item("barra_ferro") + GameState.count_item("barra_prata") + GameState.count_item("barra_ouro") + GameState.count_item("barra_mithril")
+				(n as StoryProp).interact(null)
+				var b1 := GameState.count_item("barra_cobre") + GameState.count_item("barra_ferro") + GameState.count_item("barra_prata") + GameState.count_item("barra_ouro") + GameState.count_item("barra_mithril")
+				check(b1 > b0 and not (n as StoryProp).enabled, "minerar dá barra e esgota o veio")
+	check(veins >= 8, "veios de minério na floresta (%d)" % veins)
 	print("[v26] ", "TUDO OK" if fails == 0 else "%d falhas" % fails)

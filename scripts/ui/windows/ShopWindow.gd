@@ -54,7 +54,7 @@ func _equipment(col: VBoxContainer) -> void:
 			row.mouse_entered.connect(func() -> void: _try_on(id))
 			col.add_child(row)
 	if max_tier < Data.TIER_UNLOCK_LEVEL.size() - 1:
-		col.add_child(UI.label("Próximo tier de equipamentos no nível %d." % Data.TIER_UNLOCK_LEVEL[max_tier + 1], UI.C_DIM))
+		col.add_child(UI.label("Próximo material (%s) no nível %d." % [Data.TIER_NAMES[max_tier + 1], Data.TIER_UNLOCK_LEVEL[max_tier + 1]], UI.C_DIM))
 
 
 func _potions(col: VBoxContainer) -> void:

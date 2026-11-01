@@ -7,16 +7,19 @@ extends Node
 const TILE := 16
 
 # ------------------------------------------------------------------ Raridades
-const RARITY_NAMES := ["Comum", "Incomum", "Raro", "Épico", "Lendário", "Mítico"]
+const RARITY_NAMES := ["Comum", "Incomum", "Raro", "Épico", "Lendário", "Mítico", "Divino", "Supremo"]
 const RARITY_COLORS := [
-	Color("c9c4b8"), Color("7ed957"), Color("5aa9ff"), Color("b57aff"), Color("ffb23e"), Color("ff5a4d"),
+	Color("c9c4b8"), Color("7ed957"), Color("5aa9ff"), Color("b57aff"), Color("ffb23e"), Color("ff5a4d"), Color("4de8d0"), Color("fff3a0"),
 ]
 # Cor aplicada (modulate) sobre os ícones de equipamento conforme o nível do item.
 const TIER_TINTS := [
 	Color(0.80, 0.62, 0.42), Color(0.82, 0.84, 0.88), Color(0.55, 0.72, 1.0),
 	Color(0.78, 0.58, 1.0), Color(1.0, 0.84, 0.40), Color(1.0, 0.48, 0.42),
+	Color(0.45, 1.0, 0.85), Color(1.0, 0.96, 0.62),
 ]
-const TIER_UNLOCK_LEVEL := [1, 5, 10, 18, 28, 40]
+# v2.8: 8 tiers de material: Madeira > Pedra > Ferro > Ouro > Diamante > Obsidiana > Adamantium > Supremo
+const TIER_NAMES := ["Madeira", "Pedra", "Ferro", "Ouro", "Diamante", "Obsidiana", "Adamantium", "Supremo"]
+const TIER_UNLOCK_LEVEL := [1, 5, 10, 18, 28, 45, 70, 100]
 
 # --------------------------------------------------------------------- Classes
 # weapon: família de arma que a classe usa. ranged: ataque à distância.
@@ -271,49 +274,58 @@ const SLOT_ICONS := {"weapon": "weapons/Sword_icon", "helmet": "skill_icons/item
 
 const WEAPON_TABLE := {
 	"sword": [
-		["espada_madeira", "Espada de Madeira", "Club"], ["espada_ferro", "Espada de Ferro", "Sword"],
-		["espada_aco", "Espada de Aço", "Sword2"], ["montante", "Montante", "BigSword"],
-		["machado_runico", "Machado Rúnico", "Axe"], ["martelo_real", "Martelo Real", "Hammer"],
+		["espada_madeira", "Espada de Madeira", "Club"], ["espada_ferro", "Espada de Pedra", "Sword"],
+		["espada_aco", "Espada de Ferro", "Sword2"], ["montante", "Montante de Ouro", "BigSword"],
+		["machado_runico", "Machado de Diamante", "Axe"], ["martelo_real", "Martelo de Obsidiana", "Hammer"],
+		["espada_adamantium", "Espada de Adamantium", "BigSword"], ["espada_suprema", "Espada Suprema", "Sword2"],
 	],
 	"dagger": [
-		["osso_afiado", "Osso Afiado", "Bone"], ["ninjaku", "Ninjaku", "Ninjaku"],
-		["sai_aco", "Sai de Aço", "Sai"], ["katana", "Katana", "Katana"],
-		["florete", "Florete", "Rapier"], ["lamina_sombria", "Lâmina Sombria", "Sword2"],
+		["osso_afiado", "Adaga de Madeira", "Bone"], ["ninjaku", "Adaga de Pedra", "Ninjaku"],
+		["sai_aco", "Adaga de Ferro", "Sai"], ["katana", "Katana de Ouro", "Katana"],
+		["florete", "Florete de Diamante", "Rapier"], ["lamina_sombria", "Lâmina de Obsidiana", "Sword2"],
+		["adaga_adamantium", "Adaga de Adamantium", "Katana"], ["adaga_suprema", "Adaga Suprema", "Rapier"],
 	],
 	"staff": [
-		["graveto_magico", "Graveto Mágico", "Stick"], ["varinha", "Varinha", "MagicWand"],
-		["livro_feitico", "Livro de Feitiços", "Book"], ["tridente_arcano", "Tridente Arcano", "Fork"],
-		["cajado_ancestral", "Cajado Ancestral", "Lance2"], ["varinha_estelar", "Varinha Estelar", "MagicWand"],
+		["graveto_magico", "Graveto de Madeira", "Stick"], ["varinha", "Varinha de Pedra", "MagicWand"],
+		["livro_feitico", "Livro de Ferro", "Book"], ["tridente_arcano", "Tridente de Ouro", "Fork"],
+		["cajado_ancestral", "Cajado de Diamante", "Lance2"], ["varinha_estelar", "Varinha de Obsidiana", "MagicWand"],
+		["cajado_adamantium", "Cajado de Adamantium", "Lance2"], ["cajado_supremo", "Cajado Supremo", "MagicWand"],
 	],
 	"bow": [
-		["arco_curto", "Arco Curto", "Bow"], ["arco_longo", "Arco Longo", "Bow2"],
-		["arco_composto", "Arco Composto", "Bow"], ["arco_cacador", "Arco de Caça", "Bow2"],
-		["arco_elfico", "Arco Élfico", "Bow"], ["arco_estelar", "Arco Estelar", "Bow2"],
+		["arco_curto", "Arco de Madeira", "Bow"], ["arco_longo", "Arco de Pedra", "Bow2"],
+		["arco_composto", "Arco de Ferro", "Bow"], ["arco_cacador", "Arco de Ouro", "Bow2"],
+		["arco_elfico", "Arco de Diamante", "Bow"], ["arco_estelar", "Arco de Obsidiana", "Bow2"],
+		["arco_adamantium", "Arco de Adamantium", "Bow2"], ["arco_supremo", "Arco Supremo", "Bow"],
 	],
 }
-const WEAPON_ATK := [5, 10, 17, 27, 40, 58]
+const WEAPON_ATK := [5, 10, 17, 27, 40, 58, 85, 125]
 const WEAPON_CRIT := {"sword": 0, "dagger": 2, "staff": 1, "bow": 1}
 
 const ARMOR_TABLE := {
-	"helmet": [["capuz_couro", "Capuz de Couro"], ["capacete_ferro", "Capacete de Ferro"], ["elmo_aco", "Elmo de Aço"],
-		["elmo_mithril", "Elmo de Mithril"], ["elmo_runico", "Elmo Rúnico"], ["coroa_draconica", "Coroa Dracônica"]],
-	"armor": [["armadura_couro", "Armadura de Couro"], ["cota_malha", "Cota de Malha"], ["peitoral_aco", "Peitoral de Aço"],
-		["couraca_mithril", "Couraça de Mithril"], ["couraca_runica", "Couraça Rúnica"], ["couraca_draconica", "Couraça Dracônica"]],
-	"shield": [["escudo_couro", "Escudo de Couro"], ["escudo_ferro", "Escudo de Ferro"], ["escudo_aco", "Escudo de Aço"],
-		["escudo_mithril", "Escudo de Mithril"], ["escudo_runico", "Escudo Rúnico"], ["escudo_draconico", "Escudo Dracônico"]],
-	"boots": [["botas_couro", "Botas de Couro"], ["botas_ferro", "Botas de Ferro"], ["botas_aco", "Botas de Aço"],
-		["botas_mithril", "Botas de Mithril"], ["botas_runicas", "Botas Rúnicas"], ["botas_draconicas", "Botas Dracônicas"]],
-	"amulet": [["amuleto_madeira", "Amuleto de Madeira"], ["amuleto_cobre", "Amuleto de Cobre"], ["amuleto_prata", "Amuleto de Prata"],
-		["amuleto_ouro", "Amuleto de Ouro"], ["amuleto_runico", "Amuleto Rúnico"], ["amuleto_draconico", "Amuleto Dracônico"]],
+	"helmet": [["capuz_couro", "Capuz de Madeira"], ["capacete_ferro", "Elmo de Pedra"], ["elmo_aco", "Elmo de Ferro"],
+		["elmo_mithril", "Elmo de Ouro"], ["elmo_runico", "Elmo de Diamante"], ["coroa_draconica", "Elmo de Obsidiana"],
+		["elmo_adamantium", "Elmo de Adamantium"], ["coroa_suprema", "Coroa do Rei Divino"]],
+	"armor": [["armadura_couro", "Armadura de Madeira"], ["cota_malha", "Armadura de Pedra"], ["peitoral_aco", "Armadura de Ferro"],
+		["couraca_mithril", "Armadura de Ouro"], ["couraca_runica", "Armadura de Diamante"], ["couraca_draconica", "Armadura de Obsidiana"],
+		["couraca_adamantium", "Armadura de Adamantium"], ["armadura_suprema", "Armadura do Rei Divino Galáctico"]],
+	"shield": [["escudo_couro", "Escudo de Madeira"], ["escudo_ferro", "Escudo de Pedra"], ["escudo_aco", "Escudo de Ferro"],
+		["escudo_mithril", "Escudo de Ouro"], ["escudo_runico", "Escudo de Diamante"], ["escudo_draconico", "Escudo de Obsidiana"],
+		["escudo_adamantium", "Escudo de Adamantium"], ["escudo_supremo", "Escudo Supremo"]],
+	"boots": [["botas_couro", "Botas de Madeira"], ["botas_ferro", "Botas de Pedra"], ["botas_aco", "Botas de Ferro"],
+		["botas_mithril", "Botas de Ouro"], ["botas_runicas", "Botas de Diamante"], ["botas_draconicas", "Botas de Obsidiana"],
+		["botas_adamantium", "Botas de Adamantium"], ["botas_supremas", "Botas Supremas"]],
+	"amulet": [["amuleto_madeira", "Amuleto de Madeira"], ["amuleto_cobre", "Amuleto de Pedra"], ["amuleto_prata", "Amuleto de Ferro"],
+		["amuleto_ouro", "Amuleto de Ouro"], ["amuleto_runico", "Amuleto de Diamante"], ["amuleto_draconico", "Amuleto de Obsidiana"],
+		["amuleto_adamantium", "Amuleto de Adamantium"], ["amuleto_supremo", "Amuleto Supremo"]],
 }
-const ARMOR_DEF := {"helmet": [1, 2, 4, 6, 9, 13], "armor": [2, 4, 7, 11, 16, 23], "shield": [2, 3, 5, 8, 12, 17],
-	"boots": [0, 1, 2, 3, 5, 7], "amulet": [0, 0, 0, 0, 0, 0]}
-const ARMOR_HP := {"helmet": [4, 8, 14, 22, 34, 50], "armor": [8, 16, 28, 44, 66, 95], "shield": [6, 10, 18, 28, 42, 60],
-	"boots": [0, 0, 0, 0, 0, 0], "amulet": [0, 0, 0, 0, 0, 0]}
-const BOOT_SPEED := [2.0, 3.0, 4.0, 6.0, 8.0, 10.0]
-const AMULET_CRIT := [2.0, 3.0, 4.5, 6.5, 9.0, 12.0]
-const AMULET_LUCK := [1.0, 2.0, 3.5, 5.0, 7.0, 10.0]
-const TIER_PRICE := [30, 90, 260, 700, 1800, 4500]
+const ARMOR_DEF := {"helmet": [1, 2, 4, 6, 9, 13, 19, 28], "armor": [2, 4, 7, 11, 16, 23, 34, 50], "shield": [2, 3, 5, 8, 12, 17, 25, 37],
+	"boots": [0, 1, 2, 3, 5, 7, 10, 14], "amulet": [0, 0, 0, 0, 0, 0, 0, 0]}
+const ARMOR_HP := {"helmet": [4, 8, 14, 22, 34, 50, 72, 105], "armor": [8, 16, 28, 44, 66, 95, 140, 205], "shield": [6, 10, 18, 28, 42, 60, 88, 130],
+	"boots": [0, 0, 0, 0, 0, 0, 0, 0], "amulet": [0, 0, 0, 0, 0, 0, 0, 0]}
+const BOOT_SPEED := [2.0, 3.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0]
+const AMULET_CRIT := [2.0, 3.0, 4.5, 6.5, 9.0, 12.0, 15.0, 18.0]
+const AMULET_LUCK := [1.0, 2.0, 3.5, 5.0, 7.0, 10.0, 13.0, 16.0]
+const TIER_PRICE := [30, 90, 260, 700, 1800, 4500, 11000, 28000]
 const SLOT_PRICE_MULT := {"weapon": 1.3, "helmet": 0.7, "armor": 1.2, "shield": 0.9, "boots": 0.6, "amulet": 1.0}
 
 const UPGRADE_MAX := 5
@@ -424,7 +436,7 @@ func _build_items() -> void:
 			var item := {
 				"id": row[0], "name": row[1], "kind": "equip", "slot": "weapon", "tier": t, "family": family,
 				"icon": "weapons/%s_icon" % row[2], "hand": ("weapons/%s" if family == "bow" else "weapons/%s_hand") % row[2],
-				"tint": TIER_TINTS[t] if t >= 2 and row[2] in ["Bow", "Bow2", "MagicWand", "Sword2"] else Color.WHITE,
+				"tint": TIER_TINTS[t] if (t >= 2 and row[2] in ["Bow", "Bow2", "MagicWand", "Sword2"]) or t >= 6 else Color.WHITE,
 				"atk": float(WEAPON_ATK[t]), "crit": float(WEAPON_CRIT[family] * (t + 1)) * 0.6,
 				"price": int(TIER_PRICE[t] * SLOT_PRICE_MULT["weapon"]),
 			}

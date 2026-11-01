@@ -71,6 +71,7 @@ func _ready() -> void:
 	_build_decor()
 	_build_sounds()
 	_build_herbs()
+	_build_ore()
 	_build_monsters()
 	_build_fog()
 	_spawn_player()
@@ -490,6 +491,50 @@ func _build_herbs() -> void:
 			herb.position = p
 			world.add_child(herb)
 			placed_points.append(p)
+
+
+## v2.8: veios de minério no mapa aberto. [E] extrai uma barra (volta depois de ORE_RESPAWN s).
+## Quanto mais fundo, melhor o metal: borda cobre, clareira ferro, mata prata, pântano ouro, ruínas mithril.
+const ORE_RESPAWN := 120.0
+const ORE_TABLE := {
+	"borda": ["barra_cobre", "Cobre", Color(1.0, 0.65, 0.4), 3],
+	"clareira": ["barra_ferro", "Ferro", Color(0.8, 0.85, 0.95), 3],
+	"mata": ["barra_prata", "Prata", Color(0.9, 0.95, 1.0), 3],
+	"pantano": ["barra_ouro", "Ouro", Color(1.0, 0.9, 0.4), 2],
+	"ruinas": ["barra_mithril", "Mithril", Color(0.6, 0.9, 1.0), 2],
+}
+
+
+func _build_ore() -> void:
+	for z in ORE_TABLE:
+		var o: Array = ORE_TABLE[z]
+		for _i in int(o[3]):
+			var p := _random_spot(z, 30.0, z == "ruinas")
+			if p.x > (W - 10) * T:
+				continue
+			placed_points.append(p)
+			var holder := _add_prop("n_pedra_cinza", p, 5.0, o[2])
+			var node := StoryProp.make("Minerar " + str(o[1]), Callable(), null, 22.0, false)
+			node.position = p
+			world.add_child(node)
+			node.on_use = func(me: StoryProp) -> void: _mine(me, holder, str(o[0]), str(o[1]))
+
+
+func _mine(me: StoryProp, holder: Node2D, item: String, label: String) -> void:
+	if not me.enabled:
+		return
+	me.enabled = false
+	var n := 1 + (1 if rng.randf() < 0.25 else 0)
+	GameState.add_item(item, n, true)
+	Audio.sfx2("bigorna1" if randf() < 0.5 else "bigorna2", -8.0, 0.08)
+	Fx.burst(world, me.global_position + Vector2(0, -6), Color(1, 0.9, 0.6), 6, 30.0, 0.3)
+	HUD.show_toast("+%d Barra de %s" % [n, label], UI.C_GOOD)
+	holder.modulate = Color(0.5, 0.5, 0.5, 0.7)
+	get_tree().create_timer(ORE_RESPAWN).timeout.connect(func() -> void:
+		if is_instance_valid(me):
+			me.enabled = true
+		if is_instance_valid(holder):
+			holder.modulate = Color.WHITE)
 
 
 func _build_monsters() -> void:

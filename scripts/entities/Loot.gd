@@ -72,7 +72,7 @@ static func roll_item(floor_n: int, elite: bool = false) -> String:
 
 
 static func _roll_tier(floor_n: int) -> int:
-	var max_tier := mini(5, (floor_n - 1) / 3)
+	var max_tier := mini(7, (floor_n - 1) / 3)
 	var r := randf()
 	var t := max_tier
 	if r > 0.5:

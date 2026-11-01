@@ -247,4 +247,6 @@ const WEAPON_VISUALS := {
 	"tridente_arcano": ["diamond", ""], "cajado_ancestral": ["crystal", ""], "varinha_estelar": ["diamond_gold", ""],
 	"arco_curto": ["recurve", ""], "arco_longo": ["great", ""], "arco_composto": ["recurve_dark", ""],
 	"arco_cacador": ["recurve_light", ""], "arco_elfico": ["great_light", ""], "arco_estelar": ["great_gold", ""],
+	"espada_adamantium": ["longsword", "gold"], "espada_suprema": ["longsword", "gold"], "adaga_adamantium": ["katana", ""], "adaga_suprema": ["rapier", "gold"],
+	"cajado_adamantium": ["crystal", ""], "cajado_supremo": ["diamond_gold", ""], "arco_adamantium": ["great_gold", ""], "arco_supremo": ["great_gold", ""],
 }
