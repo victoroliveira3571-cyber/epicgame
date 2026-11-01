@@ -12,6 +12,7 @@ func _init() -> void:
 
 func build() -> void:
 	add_to_body(UI.label("Escolha o equipamento", UI.C_DIM), Vector2(0, 0))
+	add_to_body(UI.button("Trabalhar na forja", func() -> void: HUD.open_window("mg_forja"), 120), Vector2(160, -3))
 	var col := scroll_column(Vector2(0, 16), Vector2(290, 256))
 	var ids: Array = []
 	for id in GameState.inventory:

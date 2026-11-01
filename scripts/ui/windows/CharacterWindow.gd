@@ -196,6 +196,9 @@ func _pets() -> void:
 	left.add_child(UI.hline())
 	left.add_child(UI.wrap_label("%d min de foco = 1 crédito. Cada entrada na floresta ou na masmorra custa 1 (escadas também). Morrer tira 1 e o saldo pode ficar negativo até você estudar. Chefes pedem horas de foco." % Data.MINUTES_PER_CREDIT, UI.C_DIM, 220))
 	left.add_child(UI.hline())
+	if Story.mother_path() != "":
+		left.add_child(UI.wrap_label("Bênção da %s: %s." % [Story.fmt("{mae}"), StoryData.MAE_BONUS_TEXT[Story.mother_path()]], UI.C_GOLD, 220))
+		left.add_child(UI.hline())
 	left.add_child(UI.label("Objetivo:", UI.C_ORANGE_L))
 	left.add_child(UI.wrap_label(Story.objective_text(), UI.C_TEXT, 220))
 	var right := UI.vbox(4)

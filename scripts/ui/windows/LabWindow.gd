@@ -13,7 +13,8 @@ func _init() -> void:
 
 
 func build() -> void:
-	var col := scroll_column(Vector2(0, 0), Vector2(346, 280))
+	add_to_body(UI.button("Ajudar o Dr. Faísca (mini-jogo)", func() -> void: HUD.open_window("mg_lab"), 200), Vector2(0, 262))
+	var col := scroll_column(Vector2(0, 0), Vector2(346, 258))
 	for i in Data.LAB_RECIPES.size():
 		var r: Array = Data.LAB_RECIPES[i]
 		var it: Dictionary = Data.get_item(str(r[0]))

@@ -24,6 +24,12 @@ const SECTIONS := [
 		"freesound_community, freesound_gamestudio, coghezzi, composiia, benvibrant, kaazoom, 666herohero e Ninja Adventure.",
 		"Sons de ambiente provisórios do Pomodoro: sintetizados (tools/gen_pomodoro_sfx.py).",
 	]],
+	["Mini-jogos", [
+		"Forja: kanmandev (Blacksmith), Anvil 2 (OpenGameArt, CC0), life-in-pixels (Sword and hammer character).",
+		"Cozinha: Lucky Loops (64 Food Icons), Luca Pixel (CC0), ElectrikJelli, caldeirão CC0 (OpenGameArt).",
+		"Estações animadas (forno, bigorna, fogão, mesa de alquimia): Pixel Crawler, de Anokolisa.",
+		"Laboratório: Gelidus Canimons (Potion Pack), mak993 (Pixel Potions), Codiacs (Codi's Potion Essentials, CC-BY 4.0).",
+	]],
 ]
 
 

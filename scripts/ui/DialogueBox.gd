@@ -154,7 +154,7 @@ func _ready() -> void:
 
 
 func start(dialog_lines: Array) -> void:
-	lines = dialog_lines
+	lines = dialog_lines.duplicate()   # v3.1: falas condicionais e ramos entram no meio da lista
 	index = -1
 	_next()
 
@@ -204,6 +204,18 @@ func _next() -> void:
 		finished.emit()
 		return
 	var entry: Variant = lines[index]
+	# v3.1: bloco condicional: {"when": [[flag, valor], ...], "lines": [...]} entra se todas as condições valem
+	while entry is Dictionary and (entry as Dictionary).has("when"):
+		if _when_ok((entry as Dictionary)["when"]):
+			var extra: Array = (entry as Dictionary).get("lines", [])
+			for k in extra.size():
+				lines.insert(index + 1 + k, extra[k])
+		index += 1
+		if index >= lines.size():
+			_release_actors()
+			finished.emit()
+			return
+		entry = lines[index]
 	if entry is Dictionary and (entry as Dictionary).has("choice"):
 		_show_choice(entry)
 		return
@@ -551,6 +563,13 @@ func _release_actors() -> void:
 
 
 # ================================================================== Escolhas
+func _when_ok(conds: Array) -> bool:
+	for c in conds:
+		if Story.flag(str(c[0]), -1) != c[1]:
+			return false
+	return true
+
+
 func _show_choice(entry: Dictionary) -> void:
 	choosing = true
 	typing = false
@@ -566,6 +585,12 @@ func _show_choice(entry: Dictionary) -> void:
 			Audio.sfx2("ui_pack4", -6.0)
 			if key != "":
 				Story.set_flag(key, i)
+			# v3.1: cada resposta pode abrir o seu próprio trecho de falas (e até outra escolha)
+			var branches: Array = entry.get("branches", [])
+			if i < branches.size():
+				var extra: Array = branches[i]
+				for k in extra.size():
+					lines.insert(index + 1 + k, extra[k])
 			for c in _choices.get_children():
 				c.queue_free()
 			choosing = false

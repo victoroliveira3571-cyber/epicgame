@@ -7,6 +7,9 @@ extends CanvasLayer
 const WINDOWS := {
 	"inventario": "res://scripts/ui/windows/InventoryWindow.gd",
 	"bau": "res://scripts/ui/windows/StashWindow.gd",
+	"mg_forja": "res://scripts/ui/windows/MiniForgeWindow.gd",
+	"mg_cozinha": "res://scripts/ui/windows/MiniKitchenWindow.gd",
+	"mg_lab": "res://scripts/ui/windows/MiniLabWindow.gd",
 	"personagem": "res://scripts/ui/windows/CharacterWindow.gd",
 	"loja": "res://scripts/ui/windows/ShopWindow.gd",
 	"forja": "res://scripts/ui/windows/ForgeWindow.gd",

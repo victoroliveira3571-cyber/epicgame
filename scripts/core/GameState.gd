@@ -71,6 +71,7 @@ const DIFFICULTY_NAMES := ["Fácil", "Médio", "Difícil"]
 const DIFFICULTY_DMG := [0.7, 1.0, 1.4]
 const DIFFICULTY_REWARD := [0.8, 1.0, 1.3]
 var difficulty: int = 1
+var minigame_plays: Dictionary = {}   # v3.1: {"date": hoje, "<id>": partidas hoje}
 var auto_aim: bool = true      # v2.6: mira automática (corpo e ataques viram para o inimigo próximo)
 var safe_zone: bool = true     # v2.6: fora de floresta e masmorra os golpes não atingem moradores
 var music_on: bool = true    # liga/desliga só a música (Pomodoro e pausa)
@@ -199,12 +200,16 @@ func _compute_stats() -> Dictionary:
 		s["focus_xp_pct"] += float(fs.get("focus_xp_pct", 0.0))
 		s["daily_energy"] += float(fs.get("daily_energy", 0.0))
 		s["hunger_mult"] -= float(fs.get("hunger_mult", 0.0))
+	for k in Story.mother_bonus():
+		var mk: String = "max_hp" if k == "hp" else k
+		s[mk] = float(s.get(mk, 0.0)) + float(Story.mother_bonus()[k])
 	var pet_id := String(story.get("pet", ""))
 	if Data.PETS.has(pet_id) and (story.get("pets", []) as Array).has(pet_id):
 		var pet: Dictionary = Data.PETS[pet_id]
 		var growth := maxi(0, int(story.get("chapter", 1)) - 2)
 		for k in pet["bonus"]:
-			s[k] = float(s.get(k, 0.0)) + float(pet["bonus"][k])
+			var pk: String = "max_hp" if k == "hp" else k   # v3.1: o bônus de vida dos pets nunca era somado
+			s[pk] = float(s.get(pk, 0.0)) + float(pet["bonus"][k])
 		for k in pet.get("grow", {}):
 			s[k] = float(s.get(k, 0.0)) + float(pet["grow"][k]) * growth
 	for bid in buffs:
@@ -1303,6 +1308,29 @@ func set_sfx_volume(volume: float) -> void:
 	stats_changed.emit()
 
 
+## v3.1: recompensa dos mini-jogos (forja, cozinha, laboratório): XP e um pouco de ouro pelo desempenho
+## (`score` de 0 a 1). Depois de MINIGAME_FULL partidas no mesmo dia o ganho cai para 25%.
+const MINIGAME_FULL := 5
+
+
+func minigame_reward(id: String, score: float) -> Dictionary:
+	score = clampf(score, 0.0, 1.0)
+	if str(minigame_plays.get("date", "")) != _today():
+		minigame_plays = {"date": _today()}
+	var played := int(minigame_plays.get(id, 0))
+	minigame_plays[id] = played + 1
+	var factor := 1.0 if played < MINIGAME_FULL else 0.25
+	var xp_gain := int(round(float(Data.xp_for_level(level)) * 0.03 * score * factor))
+	var gold_gain := int(round((10.0 + float(level) * 1.5) * score * factor))
+	if score > 0.0:
+		xp_gain = maxi(xp_gain, 1)
+		gold_gain = maxi(gold_gain, 1)
+	add_xp(xp_gain, false)
+	add_gold(gold_gain)
+	bump("minigames")
+	return {"xp": xp_gain, "gold": gold_gain, "reduced": factor < 1.0, "played": played + 1}
+
+
 func set_difficulty(d: int) -> void:
 	difficulty = clampi(d, 0, 2)
 	_queue_save()
@@ -1362,7 +1390,7 @@ func save_now() -> void:
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
 		"music_volume": music_volume, "sfx_volume": sfx_volume,
-		"music_on": music_on, "difficulty": difficulty, "auto_aim": auto_aim, "safe_zone": safe_zone, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
+		"music_on": music_on, "difficulty": difficulty, "minigame_plays": minigame_plays, "auto_aim": auto_aim, "safe_zone": safe_zone, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
 	}
 	# grava num arquivo temporário e troca: uma queda de energia não corrompe o save
 	var tmp_path := save_path + ".tmp"
@@ -1455,6 +1483,7 @@ func load_game() -> void:
 		music_volume = float(d.get("music_volume", 0.7))
 		music_on = bool(d.get("music_on", true))
 		difficulty = clampi(int(d.get("difficulty", 1)), 0, 2)
+		minigame_plays = _dict_of(d.get("minigame_plays", {}))
 		auto_aim = bool(d.get("auto_aim", true))
 		safe_zone = bool(d.get("safe_zone", true))
 		clock_on = bool(d.get("clock_on", true))
@@ -1573,6 +1602,7 @@ func _reset_defaults() -> void:
 	hunger = 100
 	starve_left = -1.0
 	difficulty = 1
+	minigame_plays = {}
 	talent_points = 0
 	energy = Data.ENERGY_DAILY_MIN
 	for slot in Data.EQUIP_SLOTS:

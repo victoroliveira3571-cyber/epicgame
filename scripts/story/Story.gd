@@ -90,6 +90,34 @@ func _hours_text() -> String:
 	return str(int(h)) if absf(h - round(h)) < 0.05 else ("%.1f" % h).replace(".", ",")
 
 
+## v3.1: caminho escolhido na despedida da mãe ("" = ainda não conversaram, ou save antigo).
+func mother_path() -> String:
+	var d = flag("despedida", -1)
+	if d == 0:
+		return "promessa"
+	if d == 2:
+		return "luz"
+	if d == 1:
+		var m = flag("despedida_medo", -1)
+		return "medo_%d" % int(m) if int(m) >= 0 else ""
+	return ""
+
+
+## Bênção permanente da mãe: atributos somados em GameState._compute_stats.
+func mother_bonus() -> Dictionary:
+	return StoryData.MAE_BONUS.get(mother_path(), {})
+
+
+func mother_visit_lines() -> Array:
+	var path := mother_path()
+	if path == "" or not StoryData.MAE_VISITAS.has(path):
+		return StoryData.DIALOGS["mae_livre"]
+	var ch := chapter()
+	var phase := 0 if ch <= 1 else (1 if ch <= 3 else 2)
+	var opts: Array = StoryData.MAE_VISITAS[path][phase]
+	return opts[randi() % opts.size()]
+
+
 func objective_text() -> String:
 	return fmt(String(StoryData.OBJECTIVES.get(step(), "")))
 
@@ -305,7 +333,7 @@ func _talk(npc: String) -> void:
 				HUD.show_compass_gain()
 				set_step("c1_marta")
 			else:
-				await say("mae_livre")
+				await say(mother_visit_lines())
 		"marta":
 			if s == "c1_marta":
 				await say("c1_marta")

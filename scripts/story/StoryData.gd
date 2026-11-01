@@ -105,18 +105,57 @@ const OBJECTIVE_TARGET := {
 const DIALOGS := {
 	# --------------------------------------------------------------------- Capítulo 1
 	"c1_despedida": [
-		["narr", "Manhã. A casa de madeira fica no meio das árvores. {mae} está na varanda, costurando."],
+		["narr", "Manhã. A casa de madeira fica no meio das árvores. {mae} está na varanda, com a agulha parada na costura."],
 		["mae", "Você já arrumou a mochila?"],
 		["heroi", "Quase. Vou à cidade me registrar na Guilda."],
 		["mae", "Eu sei. Só não sei se eu estou pronta para isso."],
-		{"choice": ["Eu volto logo.", "Ainda não sei se quero ir."], "key": "despedida"},
-		["mae", "Seu pai também dizia que voltava logo. Ele saiu numa tarde de chuva, lembra?"],
-		["heroi", "Eu lembro. Dizem que ele morreu na masmorra, mas ninguém viu."],
-		["mae", "Boatos andam rápido, e ninguém viu o corpo. Eu prefiro achar que ele ainda está em algum lugar."],
-		["narr", "{mae} pega uma bússola de latão numa caixa de madeira."],
+		{"choice": ["Eu volto logo.", "Ainda não sei se quero ir.", "Vou. Deixe a luz da janela acesa para mim."], "key": "despedida", "branches": [
+			[
+				["mae", "Seu pai também dizia isso. Ele saiu numa tarde de chuva, lembra?"],
+				["heroi", "Lembro. Sei como isso soa. Mas eu volto. Eu prometo."],
+				["mae", "Não prometa o que não depende de você. Prometa o que depende: comer direito, dormir direito e me escrever."],
+				["heroi", "Isso eu prometo."],
+				["narr", "{mae} sorri, e uma lágrima cai no tecido. Ela não a enxuga."],
+			],
+			[
+				["mae", "Ótimo. Quem nunca duvida não está prestando atenção."],
+				["mae", "Me conta o que pesa mais. Eu fico quieta e escuto."],
+				{"choice": ["Tenho medo de não encontrar o pai.", "Tenho medo de encontrar e ele não ser quem eu lembro.", "Tenho medo de deixar você sozinha."], "key": "despedida_medo", "branches": [
+					[
+						["mae", "Então talvez você procure demais por ele e de menos por você. Vá devagar. Procurar também é um jeito de ficar perto."],
+						["heroi", "E se eu procurar a vida inteira?"],
+						["mae", "Então terá vivido procurando algo que ama. Há destinos piores."],
+					],
+					[
+						["mae", "Gente muda, meu bem. Ele mudou desde o dia em que nos casamos, e eu amei cada versão."],
+						["mae", "Se voltar outro, você aprende a conhecê-lo de novo. Isso também é amar."],
+					],
+					[
+						["mae", "Eu já fiquei sozinha antes e continuei de pé. Mas se você ficar por mim, nós duas ficamos sozinhas, só que juntas."],
+						["mae", "Vá. Eu cuido da casa e da luz da janela."],
+					],
+				]},
+			],
+			[
+				["mae", "Todas as noites. Mesmo na chuva, mesmo que você demore."],
+				["heroi", "Eu vou procurá-la de longe, no escuro."],
+				["mae", "Então, ao ver, saiba: eu estou aqui."],
+			],
+		]},
+		["narr", "{mae} se levanta e pega uma bússola de latão numa caixa de madeira."],
 		["mae", "Era do {pai}. Ela nunca aponta para o lugar errado. Leve com você."],
 		["narr", "Você recebeu a Bússola de Latão."],
+		{"when": [["despedida", 0]], "lines": [["mae", "Uma carta por semana, está bem? Mesmo que seja só uma linha."]]},
+		{"when": [["despedida", 1], ["despedida_medo", 0]], "lines": [["mae", "Se a bússola girar sem rumo, pare e respire. Ela sempre volta a apontar."]]},
+		{"when": [["despedida", 1], ["despedida_medo", 1]], "lines": [["mae", "Tome também isto: tudo o que sei dele, eu escrevi num papel. Leia quando precisar se lembrar de quem ele era."]]},
+		{"when": [["despedida", 1], ["despedida_medo", 2]], "lines": [["mae", "A cada noite que você dormir longe, eu falo seu nome para a casa. Ela guarda."]]},
+		{"when": [["despedida", 2]], "lines": [["mae", "E durma. A luz fica acesa, mas não precisa ver você acordado."]]},
 		["mae", "E não esqueça: quando estiver cansado, descanse, mas não deixe de estudar. Seu pai achava que a cabeça aprende melhor um pouco por dia."],
+		{"when": [["despedida", 0]], "lines": [["narr", "Bênção da {mae}: a promessa de voltar. +5% de XP nas sessões de foco."]]},
+		{"when": [["despedida", 1], ["despedida_medo", 0]], "lines": [["narr", "Bênção da {mae}: o conselho de ir devagar. +0,5 de regeneração."]]},
+		{"when": [["despedida", 1], ["despedida_medo", 1]], "lines": [["narr", "Bênção da {mae}: o papel com as lembranças dele. +4% de sorte."]]},
+		{"when": [["despedida", 1], ["despedida_medo", 2]], "lines": [["narr", "Bênção da {mae}: o nome dito para a casa. +12 de vida."]]},
+		{"when": [["despedida", 2]], "lines": [["narr", "Bênção da {mae}: a luz acesa na janela. +5% de ouro."]]},
 	],
 	"c1_saida": [
 		["narr", "Você segue a trilha de terra até Focus Town. A bússola pesa no bolso."],
@@ -408,6 +447,11 @@ const DIALOGS := {
 		["pai", "Eu não sei se lembro de você por inteiro. A Névoa me apagou devagar, e eu só guardei o suficiente para te reconhecer."],
 		["aldric", "Ele ainda respira. E ainda lembra de você."],
 		["pai", "Agora você precisa descobrir quem eu era antes da Névoa."],
+		{"when": [["despedida", 0]], "lines": [["heroi", "Eu prometi à {mae} que voltava logo. Estou atrasado, mas estou voltando."]]},
+		{"when": [["despedida", 1], ["despedida_medo", 0]], "lines": [["heroi", "Procurei devagar, como a {mae} pediu. Cheguei."]]},
+		{"when": [["despedida", 1], ["despedida_medo", 1]], "lines": [["heroi", "Você não é como no papel que a {mae} guardou. Mas eu quero conhecer esta versão."]]},
+		{"when": [["despedida", 1], ["despedida_medo", 2]], "lines": [["heroi", "A {mae} ficou em casa dizendo meu nome para as paredes. Vamos voltar juntos para ela."]]},
+		{"when": [["despedida", 2]], "lines": [["narr", "Longe dali, na janela da casa de madeira, a luz da {mae} continua acesa."]]},
 		["narr", "A bússola de latão aponta para o norte, para fora da masmorra. A névoa some, mas o céu continua cinza."],
 		["narr", "A história do Rei Demônio acabou. A do seu pai está apenas começando. Fim da Parte 1."],
 		["narr", "Você subiu para o Rank B. As Profundezas (andar 6 em diante) estão abertas."],
@@ -503,3 +547,49 @@ const CARDS_FREE := [   # Cavaleiro e Rei (perguntas livres)
 	{"q": "Para que serve o Caderno do herói?", "a": "Escrever livremente e esvaziar a cabeça.", "k": ["escrev|desabaf|cabeca|mente|esvazi"]},
 	{"q": "O que o Rei Demônio diz que fez com o saber da cidade?", "a": "Guardou (roubou) o conhecimento.", "k": ["guard|roub|tir"]},
 ]
+
+
+## v3.1: falas da mãe quando você volta para casa. Chave = caminho da despedida; cada lista tem
+## 3 fases da história (capítulo 1, capítulos 2 e 3, capítulos 4 e 5) com 2 variações cada.
+const MAE_VISITAS := {
+	"promessa": [
+		[[["mae", "Voltou! Estava contando as horas. Prometeu, lembra? E cumpriu, por hoje."]], [["mae", "Você parece cansado. Sente. Eu esquento a sopa enquanto você me conta tudo."]]],
+		[[["mae", "A carta chegou? Escrevi três linhas e apaguei duas. Ficou só 'volta logo'."]], [["mae", "Cada vez que você entra por essa porta, eu respiro de novo."]]],
+		[[["mae", "Você está mais alto. Ou eu estou mais velha. Prometa só mais uma vez: que volta."]], [["mae", "Eu já guardo o prato dele e o seu na mesa. Os dois. Não discuta."]]],
+	],
+	"medo_0": [
+		[[["mae", "Foi devagar, como combinamos? Que bom. Ele não está fugindo de você."]], [["mae", "Se pesar, volta aqui. Não precisa ter vencido nada para ser bem-vindo."]]],
+		[[["mae", "Você procura com os olhos dele agora. Eu reconheço o jeito de franzir a testa."]], [["mae", "Descobriu alguma pista? Não me conte tudo. Só o que fizer você sorrir."]]],
+		[[["mae", "Se você o encontrar, não deixe de perguntar se ele sentiu minha falta. Ou não pergunte. Eu já sei."]], [["mae", "Andei arrumando o escritório dele. Achei um mapa que ele nunca terminou."]]],
+	],
+	"medo_1": [
+		[[["mae", "Leu o papel? Não é tudo dele. É só o que eu consegui guardar."]], [["mae", "Cada um de nós tem uma versão dele. A sua é a que importa para você."]]],
+		[[["mae", "Se descobrir algo que não combina com o que eu escrevi, me conte. Quero a verdade, não o que eu lembro."]], [["mae", "Gente muda. Você também. Eu continuo gostando de cada versão de você."]]],
+		[[["mae", "Seja qual for o homem que você encontrar, o filho que ele tem eu conheço. É você."]], [["mae", "Descansa. Amanhã você volta a buscar quem ele é. Hoje você só é meu."]]],
+	],
+	"medo_2": [
+		[[["mae", "Falei seu nome para a casa a noite toda. Ela parece mais quente."]], [["mae", "Não precisa ter pena de mim. Estou bem. Só estou melhor quando você está aqui."]]],
+		[[["mae", "Fiz amizade com os passarinhos do telhado. Eles contam as horas melhor do que eu."]], [["mae", "Sua cama está do jeito que você deixou. Eu só tiro o pó."]]],
+		[[["mae", "Olha como eu aprendi a ficar sozinha: cozinhando para dois e rindo disso."]], [["mae", "Se eu pudesse guardar você no bolso, eu guardava. Mas prefiro te ver voltar."]]],
+	],
+	"luz": [
+		[[["mae", "A luz estava acesa? Eu não a apaguei nem um minuto."]], [["mae", "Vi uma sombra na estrada ontem. Achei que era você. Era um cervo."]]],
+		[[["mae", "A lamparina já gastou duas mechas. Boa desculpa para comprar outra e esperar mais um pouco."]], [["mae", "O vizinho perguntou se eu não durmo. Eu disse que durmo, de olho aberto."]]],
+		[[["mae", "Quando a luz da janela falhar, é porque eu dormi. Mas ela volta, eu prometo."]], [["mae", "Quer ver da varanda? Dá para ver a estrada toda. É de lá que eu te espero."]]],
+	],
+}
+
+const MAE_BONUS := {
+	"promessa": {"focus_xp_pct": 0.05},
+	"medo_0": {"regen": 0.5},
+	"medo_1": {"luck": 4.0},
+	"medo_2": {"hp": 12.0},
+	"luz": {"gold_pct": 0.05},
+}
+const MAE_BONUS_TEXT := {
+	"promessa": "a promessa de voltar: +5% de XP nas sessões de foco",
+	"medo_0": "o conselho de ir devagar: +0,5 de regeneração",
+	"medo_1": "o papel com as lembranças dele: +4% de sorte",
+	"medo_2": "o nome dito para a casa: +12 de vida",
+	"luz": "a luz acesa na janela: +5% de ouro",
+}
