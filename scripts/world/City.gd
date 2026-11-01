@@ -276,7 +276,14 @@ func _build_decor() -> void:
 	for d in city["decor"]:
 		var t: Array = d[1]
 		var tint: Color = CityData.tint_of(d[2]) if d.size() > 2 else Color.WHITE
-		_add_prop(str(d[0]), _tile_pos(int(t[0]), int(t[1])), 5.0, tint)
+		var is_boat := str(d[0]).begins_with("barco_")
+		var holder := _add_prop(str(d[0]), _tile_pos(int(t[0]), int(t[1])), 0.0 if is_boat else 5.0, tint)
+		if is_boat:
+			# o barco balança de leve no mar
+			var tw := create_tween().set_loops()
+			var y0 := holder.position.y
+			tw.tween_property(holder, "position:y", y0 + 2.0, 1.4 + rng.randf() * 0.6).set_trans(Tween.TRANS_SINE)
+			tw.tween_property(holder, "position:y", y0 - 1.0, 1.4 + rng.randf() * 0.6).set_trans(Tween.TRANS_SINE)
 
 
 ## Veios de minério de Pedralta: metal fino (mithril, obsidiana, adamantium) para o aprimoramento.

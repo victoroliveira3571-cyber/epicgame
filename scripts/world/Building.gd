@@ -47,7 +47,7 @@ static func create(parent: Node, id: String, title: String, prop: String, pos: V
 
 
 func _ready() -> void:
-	var tex := Pix.tex("props/%s.png" % prop_name)
+	var tex: Texture2D = BuildingFactory.texture(prop_name) if BuildingFactory.is_factory_name(prop_name) else Pix.tex("props/%s.png" % prop_name)
 	size = tex.get_size() if tex != null else Vector2(48, 48)
 	sprite = Sprite2D.new()
 	sprite.texture = tex

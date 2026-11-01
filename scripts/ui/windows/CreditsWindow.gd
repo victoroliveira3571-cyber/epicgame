@@ -24,6 +24,9 @@ const SECTIONS := [
 		"freesound_community, freesound_gamestudio, coghezzi, composiia, benvibrant, kaazoom, 666herohero e Ninja Adventure.",
 		"Sons de ambiente provisórios do Pomodoro: sintetizados (tools/gen_pomodoro_sfx.py).",
 	]],
+	["Cidades", [
+		"Casas e cercas: Kenney Tiny Town (CC0, kenney.nl). Barcos: Pixel Boats, de minzinn (arte reduzida e recolorida).",
+	]],
 	["Mini-jogos", [
 		"Forja: kanmandev (Blacksmith), Anvil 2 (OpenGameArt, CC0), life-in-pixels (Sword and hammer character).",
 		"Cozinha: Lucky Loops (64 Food Icons), Luca Pixel (CC0), ElectrikJelli, caldeirão CC0 (OpenGameArt).",

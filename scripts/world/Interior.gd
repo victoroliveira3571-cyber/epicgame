@@ -51,6 +51,8 @@ var owner_npc: NPC = null
 
 ## Textura de um móvel/objeto: primeiro assets/custom/props (arte própria), depois assets/ninja/props.
 static func prop_tex(name: String) -> Texture2D:
+	if BuildingFactory.is_factory_name(name):
+		return BuildingFactory.texture(name)
 	var custom := "res://assets/custom/props/%s.png" % name
 	if ResourceLoader.exists(custom):
 		return load(custom)
