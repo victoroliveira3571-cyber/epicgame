@@ -46,7 +46,6 @@ func _ready() -> void:
 		if typeof(parsed) == TYPE_DICTIONARY:
 			_cat = parsed
 	_shader = load(DIR + "lpc_ramp.gdshader")
-	prewarm_item_icons.call_deferred()
 
 
 func available() -> bool:
@@ -494,7 +493,19 @@ func item_icon(item_id: String) -> Texture2D:
 	return null
 
 
-## Monta os ícones de todo o equipamento de uma vez (chamado ao abrir o jogo).
+## Monta os ícones de todo o equipamento (v3.6: deixa de rodar na abertura, que atrasava o menu inicial em ~2 s;
+## agora começa 2 s depois de entrar no primeiro cenário de jogo).
+var _prewarm_started := false
+
+
+func prewarm_later() -> void:
+	if _prewarm_started or not available():
+		return
+	_prewarm_started = true
+	await get_tree().create_timer(2.0).timeout
+	prewarm_item_icons()
+
+
 func prewarm_item_icons() -> void:
 	for id in Data.ITEMS:
 		item_icon(str(id))

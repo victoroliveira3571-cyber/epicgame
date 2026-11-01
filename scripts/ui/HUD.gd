@@ -134,6 +134,8 @@ func _ready() -> void:
 func on_scene_ready(which: String) -> void:
 	scene_kind = which
 	set_scene_kind(which)
+	if which != "":
+		LpcW.prewarm_later()
 	if pomo_state == "idle":
 		pomo_place = ""
 	Audio.pomo_update()
