@@ -1,8 +1,8 @@
 extends UIWindow
 
 ## Criação do personagem (jogo novo): nome do herói, como ele é chamado, os nomes do pai e
-## da mãe e a aparência (AppearanceEditor: pele, olhos, cabelo, barba). A classe é escolhida
-## depois, na Guilda (capítulo 1).
+## da mãe e a aparência (AppearanceEditor: pele, olhos, cabelo, barba). v3.7 (história v4): na segunda página
+## o jogador escolhe a classe, que muda a infância no prólogo e a arma de madeira (antes era na Guilda).
 
 var _hero: LineEdit
 var _father: LineEdit
@@ -14,7 +14,7 @@ var _editor: AppearanceEditor
 
 func _init() -> void:
 	win_title = "Focus Town  -  Novo jogo"
-	win_size = Vector2(600, 262)
+	win_size = Vector2(600, 300)
 	close_on_escape = false
 
 
@@ -23,7 +23,7 @@ func build() -> void:
 	_add_landscape()
 	var v := UI.vbox(5)
 	add_to_body(v, Vector2(4, 0))
-	v.add_child(UI.wrap_label("Um Rei Demônio roubou as páginas do conhecimento de Focus Town. Cada hora de estudo de verdade é a única forma de recuperá-las.", UI.C_DIM, 226))
+	v.add_child(UI.wrap_label("Você renasce em Vicerus com as memórias de outro mundo. Um Rei Demônio roubou as páginas do conhecimento: cada hora de estudo de verdade é a única forma de recuperá-las.", UI.C_DIM, 226))
 	v.add_child(UI.hline())
 	_hero = _field(v, "Nome do herói", "Ex.: Ana, Léo...")
 	var g := UI.hbox(6)
@@ -53,7 +53,7 @@ func build() -> void:
 	v.add_child(_error)
 	var row := UI.hbox(6)
 	v.add_child(row)
-	row.add_child(UI.button("Começar a aventura", func() -> void: _start(), 150))
+	row.add_child(UI.button("Próximo: escolher a classe", func() -> void: _start(), 170))
 	var title_scene := get_tree().current_scene
 	if title_scene != null and title_scene.has_method("show_menu"):
 		row.add_child(UI.button("Voltar", func() -> void:
@@ -110,11 +110,50 @@ func _start() -> void:
 		_error.text = "Preencha os três nomes."
 		Audio.sfx("ui_error", -4.0)
 		return
+	Audio.sfx("ui_ok", -4.0)
+	_names = {"hero": hero, "father": father, "mother": mother}
+	_show_classes()
+
+
+var _names: Dictionary = {}
+var _page: Control = null
+
+
+## Segunda página: a classe (a mesma grade da janela de classe), com o herói já com a aparência escolhida.
+func _show_classes() -> void:
+	for c in body.get_children():
+		c.visible = false
+	_page = Control.new()
+	_page.size = body.size
+	body.add_child(_page)
+	var top := UI.hbox(6)
+	top.position = Vector2(2, 0)
+	_page.add_child(top)
+	var intro := UI.label("Escolha a classe de %s. Ela muda a infância e a arma de madeira. Escolha definitiva." % _names["hero"], UI.C_DIM)
+	intro.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(intro)
+	top.add_child(UI.button("Voltar", func() -> void:
+		_page.queue_free()
+		_page = null
+		for c in body.get_children():
+			c.visible = true, 50))
+	var lk: Dictionary = _editor.look.duplicate(true)
+	var sc := ClassWindow.make_grid(Vector2(body.size.x, body.size.y - 18), lk, "", func(id: String) -> void: _pick_class(id))
+	sc.position = Vector2(0, 18)
+	_page.add_child(sc)
+
+
+func _pick_class(id: String) -> void:
+	HUD.confirm("Jogar como %s? Não dá para trocar depois." % Data.CLASSES[id]["name"], func() -> void: _begin(id))
+
+
+func _begin(class_id: String) -> void:
 	Audio.sfx("magic_select", -2.0)
 	GameState.debug_reset()
 	GameState.gold = 25
-	Story.start_new_game(hero, father, mother, _gender)
+	Story.start_new_game(str(_names["hero"]), str(_names["father"]), str(_names["mother"]), _gender)
 	GameState.set_appearance(_editor.look)
+	GameState.choose_class(class_id)
 	HUD.close_window()
 	Game.enter_interior("casa_familia")
 

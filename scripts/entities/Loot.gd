@@ -86,7 +86,7 @@ static func roll_equipment(_floor_n: int, tier: int) -> String:
 	var pool: Array = []
 	for slot in Data.EQUIP_SLOTS:
 		for it in Data.ITEMS.values():
-			if it["kind"] == "equip" and int(it["tier"]) == tier and it["slot"] == slot and Data.class_can_use(GameState.player_class, it["id"]):
+			if it["kind"] == "equip" and int(it["tier"]) == tier and it["slot"] == slot and Data.class_can_use(GameState.player_class, it["id"]) and not it.get("unique", false):
 				pool.append(it["id"])
 	if pool.is_empty():
 		return ""

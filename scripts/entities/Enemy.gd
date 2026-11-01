@@ -639,6 +639,7 @@ func _die() -> void:
 	Fx.fx(w, "smoke", global_position + Vector2(0, -6), 1.0)
 	Fx.burst(w, global_position + Vector2(0, -6), Color(1, 0.9, 0.6), 8, 50.0, 0.4)
 	_award_and_drop()
+	Story.on_enemy_killed(self)
 	died.emit(self)
 	if respawn_s > 0.0 and not is_boss:
 		_schedule_respawn(get_parent(), def_id, position, floor_n, is_elite, respawn_s)

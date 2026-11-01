@@ -10,7 +10,8 @@ extends CharacterBody2D
 ## Parados respiram, olham em volta e gesticulam; nos diálogos a DialogueBox os anima.
 
 var sheet: String = "Villager"
-var mode: String = "static"
+var mode: String = "static"        # static | wander | sit | animal | chase | cutscene (v3.7: só o roteiro move)
+var custom_look: Dictionary = {}   # v3.7: visual LPC próprio (criança do prólogo, colegas), no lugar de Looks
 var move_speed: float = 16.0
 var wander_points: Array = []
 var wander_radius: float = 140.0
@@ -73,6 +74,11 @@ func _ready() -> void:
 		anim.play("idle")
 		sprite = anim
 		add_child(sprite)
+	elif not custom_look.is_empty():
+		Fx.make_shadow(self, 11.0, 0.0)
+		actor = LpcActor.make(self, custom_look, true)
+		sprite = actor
+		actor.play("idle_down")
 	elif Looks.has(look_key if look_key != "" else sheet):
 		Fx.make_shadow(self, 11.0, 0.0)
 		actor = LpcActor.make(self, Looks.of(look_key if look_key != "" else sheet))
@@ -100,7 +106,7 @@ func _ready() -> void:
 ## [E] "Conversar": gente comum conta uma história curta e uma frase motivacional (Street).
 ## Quem já tem "Falar com" (história, dono de loja) marca meta "has_talker" e fica de fora.
 func _add_street_chat() -> void:
-	if not is_inside_tree() or has_meta("has_talker") or is_police or mode == "animal" or mode == "chase":
+	if not is_inside_tree() or has_meta("has_talker") or is_police or mode in ["animal", "chase", "cutscene"]:
 		return
 	var p := StoryProp.make("Conversar", func(_me: StoryProp) -> void: Street.talk(self), null, 22.0, false)
 	add_child(p)
@@ -116,7 +122,7 @@ func use_look(key: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if talking or downed:
+	if talking or downed or mode == "cutscene":
 		return
 	if mode == "chase":
 		_chase(delta)

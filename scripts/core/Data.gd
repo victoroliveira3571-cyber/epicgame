@@ -130,6 +130,13 @@ const SKILLS := {
 	"cura": {"name": "Bênção Curativa", "icon": "spell/Heal", "cd": 20.0, "kind": "buff", "anim": "spellcast",
 		"buff": "regen", "buff_time": 6.0, "heal_pct": 0.35, "fx": "shield", "color": Color(0.7, 1.0, 0.7),
 		"desc": "Cura 35% da vida e dá Regeneração por 6s."},
+	# ---- v3.7: magias das side quests (tecla 4, substituem a magia do livro)
+	"trevas": {"name": "Magia Sombria", "icon": "spell/BookDarkness", "cd": 8.0, "kind": "blast", "anim": "spellcast",
+		"dist": 95.0, "radius": 32.0, "mult": 2.8, "kb": 110.0, "delay": 0.3, "fx": "explosion", "color": Color(0.7, 0.4, 1.0),
+		"desc": "Uma esfera de sombra explode no inimigo mais próximo: 280% de dano em área. (Caça ao Bruxo do Submundo)"},
+	"nevasca": {"name": "Sopro do Pé Grande", "icon": "spell/Mist", "cd": 7.0, "kind": "fan", "anim": "spellcast",
+		"count": 5, "spread": 32.0, "mult": 1.3, "proj": "ARROW", "speed": 260.0, "range": 0.75,
+		"desc": "Cinco rajadas de gelo em leque (130% de dano cada). (Incursão ao Pé Grande)"},
 }
 
 # ------------------------------------------------------------- Progressão de habilidades
@@ -297,6 +304,11 @@ const WEAPON_TABLE := {
 		["arco_elfico", "Arco de Diamante", "Bow"], ["arco_estelar", "Arco de Obsidiana", "Bow2"],
 		["arco_adamantium", "Arco de Adamantium", "Bow2"], ["arco_supremo", "Arco Supremo", "Bow"],
 	],
+}
+## v3.7: armaduras únicas das side quests (história v4, seção 8). Força de um tier Diamante com um bônus próprio.
+const UNIQUE_ITEMS := {
+	"manto_cacador": {"name": "Manto do Caçador de Bruxos", "slot": "armor", "tier": 4, "def": 18.0, "hp": 70.0, "crit": 6.0, "price": 900},
+	"pele_pe_grande": {"name": "Pele do Pé Grande", "slot": "armor", "tier": 4, "def": 20.0, "hp": 110.0, "price": 900},
 }
 const WEAPON_ATK := [5, 10, 17, 27, 40, 58, 85, 125]
 const WEAPON_CRIT := {"sword": 0, "dagger": 2, "staff": 1, "bow": 1}
@@ -466,6 +478,15 @@ func _build_items() -> void:
 				it["crit"] = AMULET_CRIT[t]
 				it["luck"] = AMULET_LUCK[t]
 			ITEMS[it["id"]] = it
+	# v3.7: armaduras únicas das side quests (não aparecem em loja nem em drop; visual próprio em LpcW.UNIQUE_GEAR)
+	for uid in UNIQUE_ITEMS:
+		var u: Dictionary = UNIQUE_ITEMS[uid].duplicate()
+		u["id"] = uid
+		u["kind"] = "equip"
+		u["unique"] = true
+		u["icon"] = SLOT_ICONS[u["slot"]]
+		u["tint"] = Color.WHITE
+		ITEMS[uid] = u
 	for mid in MATERIALS:
 		var m: Dictionary = MATERIALS[mid]
 		ITEMS[mid] = {"id": mid, "name": m["name"], "kind": "material", "tier": m["tier"], "icon": m["icon"], "price": m["price"],
@@ -553,7 +574,7 @@ func shop_equipment(class_id: String, tier: int) -> Array:
 	var out: Array = []
 	for slot in EQUIP_SLOTS:
 		for it in ITEMS.values():
-			if it["kind"] == "equip" and it["slot"] == slot and int(it["tier"]) == tier and class_can_use(class_id, it["id"]):
+			if it["kind"] == "equip" and it["slot"] == slot and int(it["tier"]) == tier and class_can_use(class_id, it["id"]) and not it.get("unique", false):
 				out.append(it["id"])
 	return out
 
@@ -658,6 +679,10 @@ const BOSSES := {
 		"patterns": ["charge", "burst", "summon", "slam"], "anims": {}, "summon": "diabrete"},
 	"orc_senhor": {"name": "Senhor da Guerra Orc", "dt2": "ogro", "scale": 2.6, "hp": 2600, "dmg": 50, "speed": 32.0, "xp": 1150, "gold": [360, 500], "radius": 19.0,
 		"patterns": ["charge", "slam", "burst", "summon"], "anims": {}, "summon": "orc_mascarado", "tint": Color(1.0, 0.75, 0.7)},
+	# v3.7: Pé Grande (side quest). PROVISÓRIO: Guaxinim Gigante tingido de branco até a compra do pack de iéti (Elthen).
+	"pe_grande": {"name": "Pé Grande", "folder": "GiantRacoon", "hp": 900, "dmg": 26, "speed": 30.0, "xp": 420, "gold": [140, 200], "radius": 14.0,
+		"patterns": ["slam", "charge", "burst", "summon"], "anims": {"idle": ["Idle", 60, 6, 6], "walk": ["Idle", 60, 6, 8], "hit": ["Idle", 60, 6, 10]},
+		"summon": "zumbi_gelo", "tint": Color(0.95, 0.98, 1.15), "power": 9},
 	"guaxinim_gigante": {"name": "Guaxinim Gigante", "folder": "GiantRacoon", "hp": 2900, "dmg": 54, "speed": 32.0, "xp": 1300, "gold": [400, 560], "radius": 14.0,
 		"patterns": ["slam", "burst", "summon", "charge"], "anims": {"idle": ["Idle", 60, 6, 6], "walk": ["Idle", 60, 6, 8], "hit": ["Idle", 60, 6, 10]}, "summon": "ciclope"},
 }

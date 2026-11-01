@@ -99,6 +99,8 @@ func resolve(look: Dictionary) -> Dictionary:
 		out[k] = look[k]
 	if not look.has("hair_pal") and look.has("hair_color"):
 		out["hair_pal"] = nearest_hair(str(look["hair_color"]))
+	if str(out.get("body", "male")) == "child":
+		return out
 	if str(out.get("body", "male")) not in ["male", "female", "muscular"]:
 		out["body"] = "male"
 	if not out.has("head") or not _cat.get("heads", {}).has(str(out["head"])):
@@ -128,11 +130,42 @@ func swatch(material: String, name: String) -> Color:
 	return Color(name) if name.is_valid_html_color() else Color.WHITE
 
 
+# ================================================================== Criança (v3.7)
+## Corpo de criança do LPC (catálogo "child", tools/build_lpc_extra.py), usado no prólogo: o herói cresce nas cenas.
+## Visual: pele/olhos/cabelo da aparência escolhida; "child_hair" = "hair_short" | "hair_wavy";
+## "child_legs" = "pants" | "skirt"; cores de roupa em "child_shirt" e "child_pants" (paleta de tecido).
+static func child_look(adult: Dictionary, female: bool) -> Dictionary:
+	return {"body": "child", "skin": adult.get("skin", "light"), "eyes": adult.get("eyes", "brown"),
+		"hair_pal": adult.get("hair_pal", "dark_brown"), "child_hair": "hair_wavy" if female else "hair_short",
+		"child_legs": "skirt" if female else "pants", "child_shirt": "white" if female else "sky",
+		"child_pants": "lavender" if female else "brown"}
+
+
+func _child_layers(look: Dictionary) -> Array:
+	var c: Dictionary = _cat.get("child", {})
+	var out: Array = []
+	var base := _ramp(look, "")
+	for key in ["body", "head"]:
+		for l in c.get(key, []):
+			out.append(_lay(l, base))
+	var legs := str(look.get("child_legs", "pants"))
+	for l in c.get(legs, []):
+		out.append({"file": str(l["file"]), "z": int(l["z"]), "ramp": _ramp(look, str(look.get("child_pants", "brown")), "cloth")})
+	for l in c.get("shirt", []):
+		out.append({"file": str(l["file"]), "z": int(l["z"]), "ramp": _ramp(look, str(look.get("child_shirt", "white")), "cloth")})
+	for l in c.get(str(look.get("child_hair", "hair_short")), []):
+		out.append(_lay(l, base))
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["z"]) < int(b["z"]))
+	return out
+
+
 # ================================================================== Camadas
 ## [{file, z, ramp(Texture2D)}] da mais funda para a mais à frente.
 func layers(look_in: Dictionary, expr_override: String = "") -> Array:
 	var look := resolve(look_in)
 	var body: String = look["body"]
+	if body == "child":
+		return _child_layers(look)
 	# corpo forte: base própria; roupas e cabeças são as masculinas
 	var bt: String = "male" if body == "muscular" else body
 	var out: Array = []
@@ -445,6 +478,15 @@ const CLASS_GEAR := {
 }
 
 
+## v3.7: armaduras únicas das side quests (Data.UNIQUE_ITEMS): visual próprio, igual para todas as classes.
+const UNIQUE_GEAR := {
+	"manto_cacador": {"l": [[_LEATHER, "black", "cloth"], [_GLOVES, "black", "cloth"], [_MANTAL, "black", "cloth"],
+		[_CAPE_T_BG, "purple", "cloth"], [_CAPE_T_FG, "purple", "cloth"], [_CLIP, "silver", "metal"]]},
+	"pele_pe_grande": {"l": [[_LEATHER, "white", "cloth"], [_MANTAL, "white", "cloth"], [_BRACERS, "white", "cloth"],
+		[_CAPE_BG, "white", "cloth"], [_CAPE_FG, "white", "cloth"]]},
+}
+
+
 ## Chapéus que deixam o cabelo à mostra (coroa, tiara, chapéus de mago, de aba e boné). Antes todo capacete
 ## escondia o cabelo, e o tier 5 do conjunto padrão (coroa) deixava o herói careca.
 const KEEP_HAIR_FILES := ["hat_formal_crown_adult.png", "hat_formal_tiara_adult.png", "hat_magic_wizard_base_adult.png",
@@ -474,9 +516,14 @@ static func gear_family(class_id: String) -> String:
 
 
 ## Camadas prontas (com rampa de cor) de um equipamento: da família da classe, se ela tiver, ou do catálogo.
-func gear_layers(look: Dictionary, slot: String, t: int, bt: String, family: String = "") -> Array:
+func gear_layers(look: Dictionary, slot: String, t: int, bt: String, family: String = "", unique_id: String = "") -> Array:
 	var out: Array = []
 	var fam: Dictionary = CLASS_GEAR.get(family, {})
+	if unique_id == "":
+		unique_id = str((look.get("gear_unique", {}) as Dictionary).get(slot, ""))
+	if UNIQUE_GEAR.has(unique_id):
+		fam = {slot: [UNIQUE_GEAR[unique_id]]}
+		t = 0
 	# botas e escudos do herói seguem o material (NPCs sem família continuam com o catálogo)
 	if family != "" and not fam.has(slot) and CLASS_GEAR["_mat"].has(slot):
 		fam = CLASS_GEAR["_mat"]
@@ -758,7 +805,7 @@ func item_layers(item_id: String, bt: String = "male", family: String = "") -> A
 		for l in _cat.get("weapons", {}).get(wid, []):
 			out.append(_lay(l, wr))
 	elif slot in ["armor", "helmet", "boots", "shield"]:
-		out.append_array(gear_layers(base, slot, maxi(int(it.get("tier", 0)), 0), bt, family))
+		out.append_array(gear_layers(base, slot, maxi(int(it.get("tier", 0)), 0), bt, family, item_id if it.get("unique", false) else ""))
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["z"]) < int(b["z"]))
 	return out
 

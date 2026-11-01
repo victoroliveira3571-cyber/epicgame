@@ -525,10 +525,15 @@ func _lpc_of(n: Node2D) -> LpcActor:
 		return (n as NPC).actor
 	if n is Player:
 		return (n as Player).sprite
+	if n is Ally:
+		return (n as Ally).actor
 	return null
 
 
 func _face(n: Node2D, target: Vector2) -> void:
+	if n is Ally:
+		(n as Ally).actor.play("idle_" + Pix.dir_name(target - n.global_position))
+		return
 	if n is NPC:
 		(n as NPC).face(target)
 	elif n is Player:

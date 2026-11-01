@@ -21,7 +21,7 @@ const FRICTION := 1100.0
 const ATTACK_CD := {"sword": 0.36, "dagger": 0.26, "staff": 0.5, "bow": 0.4}
 const MELEE_REACH := {"sword": 27.0, "dagger": 22.0}
 const MELEE_ARC := {"sword": 115.0, "dagger": 95.0}
-const CAMERA_ZOOM := 3.0
+const CAMERA_ZOOM := 3.0          # zoom máximo usado como referência (o zoom em uso vem de GameState.cam_zoom)
 
 var state: int = State.NORMAL
 var facing: Vector2 = Vector2.DOWN
@@ -89,7 +89,7 @@ func _ready() -> void:
 	weapon_sprite.centered = true
 	weapon_pivot.add_child(weapon_sprite)
 	camera = Camera2D.new()
-	camera.zoom = Vector2(CAMERA_ZOOM, CAMERA_ZOOM)
+	camera.zoom = Vector2(GameState.cam_zoom, GameState.cam_zoom)
 	camera.position = Vector2(0, -12)
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 9.0
@@ -161,7 +161,60 @@ func _footsteps(delta: float, speed_now: float) -> void:
 	Audio.novo(id, -10.0, 0.06)
 
 
+# ====================================================================== Zoom (v3.7)
+var _combat_check: float = 0.0
+var _in_combat: bool = false
+var _last_hurt: float = -99.0
+var zoom_override: float = 0.0     # cenas que pedem outro zoom (0 = usa o do jogador)
+
+
+## Câmera mais afastada no passeio; quando a batalha começa (monstro perseguindo/atacando por perto, chefe à
+## vista ou levar dano), aproxima um pouco (GameState.COMBAT_ZOOM_BONUS) e volta devagar depois.
+func _update_zoom(delta: float) -> void:
+	_combat_check -= delta
+	if _combat_check <= 0.0:
+		_combat_check = 0.25
+		_in_combat = _detect_combat()
+	var want := GameState.cam_zoom if zoom_override <= 0.0 else zoom_override
+	if _in_combat and GameState.combat_zoom and zoom_override <= 0.0:
+		want = minf(want + GameState.COMBAT_ZOOM_BONUS, GameState.CAM_ZOOM_MAX)
+	var k := 1.0 - exp(-delta * (2.2 if _in_combat else 1.1))
+	var z := lerpf(camera.zoom.x, want, k)
+	if absf(z - want) < 0.002:
+		z = want
+	camera.zoom = Vector2(z, z)
+
+
+func _detect_combat() -> bool:
+	if Time.get_ticks_msec() / 1000.0 - _last_hurt < 4.0:
+		return true
+	for e in get_tree().get_nodes_in_group("enemy"):
+		var en := e as Enemy
+		if en == null or en.state == Enemy.State.DEAD or en.state == Enemy.State.IDLE:
+			continue
+		var r := 220.0 if en.is_boss else 150.0
+		if en.global_position.distance_squared_to(global_position) < r * r:
+			return true
+	return false
+
+
+func _unhandled_key_input(ev: InputEvent) -> void:
+	if Game.input_locked or get_tree().paused or not (ev is InputEventKey) or not ev.pressed or ev.echo:
+		return
+	var step := 0.0
+	if ev.is_action("zoom_in"):
+		step = 0.25
+	elif ev.is_action("zoom_out"):
+		step = -0.25
+	if step == 0.0:
+		return
+	get_viewport().set_input_as_handled()
+	GameState.set_cam_zoom(GameState.cam_zoom + step)
+	HUD.show_toast("Zoom da câmera: %sx (teclas - e =, ou na Pausa)" % GameState._num(GameState.cam_zoom), UI.C_DIM)
+
+
 func _physics_process(delta: float) -> void:
+	_update_zoom(delta)
 	if state == State.DEAD:
 		velocity = Vector2.ZERO
 		return
@@ -702,6 +755,7 @@ func hurt(raw_damage: float, from_pos: Vector2, knockback_strength: float = 90.0
 	if is_invulnerable():
 		return false
 	var amount := GameState.take_damage(raw_damage)
+	_last_hurt = Time.get_ticks_msec() / 1000.0
 	invuln = INVULN_AFTER_HIT
 	var away := (global_position - from_pos).normalized()
 	if away == Vector2.ZERO:

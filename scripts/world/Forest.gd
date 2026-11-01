@@ -74,6 +74,7 @@ func _ready() -> void:
 	_build_herbs()
 	_build_ore()
 	_build_monsters()
+	SideQuests.populate_forest(self)   # v3.7: Caça ao Bruxo do Submundo
 	_build_fog()
 	_spawn_player()
 	canvas_mod = CanvasModulate.new()

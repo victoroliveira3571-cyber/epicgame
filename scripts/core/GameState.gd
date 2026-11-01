@@ -78,6 +78,13 @@ const DIFFICULTY_REWARD := [1.0, 1.2, 1.5]     # XP e ouro de monstros
 var difficulty: int = 1
 var minigame_plays: Dictionary = {}   # v3.1: {"date": hoje, "<id>": partidas hoje}
 var auto_aim: bool = true      # v2.6: mira automática (corpo e ataques viram para o inimigo próximo)
+## v3.7: zoom da câmera (antes fixo em 3x). Menor = vê mais do cenário. Teclas - e = ou a tela de Pausa regulam.
+const CAM_ZOOM_MIN := 1.5
+const CAM_ZOOM_MAX := 3.5
+const CAM_ZOOM_DEFAULT := 2.25
+const COMBAT_ZOOM_BONUS := 0.4     # quanto a câmera aproxima durante a batalha ("mas não tanto")
+var cam_zoom: float = CAM_ZOOM_DEFAULT
+var combat_zoom: bool = true       # aproxima um pouco quando a batalha começa
 var safe_zone: bool = true     # v2.6: fora de floresta e masmorra os golpes não atingem moradores
 var music_on: bool = true    # liga/desliga só a música (Pomodoro e pausa)
 var clock_on: bool = true    # tique-taque do relógio durante o foco
@@ -1351,6 +1358,16 @@ func set_auto_aim(on: bool) -> void:
 	_queue_save()
 
 
+func set_cam_zoom(z: float) -> void:
+	cam_zoom = clampf(snappedf(z, 0.05), CAM_ZOOM_MIN, CAM_ZOOM_MAX)
+	_queue_save()
+
+
+func set_combat_zoom(on: bool) -> void:
+	combat_zoom = on
+	_queue_save()
+
+
 func set_safe_zone(on: bool) -> void:
 	safe_zone = on
 	_queue_save()
@@ -1418,7 +1435,7 @@ func save_now() -> void:
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
 		"music_volume": music_volume, "sfx_volume": sfx_volume,
-		"music_on": music_on, "difficulty": difficulty, "minigame_plays": minigame_plays, "auto_aim": auto_aim, "safe_zone": safe_zone, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
+		"music_on": music_on, "difficulty": difficulty, "minigame_plays": minigame_plays, "auto_aim": auto_aim, "cam_zoom": cam_zoom, "combat_zoom": combat_zoom, "safe_zone": safe_zone, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
 	}
 	# grava num arquivo temporário e troca: uma queda de energia não corrompe o save
 	var tmp_path := save_path + ".tmp"
@@ -1513,6 +1530,8 @@ func load_game() -> void:
 		difficulty = clampi(int(d.get("difficulty", 1)), 0, 2)
 		minigame_plays = _dict_of(d.get("minigame_plays", {}))
 		auto_aim = bool(d.get("auto_aim", true))
+		cam_zoom = clampf(float(d.get("cam_zoom", CAM_ZOOM_DEFAULT)), CAM_ZOOM_MIN, CAM_ZOOM_MAX)
+		combat_zoom = bool(d.get("combat_zoom", true))
 		safe_zone = bool(d.get("safe_zone", true))
 		clock_on = bool(d.get("clock_on", true))
 		tutorial_done = _dict_of(d.get("tutorial_done", {}))

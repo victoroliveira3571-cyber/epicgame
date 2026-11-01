@@ -1,6 +1,8 @@
+class_name ClassWindow
 extends UIWindow
 
-## Escolha da classe, no registro da Guilda (capítulo 1). A arma de madeira inicial depende dela.
+## Escolha da classe. Desde a v3.7 (história v4) ela acontece na criação do personagem; esta janela fica para saves
+## antigos que chegaram à Guilda sem classe. A arma de madeira inicial depende dela.
 
 var _picked: String = ""
 
@@ -12,27 +14,35 @@ func _init() -> void:
 
 ## Cartões numa grade com rolagem: a altura de cada um vem do conteúdo, então nenhum botão fica
 ## escondido atrás do cartão de baixo nem para fora da janela.
+## v3.7 (história v4): a classe é escolhida na criação do personagem (CreationWindow usa make_grid). Esta janela
+## só abre na Guilda para saves antigos que ainda não tinham classe.
 func build() -> void:
 	var intro := UI.label("Você ganha uma arma de madeira da classe (escudeiro e paladino: escudo). Escolha definitiva.", UI.C_DIM)
 	add_to_body(intro, Vector2(2, 0))
-	var sc := ScrollContainer.new()
+	var sc := make_grid(Vector2(body.size.x, body.size.y - 16), Looks.hero(), _picked, func(id: String) -> void: _choose(id))
 	sc.position = Vector2(0, 16)
-	sc.size = Vector2(body.size.x, body.size.y - 16)
+	body.add_child(sc)
+
+
+static func make_grid(area: Vector2, look: Dictionary, picked: String, on_pick: Callable) -> ScrollContainer:
+	var sc := ScrollContainer.new()
+	sc.size = area
+	sc.custom_minimum_size = area
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	body.add_child(sc)
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 5)
 	grid.add_theme_constant_override("v_separation", 5)
 	sc.add_child(grid)
 	for id in Data.CLASSES.keys():
-		grid.add_child(_card(id))
+		grid.add_child(_card(id, look, picked, on_pick))
+	return sc
 
 
-func _card(id: String) -> PanelContainer:
+static func _card(id: String, look: Dictionary, picked: String, on_pick: Callable) -> PanelContainer:
 	var c: Dictionary = Data.CLASSES[id]
-	var card := UI.card(UI.C_PANEL, UI.C_ORANGE if id == _picked else UI.C_LINE)
+	var card := UI.card(UI.C_PANEL, UI.C_ORANGE if id == picked else UI.C_LINE)
 	card.custom_minimum_size = Vector2(188, 0)
 	var v := UI.vbox(2)
 	card.add_child(v)
@@ -44,12 +54,11 @@ func _card(id: String) -> PanelContainer:
 	pv.px = 0.62
 	pv.draw_frame = false
 	pv.fixed_row = 2
-	var lk := Looks.hero()
+	var lk: Dictionary = look.duplicate(true)
 	var start: Array = {"sword": ["arming", "ceramic"], "dagger": ["dagger", "ceramic"], "staff": ["gnarled", ""], "bow": ["recurve", ""]}.get(c["weapon"], ["", ""])
 	lk["weapon"] = start[0]
 	lk["weapon_pal"] = start[1]
-	if c["sheet"] in ["KnightGold", "Boy"]:
-		lk["gear"] = {"shield": 0}
+	lk["gear"] = {"shield": 0} if id in ["escudeiro", "paladino"] else {}
 	pv.set_look(lk)
 	head.add_child(pv)
 	var names := UI.vbox(0)
@@ -57,7 +66,7 @@ func _card(id: String) -> PanelContainer:
 	head.add_child(names)
 	names.add_child(UI.label(c["name"], UI.C_ORANGE_L))
 	names.add_child(UI.label("À distância" if c["ranged"] else "Corpo a corpo", UI.C_DIM))
-	var btn := UI.button("Escolher", func() -> void: _choose(id), 56)
+	var btn := UI.button("Escolher", func() -> void: on_pick.call(id), 56)
 	btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	names.add_child(btn)
 	v.add_child(UI.wrap_label(c["desc"], UI.C_TEXT, 172))

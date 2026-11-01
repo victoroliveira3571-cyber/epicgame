@@ -56,7 +56,7 @@ func _save() -> void:
 func start_new_game(hero: String, father: String, mother: String, gender: String) -> void:
 	GameState.story = {
 		"started": true, "hero": hero, "father": father, "mother": mother, "gender": gender,
-		"chapter": 1, "step": "c1_casa", "flags": {}, "rank": 0, "pets": [], "pet": "",
+		"chapter": 0, "step": "p_prologo", "flags": {"v4": true}, "rank": 0, "pets": [], "pet": "", "path": "",
 		"credits": 1, "credit_min": 0, "focus_min": 0, "entries": {},
 		"cards": [], "bank": {},
 		"worries": [], "herbs": 0, "pages": 0,
@@ -120,12 +120,64 @@ func mother_visit_lines() -> Array:
 
 
 func objective_text() -> String:
-	return fmt(String(StoryData.OBJECTIVES.get(step(), "")))
+	var s := step()
+	if StoryV4.has_step(s):
+		var t := StoryV4.objective(s)
+		t = t.replace("{missao_jardim}", AcademyStory.objective_text()).replace("{sequencia}", AcademyStory.streak_text())
+		t = t.replace("{missao_exercito}", ArmyStory.objective_text())
+		return fmt(t)
+	return fmt(String(StoryData.OBJECTIVES.get(s, "")))
 
 
 ## Id do local do mapa onde o objetivo atual se cumpre ("" = sem ponto no mapa).
 func objective_target() -> String:
-	return str(StoryData.OBJECTIVE_TARGET.get(step(), ""))
+	var s := step()
+	if StoryV4.has_step(s):
+		if s == "a_jardim":
+			return AcademyStory.objective_target()
+		if s == "b_missao":
+			return ArmyStory.objective_target()
+		return StoryV4.target(s)
+	return str(StoryData.OBJECTIVE_TARGET.get(s, ""))
+
+
+# ================================================================== Caminho (v4)
+## "" (antes da Formatura), "aventureiro" (Guilda, história principal) ou "exercito" (Rocuetos).
+## Saves de antes da v4 já estão na história da Guilda.
+func path() -> String:
+	var p := str(st().get("path", ""))
+	if p != "":
+		return p
+	var s := step()
+	if s.begins_with("c") or s == "fim":
+		return "aventureiro"
+	return ""
+
+
+func set_path(p: String) -> void:
+	st()["path"] = p
+	_save()
+
+
+## Ainda no prólogo ou na Academia (antes de escolher o caminho).
+func in_academy_act() -> bool:
+	var s := step()
+	return s.begins_with("p_") or s.begins_with("a_")
+
+
+## Fim da Parte 1 em qualquer caminho (libera viagens e fragmentos).
+func part1_done() -> bool:
+	return chapter() >= 6 or step() == "fim_b"
+
+
+## Passe para as trilhas da floresta: cartão da Guilda ou insígnia do Exército.
+func has_trail_pass() -> bool:
+	if path() == "exercito":
+		return true
+	if flag("cartao_guilda", false):
+		return true
+	# saves antigos: quem já passou do registro tem o cartão
+	return GameState.has_chosen_class() and step() not in ["c1_casa", "c1_marta", "c1_guilda", ""] and not in_academy_act()
 
 
 ## Posição (px) do objetivo na cena `scene` (Town/Forest), ou null se ele não está nesta cena.
@@ -148,6 +200,15 @@ func objective_world_pos(scene: Node) -> Variant:
 
 
 func chapter_title() -> String:
+	var s := step()
+	if s.begins_with("p_"):
+		return "%s: %s" % [StoryV4.PHASES["prologo"]["title"], StoryV4.PHASES["prologo"]["name"]]
+	if s.begins_with("a_"):
+		return "%s: %s" % [StoryV4.PHASES["academia"]["title"], StoryV4.PHASES["academia"]["name"]]
+	if s == "fim_b":
+		return "%s: %s" % [StoryV4.PHASES["fim_b"]["title"], StoryV4.PHASES["fim_b"]["name"]]
+	if path() == "exercito":
+		return "%s: %s" % [StoryV4.PHASES["exercito"]["title"], ArmyStory.patente_name()]
 	var c: Dictionary = StoryData.CHAPTERS.get(chapter(), {})
 	return "%s: %s" % [c.get("title", ""), c.get("name", "")] if not c.is_empty() else ""
 
@@ -189,6 +250,19 @@ func add_focus_minutes(minutes: int) -> int:
 	Recall.release_waiting()
 	_save()
 	return gained
+
+
+## v3.7: um foco terminou (`early` = finalizado antes da hora). Conta para a sequência da Formatura.
+func on_focus_session(minutes: int, early: bool) -> void:
+	if not started():
+		return
+	AcademyStory.on_focus(minutes, early)
+
+
+## O foco foi descartado no meio: quebra a sequência da Formatura.
+func on_focus_interrupted() -> void:
+	if started():
+		AcademyStory.on_focus_break()
 
 
 ## Minutos que faltam para o próximo crédito.
@@ -253,6 +327,10 @@ func rank() -> int:
 
 
 func rank_name() -> String:
+	if path() == "exercito":
+		return ArmyStory.patente_name()
+	if in_academy_act():
+		return "Aluno" if str(st().get("gender", "m")) != "f" else "Aluna"
 	return "Rank " + Data.RANKS[clampi(rank(), 0, Data.RANKS.size() - 1)]
 
 
@@ -313,6 +391,8 @@ func floor_unlocked(floor_n: int) -> bool:
 
 
 func zone_unlocked(zone: String) -> bool:
+	if path() == "exercito":
+		return ArmyStory.zone_ok(zone)
 	return rank() >= int(Data.FOREST_ZONES[zone]["rank"])
 
 
@@ -337,9 +417,23 @@ func talk(npc: String) -> void:
 
 func _talk(npc: String) -> void:
 	var s := step()
+	if AcademyStory.handles(npc):
+		await AcademyStory.talk(npc)
+		return
+	if ArmyStory.handles(npc):
+		await ArmyStory.talk(npc)
+		return
 	match npc:
 		"mae":
-			if s == "c1_casa":
+			if s == "a_casa":
+				# v4: a despedida acontece na saída para a Academia (mesmos ramos e bênçãos de c1_despedida)
+				var lines: Array = StoryV4.DESPEDIDA_ABERTURA.duplicate(true)
+				lines.append_array((StoryData.DIALOGS["c1_despedida"] as Array).slice(4))
+				await say(lines)
+				set_flag("bussola")
+				HUD.show_compass_gain()
+				set_step("a_viagem")
+			elif s == "c1_casa":
 				await say("c1_despedida")
 				set_flag("bussola")
 				HUD.show_compass_gain()
@@ -347,7 +441,9 @@ func _talk(npc: String) -> void:
 			else:
 				await say(mother_visit_lines())
 		"marta":
-			if s == "c1_marta":
+			if s == "a_formatura":
+				await say(StoryV4.MARTA_FORMATURA)
+			elif s == "c1_marta":
 				await say("c1_marta")
 				GameState.add_xp(20, false)
 				set_step("c1_guilda")
@@ -376,8 +472,15 @@ func _talk_helena(s: String) -> void:
 		"c1_marta", "c1_casa":
 			await say([["helena", "Bem-vindo! A Dona Marta, da pousada, sempre manda os novatos para cá. Passe lá primeiro."]])
 		"c1_guilda":
-			await say("c1_guilda")
-			HUD.open_window("classe")
+			if GameState.has_chosen_class():
+				# v4: a classe veio da criação; a Guilda só registra o formado da Academia
+				await say(DIALOG_GUILDA_V4)
+				set_flag("cartao_guilda")
+				await say("c1_guilda2")
+				set_step("c1_portao")
+			else:
+				await say("c1_guilda")
+				HUD.open_window("classe")
 		"c1_volta":
 			var n := mini(GameState.count_item("erva_azul"), 5)
 			if n > 0:
@@ -406,19 +509,28 @@ func _talk_helena(s: String) -> void:
 			await say("helena_livre")
 
 
-## Chamado pela janela de classe depois da escolha.
+const DIALOG_GUILDA_V4 := [
+	["narr", "O salão da Guilda é grande e cheio de cartazes de missões. Helena está na mesa de registro."],
+	["helena", "Nov{o} aventureir{o}? Esse selo é de Fontelúcida. Formad{o} na Academia, então. Nome?"],
+	["heroi", "{heroi}."],
+	["helena", "E a classe eu já vejo pela arma. Ótimo, menos papel."],
+]
+
+
+## Chamado pela janela de classe depois da escolha (saves antigos que chegaram à Guilda sem classe).
 func on_class_chosen() -> void:
 	if step() != "c1_guilda":
 		return
 	_busy = true
+	set_flag("cartao_guilda")
 	await say("c1_guilda2")
 	_busy = false
 	set_step("c1_portao")
 
 
 func _talk_osvaldo() -> void:
-	if not GameState.has_chosen_class():
-		await say([["osvaldo", "Sem cartão da Guilda, sem floresta. Registre-se primeiro, jovem."]])
+	if not has_trail_pass():
+		await say([["osvaldo", "Sem cartão da Guilda ou insígnia do Exército, sem floresta. Registre-se primeiro, jovem."]])
 		return
 	if credits() < entry_cost("floresta", 1):
 		if credits() < 0:
@@ -511,6 +623,15 @@ func on_corvin() -> void:
 	_check_c1_ervas()
 
 
+## v3.7: um monstro caiu (Enemy). Missões do jardim, patrulhas do Exército e side quests contam aqui.
+func on_enemy_killed(e: Node) -> void:
+	if not started():
+		return
+	AcademyStory.on_kill(e)
+	ArmyStory.on_kill(e)
+	SideQuests.on_kill(e)
+
+
 func on_page() -> void:
 	st()["pages"] = int(st().get("pages", 0)) + 1
 	_save()
@@ -523,6 +644,10 @@ func on_page() -> void:
 func on_boss_defeated(boss_id: String) -> void:
 	_busy = true
 	await get_tree().create_timer(1.2).timeout
+	if path() == "exercito":
+		await ArmyStory.on_boss_defeated(boss_id)
+		_busy = false
+		return
 	match boss_id:
 		"espirito_cacador":
 			await say("c1_espirito_vitoria")

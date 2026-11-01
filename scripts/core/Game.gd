@@ -22,6 +22,7 @@ var forest_spawn: String = "town"     # "town" | "door:<id do interior>"
 var interior_id: String = ""
 var interior_return: String = "town"  # para onde a porta do interior leva: "town" | "forest"
 var transitioning: bool = false
+var cutscene: bool = false        # v3.7: roteiro rodando (prólogo): nada destrava o controle do herói
 var input_locked: bool = false    # janelas abertas / diálogo / transição
 var last_run_summary: Dictionary = {}
 
@@ -83,6 +84,9 @@ func _setup_input() -> void:
 	_add_action("pomodoro", [KEY_P])
 	_add_action("pet", [KEY_B])
 	_add_action("decorar", [KEY_V])
+	# v3.7: zoom da câmera
+	_add_action("zoom_out", [KEY_MINUS, KEY_KP_SUBTRACT])
+	_add_action("zoom_in", [KEY_EQUAL, KEY_KP_ADD])
 	_load_keybinds()
 
 
@@ -94,6 +98,7 @@ const REBINDABLE := [
 	["skill_book", "Magia do livro"], ["interact", "Interagir / falar"], ["potion", "Tomar poção"], ["eat", "Comer"],
 	["inventory", "Inventário"], ["character", "Personagem e pets"], ["habits", "Hábitos"], ["quests", "Missões"],
 	["map", "Mapa"], ["caderno", "Caderno"], ["pomodoro", "Pomodoro"], ["pet", "Chamar o pet"], ["decorar", "Decorar a casa"],
+	["zoom_out", "Afastar a câmera"], ["zoom_in", "Aproximar a câmera"],
 ]
 const KEYBIND_FILE := "user://keybinds.cfg"
 var _default_keys := {}   # action -> [keycode, ...] (valores de fábrica, para "Restaurar teclas padrão")
@@ -370,11 +375,15 @@ func run_add_item(item_id: String, amount: int = 1) -> void:
 
 
 ## Duelo da história (Torneio das Guildas): arena com o chefe dado, sem pedágio e sem castigo.
-func start_duel(boss_id: String) -> void:
+## v3.7: `opts` = {"banner": [título, subtítulo], "return": "pedralta"|"vila_neve"|"" (cidade para onde volta),
+## "army": true (cruzada do Exército)}. Sem opts, é o Torneio (volta à Guilda de Focus Town).
+func start_duel(boss_id: String, opts: Dictionary = {}) -> void:
 	current_floor = 9
 	run = {
 		"start_floor": 0, "kills": 0, "bosses": 0, "gold": 0, "xp": 0, "items": {},
 		"time": 0.0, "chests": 0, "deepest": 0, "died": false, "duel": boss_id,
+		"banner": opts.get("banner", ["Torneio das Guildas", "Duelo contra Ivo"]),
+		"return": str(opts.get("return", "")), "army": bool(opts.get("army", false)),
 	}
 	GameState.in_dungeon = true
 	change_scene(DUNGEON_SCENE)
@@ -389,8 +398,14 @@ func finish_run(died: bool) -> void:
 		go_to_town("gate")
 		return
 	if is_duel():
+		var back := str(run.get("return", ""))
 		run = {}
 		GameState.full_heal()
+		if back != "" and CityData.CITIES.has(back):
+			if died:
+				GameState.toast.emit(Story.fmt("Você caiu na batalha. Recupere o fôlego e tente de novo quando estiver pront{o}."), Color("ffb23e"))
+			go_to_city(back)
+			return
 		if died:
 			GameState.toast.emit("Você perdeu o duelo. Recupere o fôlego e fale com Helena para tentar de novo.", Color("ffb23e"))
 		town_spawn = "door:guilda"

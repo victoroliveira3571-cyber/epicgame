@@ -155,7 +155,9 @@ func _ready() -> void:
 	Audio.play_music("musica_laboratorio" if id == "laboratorio" else ("interior_taverna" if id in ["restaurante", "casa_npc_1"] else ("home" if id == "casa_familia" else "interior_manor")))
 	Audio.set_place_loop("biblioteca_escrita" if id == "biblioteca" else ("ferraria_ambiente" if id == "forja" else ("lareira_casa" if id.begins_with("casa") else "")))
 	HUD.on_scene_ready("interior")
-	if id == "casa_familia" and Story.step() == "c1_casa":
+	if id == "casa_familia" and Story.step() == "p_prologo":
+		Prologue.start(self)
+	elif id == "casa_familia" and Story.step() in ["c1_casa", "a_casa"]:
 		await get_tree().create_timer(0.8).timeout
 		Story.talk("mae")
 	elif owner_id != "" and not Story.flag("intro_" + owner_id) and not Story.is_busy():
@@ -271,7 +273,7 @@ func _leave() -> void:
 	if id == "delegacia" and Law.is_jailed():
 		player.global_position.y -= 18.0
 		return
-	if id == "casa_familia" and Story.step() == "c1_casa":
+	if id == "casa_familia" and Story.step() in ["c1_casa", "a_casa", "p_prologo"]:
 		HUD.set_prompt("")
 		HUD.show_toast("Fale com %s antes de partir." % Story.fmt("{mae}"), UI.C_ORANGE_L)
 		player.global_position.y -= 18.0
@@ -281,7 +283,7 @@ func _leave() -> void:
 	# prólogo: da casa da família a trilha leva direto a Focus Town
 	if id == "casa_familia" and not Story.flag("saiu_casa"):
 		Story.set_flag("saiu_casa")
-		await Story.say("c1_saida")
+		await Story.say(StoryV4.SAIDA_CASA if Story.step() == "a_viagem" else StoryData.DIALOGS["c1_saida"])
 		Game.go_to_town("start")
 		return
 	Game.leave_interior()
@@ -583,7 +585,7 @@ func _build_guild() -> void:
 	for dx in [-45.0, 0.0, 45.0]:
 		prop("i_counter", Vector2(cx + dx, 104))
 	_block(Rect2(cx - 70, 44, 140, 38))
-	var helena := npc("Princess", Vector2(cx, 84), ["Bem-vindo à Guilda!", "As missões do dia estão no quadro.", "Quem foca, conquista."])
+	var helena := npc("Princess", Vector2(cx, 84), ["Bem-vind" + ("a" if str(Story.st().get("gender", "m")) == "f" else "o") + " à Guilda!", "As missões do dia estão no quadro.", "Quem foca, conquista."])
 	helena.add_to_group("speaker_helena")
 	helena.use_look("helena")
 	prop("i_desk_paper", Vector2(cx - 50, 96), false)
@@ -593,7 +595,8 @@ func _build_guild() -> void:
 	spot("Missões da Guilda", Vector2(cx + 46, 118), func() -> void: HUD.open_window("guilda"), 18.0)
 	_guild_story_npcs(cx, w)
 	spot("Quadro de missões", Vector2(cx - 110, 70), func() -> void: HUD.open_window("guilda"), 24.0)
-	spot("Quadro de missões", Vector2(cx + 110, 70), func() -> void: HUD.open_window("guilda"), 24.0)
+	# v3.7: o quadro da direita traz as missões especiais (side quests da história v4, a partir do Rank E)
+	spot("Missões especiais", Vector2(cx + 110, 70), func() -> void: SideQuests.board(), 24.0)
 	# escada para a masmorra
 	prop("stairs_down_0", Vector2(w - 64, 196), false, true)
 	spot("Portão da masmorra", Vector2(w - 64, 200), func() -> void: HUD.open_window("dungeon"), 26.0)

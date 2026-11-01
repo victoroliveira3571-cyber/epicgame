@@ -225,6 +225,7 @@ func map_landmarks() -> Array:
 		out.append(["casa_npc_%d" % i, Interior.house_title(i), Vector2(t.x * T + 8, t.y * T)])
 	out.append(["portao_masmorra", "Portão da Masmorra", Vector2(SPINE_X * T + 8, GATE_Y * T)])
 	out.append(["trilha_floresta", "Trilha da Floresta", Vector2(4 * T, AVENUE_Y * T + 8)])
+	out.append(["estacao", "Carruagens do Tobias", Vector2(STATION_TILE.x * T + 8, STATION_TILE.y * T)])
 	return out
 
 

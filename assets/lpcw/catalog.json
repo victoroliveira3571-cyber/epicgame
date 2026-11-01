@@ -6129,14 +6129,15 @@
    "Johannes Sjölund (wulax)",
    "Joshua Taylor",
    "kcilds/Rocetti/Eredah",
+   "kheftel",
    "laetissima",
    "Lanea Zimmerman (Sharm)",
    "Luke Mehl",
    "Mandi Paugh",
    "Manuel Riecke (MrBeast)",
    "Marcel van de Steeg (MadMarcel)",
-   "Matthew Krohn (makrohn)",
    "Matthew Krohn (Makrohn)",
+   "Matthew Krohn (makrohn)",
    "Michael Whitlock (bigbeargames)",
    "MuffinElZangano",
    "Napsio",
@@ -6537,5 +6538,56 @@
     ]
    }
   }
+ },
+ "child": {
+  "body": [
+   {
+    "file": "body_bodies_child.png",
+    "z": 10,
+    "ramp": "skin"
+   }
+  ],
+  "head": [
+   {
+    "file": "head_heads_human_child.png",
+    "z": 100,
+    "ramp": "skin"
+   }
+  ],
+  "shirt": [
+   {
+    "file": "torso_clothes_shirt_child.png",
+    "z": 35,
+    "ramp": "cloth:gray"
+   }
+  ],
+  "pants": [
+   {
+    "file": "legs_pants_child.png",
+    "z": 20,
+    "ramp": "cloth:gray"
+   }
+  ],
+  "skirt": [
+   {
+    "file": "legs_skirts_child.png",
+    "z": 20,
+    "ramp": "cloth:white"
+   }
+  ],
+  "hair_wavy": [
+   {
+    "file": "hair_wavy_child.png",
+    "z": 120,
+    "ramp": "hair"
+   }
+  ],
+  "hair_short": [
+   {
+    "file": "hair_parted_side_bangs_child.png",
+    "z": 120,
+    "ramp": "hair"
+   }
+  ]
  }
 }

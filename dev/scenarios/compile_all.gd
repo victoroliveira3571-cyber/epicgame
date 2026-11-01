@@ -9,7 +9,8 @@ func run(_dev: Node) -> void:
 		for path in _scripts_in(dir):
 			var s: Script = load(path)
 			count += 1
-			if s == null:
+			# v3.7: script com erro de sintaxe ainda volta de load(); can_instantiate() é false nesse caso
+			if s == null or not s.can_instantiate():
 				bad += 1
 				printerr("[compile] FALHOU: ", path)
 	print("[compile] %d scripts, %d com erro" % [count, bad])

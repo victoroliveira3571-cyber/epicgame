@@ -219,10 +219,15 @@ static func hero() -> Dictionary:
 		if str(Story.st().get("gender", "m")) == "f":
 			lk = LpcW.default_look("female")
 	var gear := {}
+	var unique := {}
 	for slot in ["armor", "helmet", "boots", "shield"]:
 		var id: String = GameState.equipped.get(slot, "")
 		if id != "":
 			gear[slot] = int(Data.get_item(id).get("tier", 0))
+			if Data.get_item(id).get("unique", false):
+				unique[slot] = id
+	if not unique.is_empty():
+		lk["gear_unique"] = unique
 	if lk.get("hide_helmet", false):
 		gear.erase("helmet")
 	lk["gear"] = gear

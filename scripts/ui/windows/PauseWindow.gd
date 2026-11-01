@@ -5,7 +5,7 @@ extends UIWindow
 
 func _init() -> void:
 	win_title = "Pausa  -  Focus Town v3"
-	win_size = Vector2(440, 330)
+	win_size = Vector2(440, 352)
 
 
 func build() -> void:
@@ -77,8 +77,33 @@ func build() -> void:
 	var toggles2 := UI.hbox(6)
 	toggles2.add_child(aim)
 	toggles2.add_child(safe)
+	# v3.7: zoom da câmera (menor = vê mais do cenário) e o zoom leve que entra na batalha
+	var zl := UI.label("Zoom: %sx" % GameState._num(GameState.cam_zoom), UI.C_TEXT)
+	zl.custom_minimum_size.x = 64
+	var zminus := UI.button("-", func() -> void:
+		Audio.ui_click()
+		GameState.set_cam_zoom(GameState.cam_zoom - 0.25)
+		zl.text = "Zoom: %sx" % GameState._num(GameState.cam_zoom), 18)
+	zminus.tooltip_text = "Afastar a câmera (tecla -): vê mais do cenário."
+	var zplus := UI.button("+", func() -> void:
+		Audio.ui_click()
+		GameState.set_cam_zoom(GameState.cam_zoom + 0.25)
+		zl.text = "Zoom: %sx" % GameState._num(GameState.cam_zoom), 18)
+	zplus.tooltip_text = "Aproximar a câmera (tecla =)."
+	var cz := UI.button("Zoom na batalha: ligado" if GameState.combat_zoom else "Zoom na batalha: desligado", Callable(), 150)
+	cz.tooltip_text = "Ligado: quando um monstro vem atrás de você, a câmera aproxima um pouco e volta depois."
+	cz.pressed.connect(func() -> void:
+		Audio.ui_click()
+		GameState.set_combat_zoom(not GameState.combat_zoom)
+		cz.text = "Zoom na batalha: ligado" if GameState.combat_zoom else "Zoom na batalha: desligado")
+	var toggles3 := UI.hbox(6)
+	toggles3.add_child(zminus)
+	toggles3.add_child(zl)
+	toggles3.add_child(zplus)
+	toggles3.add_child(cz)
 	v.add_child(toggles)
 	v.add_child(toggles2)
+	v.add_child(toggles3)
 	v.add_child(UI.hline())
 	v.add_child(UI.label("Controles: clique na tecla e aperte a nova (Esc cancela)", UI.C_ORANGE_L))
 	var grid := GridContainer.new()

@@ -24,6 +24,7 @@ var forced_hour: float = -1.0
 var _daylight_timer: float = 0.0
 var _leaving: bool = false
 var _ore_nodes: Array = []
+var extra_landmarks: Array = []    # v3.7: pontos da história no mapa (jardim, centro de treinamento, caverna)
 
 
 func _ready() -> void:
@@ -62,6 +63,7 @@ func _ready() -> void:
 	_build_decor()
 	_build_ore()
 	_build_anim_decor()
+	_build_story()
 	_build_exit()
 	_build_title()
 	_spawn_player()
@@ -352,6 +354,54 @@ func _mine(me: StoryProp, holder: Node2D, item: String, label: String) -> void:
 			holder.modulate = Color.WHITE)
 
 
+## v3.7 (história v4): o que cada cidade ganha da história: Jardim e professores na Academia, Centro de
+## Treinamento e quadro de missões especiais em Pedralta, a caverna do Pé Grande na Vila da Neve.
+func _build_story() -> void:
+	match city_id:
+		"academia":
+			AcademyStory.decorate(self)
+		"pedralta":
+			ArmyStory.decorate(self)
+			var bp := _tile_pos(ArmyStory.BRIGIDA_TILE.x - 3, ArmyStory.BRIGIDA_TILE.y + 1)
+			_add_prop("i_board", bp, 4.0)
+			var board := StoryProp.make("Quadro de missões especiais", func(_me: StoryProp) -> void: SideQuests.board(), null, 22.0, false)
+			board.position = bp
+			world.add_child(board)
+		"vila_neve":
+			var c: Array = city.get("cave", [20, 6])
+			var cp := _tile_pos(int(c[0]), int(c[1]))
+			var hole := CaveMouth.new()
+			hole.position = cp
+			world.add_child(hole)
+			var cave := StoryProp.make("Entrar na caverna", func(_me: StoryProp) -> void: SideQuests.enter_cave(), null, 24.0, false)
+			cave.position = cp + Vector2(0, 6)
+			world.add_child(cave)
+			_label("Caverna do Pé Grande", cp + Vector2(0, -40), Color("cfe8ff"))
+			extra_landmarks.append(["caverna", "Caverna do Pé Grande", cp])
+
+
+## Boca de caverna provisória: sombra elíptica escura entre as pedras (o pack de neve ainda não entrou).
+class CaveMouth extends Node2D:
+	func _ready() -> void:
+		z_index = -5
+
+	func _draw() -> void:
+		var pts := PackedVector2Array()
+		for i in 24:
+			var a := TAU * i / 24.0
+			pts.append(Vector2(cos(a) * 18.0, sin(a) * 9.0 - 4.0))
+		draw_colored_polygon(pts, Color(0.05, 0.06, 0.1, 0.92))
+		var pts2 := PackedVector2Array()
+		for i in 24:
+			var a2 := TAU * i / 24.0
+			pts2.append(Vector2(cos(a2) * 12.0, sin(a2) * 6.0 - 4.0))
+		draw_colored_polygon(pts2, Color(0, 0, 0, 1))
+
+
+func is_academy() -> bool:
+	return city_id == "academia"
+
+
 func _build_exit() -> void:
 	var sp: Vector2i = city["spawn"]
 	var pos := _tile_pos(sp.x, sp.y)
@@ -374,6 +424,7 @@ func map_landmarks() -> Array:
 		out.append([str(id), str(b.get("display_name")), b.position])
 	var sp: Vector2i = city["spawn"]
 	out.append(["saida_cidade", "Estrada para Focus Town", Vector2(sp.x * T + 8, sp.y * T + 8)])
+	out.append_array(extra_landmarks)
 	return out
 
 
@@ -385,6 +436,7 @@ func _spawn_player() -> void:
 		spawn = door_spawns.get(Game.city_spawn.substr(5), spawn)
 	player = Player.spawn(world, spawn)
 	player.set_camera_limits(Rect2(0, 0, W * T, H * T))
+	GameState.player_died.connect(_on_player_died, CONNECT_ONE_SHOT)
 	match str(city["exit"]):
 		"west":
 			player.facing = Vector2.RIGHT
@@ -392,6 +444,19 @@ func _spawn_player() -> void:
 			player.facing = Vector2.LEFT
 		"south":
 			player.facing = Vector2.UP
+
+
+## v3.7: cair numa cidade (Jardim da Academia) não trava mais o jogo: a enfermaria cuida e a cena recomeça.
+## Sem perda de crédito: é treino de aluno.
+func _on_player_died() -> void:
+	if _leaving:
+		return
+	_leaving = true
+	Audio.jingle("defeat", -4.0)
+	await get_tree().create_timer(2.0).timeout
+	GameState.revive_after_defeat()
+	HUD.show_toast("Você desmaiou. A enfermaria de %s cuidou de você." % str(city["name"]), UI.C_BAD)
+	Game.go_to_city(city_id)
 
 
 func _update_daylight() -> void:

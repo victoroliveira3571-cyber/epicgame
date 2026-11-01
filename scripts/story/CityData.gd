@@ -88,10 +88,11 @@ const CITIES := {
 	},
 	"academia": {
 		"name": "Academia de Fontelúcida", "subtitle": "Quem pergunta bem já aprendeu metade",
-		"W": 56, "H": 46, "base_row": 12, "tint": Color(0.96, 0.97, 1.04), "path_origin": Vector2i(0, 7), "path_set": "stone",
+		"W": 56, "H": 60, "base_row": 12, "tint": Color(0.96, 0.97, 1.04), "path_origin": Vector2i(0, 7), "path_set": "stone",
 		"music": "town", "ambience": "",
 		"exit": "east", "spawn": Vector2i(52, 24),
-		"paths": [[0, 24, 55, 26], [26, 12, 29, 23], [14, 27, 15, 40], [40, 27, 41, 40], [20, 18, 35, 20]],
+		# v3.7: trilha até o Jardim da Academia (linhas 48 a 56, ao sul da cerca da linha 47; AcademyStory)
+		"paths": [[0, 24, 55, 26], [26, 12, 29, 23], [14, 27, 15, 40], [40, 27, 41, 48], [20, 18, 35, 20]],
 		"water": [[24, 31, 31, 36]],
 		"piers": [],
 		"buildings": [
@@ -116,12 +117,73 @@ const CITIES := {
 			["h_estatua_grande_verde", [24, 22]], ["h_estatua_grande_verde", [31, 22]], ["h_estatua_pequena", [26, 28]], ["h_estatua_pequena", [29, 28]],
 			["n_arvore_redonda", [6, 20]], ["n_arvore_grande", [50, 20]], ["n_arvores_trio", [6, 32]], ["n_arvore_redonda2", [50, 32]],
 			["n_flor_margarida", [20, 30]], ["n_flor_trevo", [36, 30]], ["i_stool", [17, 25]], ["i_stool", [38, 25]], ["k_cerca_3", [32, 37]], ["k_placa", [28, 27]],
+			# Jardim da Academia (canteiros e árvores nas bordas)
+			["n_flor_margarida", [8, 50]], ["n_flor_trevo", [10, 52]], ["n_flor_margarida", [16, 54]], ["n_flor_trevo", [24, 50]],
+			["n_flor_margarida", [30, 55]], ["n_flor_trevo", [47, 51]], ["n_flor_margarida", [50, 55]], ["n_arbusto2", [6, 55]],
+			["n_arbusto4", [20, 49]], ["n_arbusto2", [34, 50]], ["n_arbusto4", [45, 56]], ["n_arvore_redonda", [3, 49]],
+			["n_arvore_redonda2", [53, 49]], ["n_arvores_trio", [12, 57]], ["n_arvore_redonda", [38, 57]], ["k_placa", [42, 46]],
 		],
 		"anim": [
 			{"sheet": "pc_alchemy1.png", "fw": 32, "fh": 64, "cols": 6, "from": 0, "n": 6, "fps": 4.0, "tile": [22, 29]},
 			{"sheet": "pc_alchemy1.png", "fw": 32, "fh": 64, "cols": 6, "from": 6, "n": 20, "fps": 7.0, "tile": [34, 29]},
 		],
 		"label": Color("e4dcff"),
+	},
+	# v3.7 (história v4): lugares novos, PROVISÓRIOS (seção 15): montados com o chão de neve e de areia do próprio
+	# tileset do jogo, casas do Kenney e pedras/árvores do Ninja Adventure, até entrarem os packs de neve e deserto.
+	"vila_neve": {
+		"name": "Vila da Neve", "subtitle": "Onde o frio ensina paciência",
+		"W": 40, "H": 34, "base_row": 19, "tint": Color(0.92, 0.96, 1.08), "path_origin": Vector2i(0, 7), "path_set": "stone",
+		"music": "town_night", "ambience": "",
+		"exit": "south", "spawn": Vector2i(20, 30),
+		"paths": [[19, 8, 20, 33], [8, 18, 32, 19]],
+		"water": [],
+		"piers": [],
+		"buildings": [
+			{"id": "casa_n1", "title": "Casa do Ancião", "prop": "k_pedra_cinza_5", "tile": [12, 18], "closed": true},
+			{"id": "casa_n2", "title": "Casa do Lenhador", "prop": "k_tijolo_cinza_5", "tile": [28, 18], "closed": true},
+			{"id": "casa_n3", "title": "Casa da Peleteira", "prop": "k_pedra_cinza_5", "tile": [10, 26], "closed": true},
+			{"id": "casa_n4", "title": "Armazém de Gelo", "prop": "k_tijolo_cinza_6", "tile": [30, 26], "closed": true},
+		],
+		"npcs": [
+			{"sheet": "OldMan3", "tile": [16, 20], "talk": "anciao", "title": "Ancião Bóris"},
+			{"sheet": "Villager2", "tile": [24, 21], "mode": "wander", "lines": ["Desde que o Pé Grande desceu, ninguém sobe a trilha.", "O chá de pinheiro esquenta até a alma."]},
+			{"sheet": "Woman", "tile": [26, 28], "mode": "wander", "lines": ["Levaram meu irmão para a caverna. Ele ainda respira, eu sinto.", "Neve nova apaga pegadas. Neve velha guarda."]},
+		],
+		"decor": [
+			["n_pinheiros_trio", [4, 10], [0.85, 0.95, 1.0]], ["n_pinheiros_trio", [35, 10], [0.85, 0.95, 1.0]], ["n_arvore_pinheiro", [6, 24], [0.85, 0.95, 1.0]],
+			["n_arvore_pinheiro", [35, 22], [0.85, 0.95, 1.0]], ["n_arvore_pinheiro", [4, 30], [0.85, 0.95, 1.0]], ["n_arvore_pinheiro", [36, 30], [0.85, 0.95, 1.0]],
+			["n_pedra_cinza_g", [15, 5]], ["n_pedra_cinza_alta", [17, 4]], ["n_pedra_cinza_alta", [23, 4]], ["n_pedra_cinza_g", [25, 5]],
+			["n_pedra_cinza", [13, 7]], ["n_pedra_cinza", [27, 7]], ["i_barrel", [22, 20]], ["i_crate", [33, 27]], ["k_cerca_4", [20, 23]],
+		],
+		"cave": [20, 6],
+		"label": Color("27406a"),
+	},
+	"oasis": {
+		"name": "Oásis de Areia Doce", "subtitle": "A parada das rotas de comércio",
+		"W": 44, "H": 34, "base_row": 5, "tint": Color(1.04, 1.0, 0.94), "path_origin": Vector2i(0, 0), "path_set": "floor",
+		"music": "town", "ambience": "amb_margem",
+		"exit": "west", "spawn": Vector2i(3, 18),
+		"paths": [[0, 17, 43, 18], [21, 7, 22, 16]],
+		"water": [[16, 21, 27, 27]],
+		"piers": [],
+		"buildings": [
+			{"id": "loja", "title": "Bazar das Caravanas", "prop": "b_casa_empena", "tile": [12, 16], "tint": [1.0, 0.92, 0.78]},
+			{"id": "restaurante", "title": "Tenda do Chá", "prop": "b_padaria", "tile": [30, 16], "tint": [1.0, 0.92, 0.78]},
+			{"id": "casa_o1", "title": "Casa do Mercador", "prop": "k_tijolo_vermelho_5", "tile": [21, 7], "closed": true, "tint": [1.0, 0.9, 0.75]},
+			{"id": "casa_o2", "title": "Estábulo das Caravanas", "prop": "k_tijolo_vermelho_6", "tile": [37, 29], "closed": true, "tint": [1.0, 0.9, 0.75]},
+		],
+		"npcs": [
+			{"sheet": "Villager4", "tile": [14, 19], "lines": ["Sal, seda e livros: o oásis vende tudo que atravessa o deserto.", "Viu algum mapa antigo? Pago bem."]},
+			{"sheet": "OldMan2", "tile": [32, 19], "mode": "wander", "lines": ["Água é o ouro daqui.", "Um viajante de bússola de latão passou por aqui há muitos anos. Bebeu três chás e foi para o norte."]},
+			{"sheet": "Woman", "tile": [22, 29], "mode": "wander", "lines": ["A miragem mostra o que você quer ver. Estudar mostra o que é.", "À noite o deserto conta estrelas."]},
+		],
+		"decor": [
+			["n_arvore_seca", [14, 22]], ["n_arvore_seca", [29, 21]], ["n_arvore_seca", [15, 28]], ["n_arvore_seca", [28, 28]],
+			["n_pedra_marrom_g", [5, 8]], ["n_pedra_marrom_alta", [38, 9]], ["n_pedra_marrom", [8, 28]], ["n_pedra_marrom_g", [40, 22]],
+			["i_barrel", [18, 19]], ["i_crate", [26, 19]], ["i_sack", [27, 20]], ["k_placa", [6, 16]],
+		],
+		"label": Color("6a3a10"),
 	},
 }
 

@@ -51,6 +51,12 @@ const SPEAKERS := {
 	"capitao": {"name": "Capitão Maré"},
 	"granito": {"name": "Mestre Granito"},
 	"reitora": {"name": "Reitora Aurora"},
+	# v3.7: história v4
+	"nina": {"name": "Nina"},
+	"tome": {"name": "Tomé"},
+	"brigida": {"name": "Comandante Brígida"},
+	"soldado": {"name": "Veterano de Rocuetos"},
+	"anciao": {"name": "Ancião Bóris"},
 }
 
 const CHAPTERS := {

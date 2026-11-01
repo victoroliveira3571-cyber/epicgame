@@ -38,14 +38,40 @@ EXTRA = {
 }
 
 
-def layer_dirs(d):
+# v3.7: corpo de criança para o prólogo (o herói cresce nas cutscenes). Camadas do corpo "child" do LPC.
+CHILD = {
+    "body": ("body/body.json", "", "body"),
+    "head": ("head/heads/human/heads_human_child.json", "", "body"),
+    "shirt": ("torso/shirts/torso_clothes_child_shirt.json", "white", "cloth"),
+    "pants": ("legs/pants/legs_childpants.json", "white", "cloth"),
+    "skirt": ("legs/skirts/legs_childskirts.json", "white", "cloth"),
+    "hair_short": ("hair/short/hair_parted_side_bangs.json", "", "hair"),
+    "hair_wavy": ("hair/long/hair_wavy_child.json", "", "hair"),
+}
+
+
+def near_gray_slots(bw, im):
+    """Peça em quase-cinza (ex.: camisa de criança "white", tons como 228,228,229): até 6 tons viram a paleta
+    de tecido, do mais escuro ao mais claro, e a peça passa a aceitar qualquer cor."""
+    cc = bw.color_counts(im)
+    grays = sorted((c for c in cc if max(c) - min(c) <= 6), key=sum)
+    if not grays or sum(cc[c] for c in grays) < 0.8 * sum(cc.values()) or len(grays) > 6:
+        return [], ""
+    n = len(grays)
+    pal = [(-99, -99, -99)] * 6
+    for i, g in enumerate(grays):
+        pal[round(i * 5 / max(n - 1, 1))] = g
+    return [(bw.SLOT["item"], pal)], "cloth:gray"
+
+
+def layer_dirs(d, bodies=("male", "female")):
     out = []
     for k in sorted(k for k in d if k.startswith("layer_")):
         lay = d[k]
         if lay.get("custom_animation"):
             continue
-        for bt in ("male", "female"):
-            p = lay.get(bt) or lay.get("male")
+        for bt in bodies:
+            p = lay.get(bt) if bt == "child" else (lay.get(bt) or lay.get("male"))
             if p and "${" not in p:
                 out.append((k, bt, p, int(lay.get("zPos", 50))))
     return out
@@ -58,6 +84,10 @@ def main():
             d = json.load(open(RAW + "sheet_definitions/" + rel))
             for _k, _bt, p, _z in layer_dirs(d):
                 dirs.add("/spritesheets/" + p)
+        for pid, (rel, _v, _m) in CHILD.items():
+            d = json.load(open(RAW + "sheet_definitions/" + rel))
+            for _k, _bt, p, _z in layer_dirs(d, ("child",)):
+                dirs.add("/spritesheets/" + p)
         print(" ".join(sorted(dirs)))
         return
     import build_lpc_world as bw
@@ -68,11 +98,15 @@ def main():
     extra = cat.get("extra", {})
     own = {l["file"] for e in extra.values() for ls in e["layers"].values() for l in ls}
     authors, licenses = set(cat.get("credits", {}).get("authors", [])), set(cat.get("credits", {}).get("licenses", []))
-    for pid, (rel, variant, material) in EXTRA.items():
+    child_cat = cat.get("child", {})
+    own |= {l["file"] for ls in child_cat.values() for l in ls}
+    jobs = [(pid, rel, v, m, ("male", "female")) for pid, (rel, v, m) in EXTRA.items()]
+    jobs += [("child:" + pid, rel, v, m, ("child",)) for pid, (rel, v, m) in CHILD.items()]
+    for pid, rel, variant, material, bodies in jobs:
         d = json.load(open(RAW + "sheet_definitions/" + rel))
-        layers = {"male": [], "female": []}
+        layers = {bt: [] for bt in bodies}
         built = {}
-        for _k, bt, p, z in layer_dirs(d):
+        for _k, bt, p, z in layer_dirs(d, bodies):
             if variant:
                 bw.VARIANTS[p] = variant
             if p not in built and os.path.exists(bw.OUT + bw.fname(p)) and bw.fname(p) not in own:
@@ -86,6 +120,8 @@ def main():
                     built[p] = None
                     continue
                 slots, ramp = bw.slots_for(material, im)
+                if not slots and material == "cloth":
+                    slots, ramp = near_gray_slots(bw, im)
                 if slots:
                     im = bw.encode(im, slots)
                 name = bw.fname(p)
@@ -98,9 +134,14 @@ def main():
                         licenses.update(c[1])
             if built[p]:
                 layers[bt].append({"file": built[p]["file"], "z": z, "ramp": built[p]["ramp"]})
+        if pid.startswith("child:"):
+            child_cat[pid[6:]] = layers["child"]
+            print("ok", pid, [(l["file"], l["ramp"]) for l in layers["child"]])
+            continue
         extra[pid] = {"name": d.get("name", pid), "layers": layers}
         print("ok", pid, [l["file"] for l in layers["male"]], [l["ramp"] for l in layers["male"]])
     cat["extra"] = extra
+    cat["child"] = child_cat
     cat.setdefault("credits", {})["authors"] = sorted(authors, key=str.lower)
     cat["credits"]["licenses"] = sorted(licenses)
     json.dump(cat, open(cat_path, "w"), ensure_ascii=False, indent=1)

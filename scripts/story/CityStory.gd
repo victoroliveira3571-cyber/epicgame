@@ -23,37 +23,78 @@ static func talk(npc: String) -> void:
 			await _fragment("pedralta")
 		"reitora":
 			await _fragment("academia")
+		"anciao":
+			await SideQuests.talk_anciao()
+		"caverna":
+			await SideQuests.enter_cave()
+		"quadro_side":
+			await SideQuests.board()
 
 
 # ------------------------------------------------------------------ Carruagem
+## v3.7 (história v4): o destino depende da etapa. Na Academia a bolsa paga a viagem; recrutas do Exército vão de
+## graça a Pedralta; a Vila da Neve abre com a side quest do Pé Grande; depois da Parte 1, tudo (1 crédito).
+static func _destinations() -> Array:
+	var out: Array = []   # [id, nome, custo]
+	var s := Story.step()
+	if Story.in_academy_act():
+		if s.begins_with("a_") and s != "a_casa":
+			out.append(["academia", "Academia de Fontelúcida (bolsa: grátis)", 0])
+		return out
+	if Story.path() == "exercito":
+		out.append(["pedralta", "Pedralta (Exército: grátis)", 0])
+	if Story.part1_done():
+		for id in CityData.ORDER:
+			if id != "pedralta" or Story.path() != "exercito":
+				out.append([id, str(CityData.CITIES[id]["name"]) + (" (fragmento obtido)" if Story.flag("frag_" + id, false) else ""), 1])
+		out.append(["oasis", str(CityData.CITIES["oasis"]["name"]), 1])
+	elif Story.path() == "aventureiro":
+		out.append(["academia", "Academia de Fontelúcida", 1])
+	if SideQuests.stage("pe_grande") >= 1:
+		out.append(["vila_neve", "Vila da Neve" + (" (missão especial)" if SideQuests.stage("pe_grande") < 3 else ""), 1])
+	return out
+
+
 static func _coach() -> void:
-	if Story.chapter() < 6:
-		await Story.say(CityData.COCHEIRO_NO)
+	var dest := _destinations()
+	if dest.is_empty():
+		if Story.in_academy_act():
+			await Story.say([["cocheiro", "Alunos da Academia viajam de graça, mas primeiro se despeça da família, jovem."]])
+		else:
+			await Story.say(CityData.COCHEIRO_NO)
 		return
-	var names := ["Porto Névoa", "Pedralta", "Academia de Fontelúcida", "Ficar em Focus Town"]
-	var marks := []
-	for id in CityData.ORDER:
-		marks.append(" (fragmento obtido)" if Story.flag("frag_" + id, false) else "")
+	var names: Array = []
+	for dd in dest:
+		names.append(str(dd[1]))
+	names.append("Ficar em Focus Town")
 	Story.set_flag("carruagem", -1)
 	await Story.say([
-		["cocheiro", "Uma carruagem, um crédito de estudo. Para onde, {heroi}?"],
-		{"choice": ["%s%s" % [names[0], marks[0]], "%s%s" % [names[1], marks[1]], "%s%s" % [names[2], marks[2]], names[3]], "key": "carruagem"},
+		["cocheiro", "Carruagem para onde o estudo levar. Para onde, {heroi}?"],
+		{"choice": names, "key": "carruagem"},
 	])
-	var pick := int(Story.flag("carruagem", 3))
-	if pick < 0 or pick >= CityData.ORDER.size():
+	var pick := int(Story.flag("carruagem", names.size() - 1))
+	if pick < 0 or pick >= dest.size():
 		return
-	var id: String = CityData.ORDER[pick]
-	if Story.credits() < Story.entry_cost("cidade_" + id, 1):
-		await Story.say([["cocheiro", "Sem crédito, sem estrada. Estude no Pomodoro e volte."]])
-		HUD.show_toast("Faltam créditos: %d min de foco para o próximo." % Story.minutes_to_next_credit(), UI.C_ENERGY)
-		return
-	Story.pay_entry("cidade_" + id, 1)
+	var id: String = dest[pick][0]
+	var cost: int = int(dest[pick][2])
+	if cost > 0:
+		if Story.credits() < Story.entry_cost("cidade_" + id, cost):
+			await Story.say([["cocheiro", "Sem crédito, sem estrada. Estude no Pomodoro e volte."]])
+			HUD.show_toast("Faltam créditos: %d min de foco para o próximo." % Story.minutes_to_next_credit(), UI.C_ENERGY)
+			return
+		Story.pay_entry("cidade_" + id, cost)
+	elif Story.step() == "a_viagem":
+		await Story.say(StoryV4.COCHEIRO_BOLSA)
 	await Story.say([["cocheiro", "Segure firme. Lá vamos nós!"]])
 	Game.go_to_city(id)
 
 
 # ------------------------------------------------------------------ Fragmentos
 static func _fragment(city: String) -> void:
+	if not Story.part1_done():
+		# v4: as memórias do pai nas cidades vêm depois da Parte 1 (antes, só uma conversa)
+		await Story.say([[_who(city), "Volte quando tiver enfrentado o que está no fundo de Masmoreum. Aí eu terei algo do seu pai para você."]])
+		return
 	var f: Dictionary = CityData.FRAGMENTS[city]
 	var need: float = CityData.FRAGMENT_HOURS[city]
 	if Story.flag("frag_" + city, false):
@@ -81,7 +122,7 @@ static func _fragment(city: String) -> void:
 
 
 static func _who(city: String) -> String:
-	return {"porto": "capitao", "pedralta": "granito", "academia": "reitora"}[city]
+	return {"porto": "capitao", "pedralta": "granito", "academia": "reitora"}.get(city, "narr")
 
 
 static func _reward(city: String) -> void:

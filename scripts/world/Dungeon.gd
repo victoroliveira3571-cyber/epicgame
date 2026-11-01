@@ -93,7 +93,8 @@ func _ready() -> void:
 		Audio.novo("arqueiro_entra", -6.0)
 	HUD.on_scene_ready("dungeon")
 	if duel_boss != "":
-		HUD.floor_banner("Torneio das Guildas", "Duelo contra Ivo")
+		var bn: Array = Game.run.get("banner", ["Torneio das Guildas", "Duelo contra Ivo"])
+		HUD.floor_banner(str(bn[0]), str(bn[1]))
 	else:
 		var subtitle: String = biome["name"] if not boss_floor else "%s - covil do chefe" % biome["name"]
 		HUD.floor_banner("Andar %d" % floor_n, subtitle)
@@ -397,15 +398,17 @@ func _populate_boss() -> void:
 
 func _on_boss_died(_e: Enemy) -> void:
 	boss_defeated.emit()
-	if boss.boss_id == "rei_demonio":
-		# o pai aparece no trono, com Aldric ao lado
+	if boss.boss_id == "rei_demonio" and Story.path() != "exercito":
+		# o pai aparece no trono, com Aldric ao lado (no caminho do Exército ele não aparece: história v4)
 		var at := boss.global_position
 		var pai := NPC.create(world, "Noble", at + Vector2(0, -8), "static")
 		pai.sprite.modulate = Color(0.85, 0.85, 0.9)
 		NPC.create(world, "Knight", at + Vector2(34, 6), "static")
 		Fx.ring(world, at + Vector2(0, -10), 40.0, Color(1.0, 0.95, 0.7), 0.8, 2.0)
-	if Data.STORY_BOSSES.has(boss.boss_id):
+	if Data.STORY_BOSSES.has(boss.boss_id) or bool(Game.run.get("army", false)):
 		await Story.on_boss_defeated(boss.boss_id)
+	elif SideQuests.stage("pe_grande") == 2 and boss.boss_id == "pe_grande":
+		await SideQuests.on_boss_defeated(boss.boss_id)
 	if duel_boss != "":
 		Game.finish_run(false)
 		return

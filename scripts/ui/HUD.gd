@@ -572,6 +572,7 @@ func pomodoro_cancel() -> void:
 		return
 	if is_focus_running():
 		show_toast("Foco descartado: sem recompensa.", UI.C_DIM)
+		Story.on_focus_interrupted()
 	pomo_state = "idle"
 	pomo_left = 0.0
 	Audio.pomo_update()
@@ -653,6 +654,7 @@ func _reward_focus(minutes: int, early: bool) -> void:
 	var gold := int(round(minutes * 2.0))
 	var r := GameState.complete_focus_session(xp, gold, minutes, 0, (not early) or minutes >= Data.FOCUS_MIN_SESSION)
 	GameState.log_pomodoro(minutes, str(GameState.pomo_cfg.get("scene", "")), early)
+	Story.on_focus_session(minutes, early)
 	GameState.pomo_cfg["recall_pending"] = {"idx": GameState.pomo_log.size() - 1, "minutes": minutes}
 	GameState.save_game()
 	Audio.jingle("pomo_done", -3.0)
@@ -1192,7 +1194,11 @@ func _refresh_objective() -> void:
 
 ## Esconde o cartão do jogador (fase final do Rei Demônio "apaga" o nome e os atributos).
 ## Esconde a parte de baixo do HUD (teclas, dica, atalhos) enquanto algo usa a tela (modo Decorar).
+var _bottom_hidden: bool = false
+
+
 func set_bottom_hidden(hidden: bool) -> void:
+	_bottom_hidden = hidden
 	for n in [_keys, _hotbar, _hint]:
 		if n != null:
 			(n as CanvasItem).visible = not hidden
@@ -1257,6 +1263,12 @@ func stage_focus(who: String, vis: Dictionary) -> void:
 		_stage.focus(who, vis)
 
 
+## v3.7 (história v4, seção 15, e PACKS_REGISTRO 6.1): as conversas acontecem sobre o mapa top-down, com os
+## personagens reagindo no lugar. O palco de lado (Stage) usava fundos pintados por código, o que vai contra a
+## regra de só usar arte de pack; fica desligado (o código continua em ui/Stage.gd).
+const USE_STAGE := false
+
+
 func dialogue(entry: Variant) -> void:
 	var lines: Array = entry if entry is Array else StoryData.DIALOGS.get(String(entry), [])
 	if lines.is_empty():
@@ -1267,7 +1279,7 @@ func dialogue(entry: Variant) -> void:
 	var was_paused := get_tree().paused
 	get_tree().paused = true
 	Game.input_locked = true
-	if Stage.wanted(lines) and scene_kind != "":
+	if USE_STAGE and Stage.wanted(lines) and scene_kind != "":
 		_stage = Stage.new()
 		root.add_child(_stage)
 		_stage.open_stage(Stage.pick_setting(get_tree(), _first_npc_speaker(lines)))
@@ -1281,8 +1293,9 @@ func dialogue(entry: Variant) -> void:
 		_stage.close_stage()
 	_stage = null
 	_dialog.queue_free()
-	_keys.visible = scene_kind != ""
-	_hotbar.visible = scene_kind != ""
+	# v3.7: modo Decorar e cutscenes deixam a barra de baixo escondida
+	_keys.visible = scene_kind != "" and not _bottom_hidden
+	_hotbar.visible = scene_kind != "" and not _bottom_hidden
 	_dialog = null
 	if not is_window_open() and not was_paused:
 		get_tree().paused = false
@@ -1309,5 +1322,5 @@ func quiz(card: Dictionary, title: String) -> Dictionary:
 func _unlock_soon() -> void:
 	Game.input_locked = true
 	await get_tree().create_timer(0.2).timeout
-	if not is_window_open() and not is_dialogue_open() and not Game.transitioning:
+	if not is_window_open() and not is_dialogue_open() and not Game.transitioning and not Game.cutscene:
 		Game.input_locked = false
