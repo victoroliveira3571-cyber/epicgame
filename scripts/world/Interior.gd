@@ -61,6 +61,27 @@ static func house_title(index: int) -> String:
 	return HOUSES[index]["title"]
 
 
+## v2.7: marca no chão da zona de estudo (anel que pulsa e fica mais forte quando o herói está perto).
+class StudyMarker extends Node2D:
+	var radius: float = 22.0
+
+	func _init() -> void:
+		z_index = -1
+
+	func _process(_delta: float) -> void:
+		queue_redraw()
+
+	func _draw() -> void:
+		var pl := get_tree().get_first_node_in_group("player") as Node2D
+		var near := pl != null and pl.global_position.distance_to(global_position) <= radius + 6.0
+		var beat := 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.005)
+		var a := (0.55 if near else 0.28) + 0.2 * beat
+		var col := Color(1.0, 0.82, 0.35, a)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.55))
+		draw_arc(Vector2.ZERO, radius - 2.0 - 2.0 * beat, 0.0, TAU, 28, col, 1.5)
+		draw_circle(Vector2.ZERO, radius - 6.0, Color(1.0, 0.82, 0.35, 0.08 + (0.1 if near else 0.0)))
+
+
 class Spot extends Interactable:
 	var text: String = ""
 	var cb: Callable
@@ -342,6 +363,9 @@ func light(pos: Vector2, color: Color, size: float, energy: float) -> void:
 
 ## Mesa onde dá para estudar: abre o Pomodoro preso ao cenário deste lugar.
 func study_spot(scene: String, pos: Vector2) -> Spot:
+	var marker := StudyMarker.new()
+	marker.position = pos
+	world.add_child(marker)
 	return spot("Estudar aqui (Pomodoro)", pos, func() -> void:
 		if Game.transitioning or HUD.is_dialogue_open():
 			return
@@ -463,6 +487,7 @@ func _build_home() -> void:
 	prop("p_espelho", Vector2(w - 70, 64))
 	spot("Espelho (aparência)", Vector2(w - 70, 76), func() -> void: HUD.open_window("aparencia"), 20.0)
 	prop("i_chest", Vector2(28, 206))
+	spot("Baú da casa", Vector2(28, 218), func() -> void: HUD.open_window("bau"), 20.0)
 	prop("p_caixotes", Vector2(30, 186))
 	prop("p_vaso_flores", Vector2(w - 22, 208), false)
 	# escrivaninha de estudo: abre o Pomodoro com o cenário da casa

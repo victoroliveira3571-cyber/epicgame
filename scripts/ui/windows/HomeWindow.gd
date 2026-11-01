@@ -21,6 +21,9 @@ func build() -> void:
 	var wardrobe := UI.button("Guarda-roupa", func() -> void: HUD.open_window("guarda_roupa"), 80)
 	wardrobe.position = Vector2(262, -2)
 	body.add_child(wardrobe)
+	var chest := UI.button("Baú", func() -> void: HUD.open_window("bau"), 40)
+	chest.position = Vector2(136, -2)
+	body.add_child(chest)
 	var deco := UI.button("Decorar (V)", func() -> void:
 		var room := get_tree().current_scene as Interior
 		HUD.close_window()

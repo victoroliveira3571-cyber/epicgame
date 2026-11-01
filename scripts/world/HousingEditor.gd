@@ -169,6 +169,7 @@ func set_active(on: bool) -> void:
 	Game.input_locked = on
 	Audio.sfx("ui_open" if on else "ui_close", -4.0)
 	HUD.set_bottom_hidden(on)
+	HUD.set_top_hidden(on)
 	if on:
 		HUD.set_prompt("")
 		_build_ui()

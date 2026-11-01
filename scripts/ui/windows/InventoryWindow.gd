@@ -36,8 +36,14 @@ func build() -> void:
 				selected = id
 				rebuild())
 		row.add_child(s)
-		var nm := UI.label(Data.SLOT_NAMES.get(slot, slot), UI.C_DIM)
-		row.add_child(nm)
+		s.tooltip_text = Data.SLOT_NAMES.get(slot, slot)
+	# --- prévia do herói com o que está equipado (v2.7); gira sozinho, arraste para virar
+	var pv := AppearanceEditor.Preview.new(true)
+	pv.custom_minimum_size = Vector2(86, 170)
+	pv.size = Vector2(86, 170)
+	pv.px = 1.4
+	add_to_body(pv, Vector2(32, 18))
+	pv.set_look(Looks.hero())
 	# --- mochila
 	var tabs := UI.hbox(2)
 	add_to_body(tabs, Vector2(120, 0))

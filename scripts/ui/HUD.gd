@@ -6,6 +6,7 @@ extends CanvasLayer
 
 const WINDOWS := {
 	"inventario": "res://scripts/ui/windows/InventoryWindow.gd",
+	"bau": "res://scripts/ui/windows/StashWindow.gd",
 	"personagem": "res://scripts/ui/windows/CharacterWindow.gd",
 	"loja": "res://scripts/ui/windows/ShopWindow.gd",
 	"forja": "res://scripts/ui/windows/ForgeWindow.gd",
@@ -167,6 +168,10 @@ func set_scene_kind(which: String) -> void:
 	_hint.visible = playing
 	_keys.visible = playing
 	_objective.visible = playing and Story.started()
+	# v2.7: dentro de prédios os painéis do topo ficam translúcidos para não esconder a decoração da sala
+	var a := 0.45 if which == "interior" else 1.0
+	for n in [_card, _pomo_panel, _objective]:
+		(n as CanvasItem).modulate.a = a
 
 
 # ================================================================== Cartão do jogador
@@ -1170,6 +1175,25 @@ func set_bottom_hidden(hidden: bool) -> void:
 	for n in [_keys, _hotbar, _hint]:
 		if n != null:
 			(n as CanvasItem).visible = not hidden
+
+
+var _top_was_visible: Dictionary = {}
+
+
+## v2.7: o modo Decorar também esconde o cartão do jogador, o Pomodoro, o objetivo e o minimapa,
+## que cobriam os cantos da casa e os móveis ali colocados.
+func set_top_hidden(hidden: bool) -> void:
+	if hidden:
+		_top_was_visible.clear()
+		for n in [_card, _pomo_panel, _objective, _minimap]:
+			if n != null:
+				_top_was_visible[n] = (n as CanvasItem).visible
+				(n as CanvasItem).visible = false
+	else:
+		for n in _top_was_visible:
+			if is_instance_valid(n):
+				(n as CanvasItem).visible = bool(_top_was_visible[n])
+		_top_was_visible.clear()
 
 
 func set_card_hidden(hidden: bool) -> void:

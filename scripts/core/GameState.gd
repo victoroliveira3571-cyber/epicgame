@@ -39,6 +39,7 @@ var playtime: float = 0.0
 
 # --- itens
 var inventory: Dictionary = {}        # item_id -> quantidade
+var stash: Dictionary = {}            # v2.7: baú da casa (item_id -> quantidade), fora da mochila
 var equipped: Dictionary = {}         # slot -> item_id
 var upgrades: Dictionary = {}         # item_id -> nível de aprimoramento
 var furniture: Array = []             # ids de móveis comprados
@@ -503,6 +504,32 @@ func add_item(item_id: String, amount: int = 1, silent: bool = false) -> void:
 		item_gained.emit(item_id, amount)
 	_queue_save()
 	stats_changed.emit()
+
+
+## Baú da casa: guarda tudo o que não está em uso (a peça equipada fica com o herói).
+func stashable_count(item_id: String) -> int:
+	return count_item(item_id) - (1 if is_equipped(item_id) else 0)
+
+
+func stash_put(item_id: String, amount: int = 1) -> bool:
+	amount = mini(amount, stashable_count(item_id))
+	if amount <= 0 or not remove_item(item_id, amount):
+		return false
+	stash[item_id] = int(stash.get(item_id, 0)) + amount
+	_queue_save()
+	stats_changed.emit()
+	return true
+
+
+func stash_take(item_id: String, amount: int = 1) -> bool:
+	amount = mini(amount, int(stash.get(item_id, 0)))
+	if amount <= 0:
+		return false
+	stash[item_id] = int(stash[item_id]) - amount
+	if int(stash[item_id]) <= 0:
+		stash.erase(item_id)
+	add_item(item_id, amount, true)
+	return true
 
 
 func remove_item(item_id: String, amount: int = 1) -> bool:
@@ -1330,7 +1357,7 @@ func save_now() -> void:
 		"level": level, "xp": xp, "xp_to_next": xp_to_next, "gold": gold, "hunger": hunger, "hp": hp,
 		"player_class": player_class, "talent_points": talent_points, "talents": talents,
 		"energy": energy, "energy_day": energy_day, "best_floor": best_floor, "playtime": playtime,
-		"inventory": inventory, "equipped": equipped, "upgrades": upgrades, "furniture": furniture, "furniture_layout": furniture_layout, "furniture_stored": furniture_stored, "pomo_log": pomo_log,
+		"inventory": inventory, "stash": stash, "equipped": equipped, "upgrades": upgrades, "furniture": furniture, "furniture_layout": furniture_layout, "furniture_stored": furniture_stored, "pomo_log": pomo_log,
 		"study_credits": study_credits, "looks_owned": looks_owned, "look": look, "story": story, "arena": arena, "promotion": promotion,
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
@@ -1397,6 +1424,7 @@ func load_game() -> void:
 	hunger = int(d.get("hunger", 100))
 	player_class = String(d.get("player_class", ""))
 	inventory = _dict_of(d.get("inventory", {}))
+	stash = _dict_of(d.get("stash", {}))
 	equipped = _dict_of(d.get("equipped", {}))
 	habits = d.get("habits", []) if typeof(d.get("habits", [])) == TYPE_ARRAY else []
 	claimed_missions = d.get("claimed_missions", []) if typeof(d.get("claimed_missions", [])) == TYPE_ARRAY else []
@@ -1557,6 +1585,7 @@ func _reset_defaults() -> void:
 func debug_reset() -> void:
 	promotion = {}
 	inventory = {}
+	stash = {}
 	equipped = {}
 	upgrades = {}
 	furniture = []
