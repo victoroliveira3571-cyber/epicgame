@@ -230,6 +230,20 @@ func focus_hours() -> float:
 	return float(focus_minutes()) / 60.0
 
 
+## v3.7: Rank de Estudo (Data.STUDY_RANKS) pelas horas de foco acumuladas.
+func study_rank() -> int:
+	var h := focus_hours()
+	var r := 0
+	for i in Data.STUDY_RANKS.size():
+		if h + 0.0001 >= float(Data.STUDY_RANKS[i][0]):
+			r = i
+	return r
+
+
+func study_rank_name(r: int = -1) -> String:
+	return str(Data.STUDY_RANKS[clampi(study_rank() if r < 0 else r, 0, Data.STUDY_RANKS.size() - 1)][1])
+
+
 func credits() -> int:
 	return int(st().get("credits", 0))
 
@@ -238,7 +252,12 @@ func credits() -> int:
 func add_focus_minutes(minutes: int) -> int:
 	if not started() or minutes <= 0:
 		return 0
+	var rank_before := study_rank()
 	st()["focus_min"] = focus_minutes() + minutes
+	if study_rank() > rank_before:
+		Audio.jingle("levelup", -4.0)
+		HUD.show_toast("Rank de Estudo: %s! (+%d%% de XP permanente)" % [study_rank_name(), int(Data.STUDY_RANK_XP * 100.0 * study_rank())], UI.C_GOLD)
+		GameState.stats_changed.emit()
 	minutes = Law.pay_with_focus(minutes)    # cumprindo pena: o foco paga a multa antes de virar crédito
 	var bank := int(st().get("credit_min", 0)) + minutes
 	var gained := bank / Data.MINUTES_PER_CREDIT

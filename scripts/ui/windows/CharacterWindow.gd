@@ -19,6 +19,13 @@ func build() -> void:
 	if mode == "habilidades":
 		_skills()
 		return
+	if mode == "patentes":
+		_ranks()
+		return
+	var pb := UI.button("Patentes  >", func() -> void:
+		mode = "patentes"
+		rebuild(), 90)
+	add_to_body(pb, Vector2(208, 244))
 	var sw := UI.button("Pets e história  >", func() -> void:
 		mode = "pets"
 		rebuild(), 120)
@@ -107,6 +114,49 @@ func build() -> void:
 		HUD.confirm("Redistribuir todos os talentos por %d de ouro?" % cost, func() -> void: GameState.respec_talents()), 0)
 	rb.disabled = GameState.gold < cost or GameState.talents.is_empty()
 	rs.add_child(rb)
+
+
+# ------------------------------------------------------------------ Patentes (v3.7)
+## Todas as patentes num lugar só: estudo, Guilda/Exército, classe, Arena e ofícios.
+func _ranks() -> void:
+	var back := UI.button("<  Atributos", func() -> void:
+		mode = "atributos"
+		rebuild(), 90)
+	add_to_body(back, Vector2(450, 244))
+	var v := UI.vbox(4)
+	add_to_body(v, Vector2(0, 0))
+	v.add_child(UI.label("Patentes de %s" % Story.hero_name(), UI.C_ORANGE_L, 2))
+	v.add_child(UI.hline())
+	var sr := Story.study_rank()
+	var nxt := "rank máximo" if sr >= Data.STUDY_RANKS.size() - 1 else "%s h de %s h para %s" % [Story._hours_text(), str(Data.STUDY_RANKS[sr + 1][0]).trim_suffix(".0"), Data.STUDY_RANKS[sr + 1][1]]
+	_rank_row(v, "Rank de Estudo", "%s  (+%d%% XP)" % [Story.study_rank_name(), int(Data.STUDY_RANK_XP * 100.0 * sr)], nxt, UI.C_GOLD)
+	var pth := Story.path()
+	if pth == "exercito":
+		_rank_row(v, "Exército de Rocuetos", ArmyStory.patente_name(), "%d de %d patentes" % [ArmyStory.patente() + 1, StoryV4.PATENTES.size()], UI.C_HP)
+	elif pth == "aventureiro":
+		_rank_row(v, "Guilda dos Aventureiros", Story.rank_name(), "ranks F, E, D, C, B, A e S", UI.C_ORANGE_L)
+	else:
+		_rank_row(v, "Academia de Fontelúcida", Story.rank_name(), "a Formatura decide o caminho", UI.C_XP)
+	_rank_row(v, "Classe", GameState.class_title() if GameState.has_chosen_class() else "-", "promoções nos níveis 25, 50, 75 e 100", UI.C_TEXT)
+	_rank_row(v, "Arena", Arena.rank_name(), "Bronze, Prata, Ouro, Platina, Lenda", UI.C_XP)
+	v.add_child(UI.hline())
+	v.add_child(UI.label("Ofícios (o do seu caminho rende o dobro)", UI.C_DIM))
+	for pid in Data.PROFESSIONS:
+		var info: Dictionary = Data.PROFESSIONS[pid]
+		var home := " *" if GameState.is_path_profession(pid) else ""
+		_rank_row(v, str(info["name"]) + home, GameState.profession_rank_name(pid), str(info["where"]), UI.C_GOOD)
+
+
+func _rank_row(parent: Control, title: String, value: String, note: String, col: Color) -> void:
+	var h := UI.hbox(6)
+	var t := UI.label(title, UI.C_DIM)
+	t.custom_minimum_size.x = 150
+	h.add_child(t)
+	var vl := UI.label(value, col)
+	vl.custom_minimum_size.x = 170
+	h.add_child(vl)
+	h.add_child(UI.label(note, UI.C_DIM))
+	parent.add_child(h)
 
 
 # ------------------------------------------------------------------ Habilidades e promoção

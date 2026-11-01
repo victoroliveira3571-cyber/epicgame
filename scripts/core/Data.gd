@@ -305,6 +305,22 @@ const WEAPON_TABLE := {
 		["arco_adamantium", "Arco de Adamantium", "Bow2"], ["arco_supremo", "Arco Supremo", "Bow"],
 	],
 }
+## v3.7: ofícios (mini-jogos) e suas patentes. Cada caminho da história v4 tem dois ofícios "da casa" (rendem
+## o dobro de experiência de ofício e +25% de recompensa); os outros continuam jogáveis, sem o bônus.
+const PROFESSIONS := {
+	"cozinha": {"name": "Cozinheiro", "fem": "Cozinheira", "path": "aventureiro", "where": "Cozinha da taverna (Pousada Pão Quente)"},
+	"costura": {"name": "Costureiro", "fem": "Costureira", "path": "aventureiro", "where": "Ateliê da Rosa"},
+	"forja": {"name": "Ferreiro", "fem": "Ferreira", "path": "exercito", "where": "Ferraria do Brás e Grande Forja"},
+	"lab": {"name": "Alquimista", "fem": "Alquimista", "path": "exercito", "where": "Laboratório do Dr. Faísca"},
+}
+const PROF_RANKS := ["Aprendiz", "Ajudante", "Oficial", "Artesão", "Mestre", "Grão-Mestre"]
+## v3.7: Rank de Estudo, pelas horas de foco acumuladas (o estudo de verdade como patente). Cada rank dá +2% de XP.
+const STUDY_RANKS := [[0.0, "Aprendiz dos Livros"], [5.0, "Estudante"], [15.0, "Escriba"], [35.0, "Erudito"],
+	[70.0, "Sábio"], [120.0, "Mestre do Saber"], [200.0, "Lenda de Vicerus"]]
+const STUDY_RANK_XP := 0.02
+const PROF_XP := [0, 60, 180, 420, 800, 1400]     # experiência de ofício para cada patente
+
+
 ## v3.7: armaduras únicas das side quests (história v4, seção 8). Força de um tier Diamante com um bônus próprio.
 const UNIQUE_ITEMS := {
 	"manto_cacador": {"name": "Manto do Caçador de Bruxos", "slot": "armor", "tier": 4, "def": 18.0, "hp": 70.0, "crit": 6.0, "price": 900},

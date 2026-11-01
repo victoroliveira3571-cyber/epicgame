@@ -11,7 +11,7 @@ func _init() -> void:
 func build() -> void:
 	add_to_body(UI.label("Fome: %d / 100" % GameState.hunger, UI.C_FOOD), Vector2(0, 0))
 	add_to_body(UI.label("Ouro: %s" % UI.fmt_int(GameState.gold), UI.C_GOLD), Vector2(420, 0))
-	add_to_body(UI.button("Ajudar na cozinha", func() -> void: HUD.open_window("mg_cozinha"), 100), Vector2(310, -3))
+	add_to_body(UI.button("Ajudar na cozinha", func() -> void: WorkShift.begin("cozinha"), 100), Vector2(310, -3))
 	var bar := UI.Bar.new(Vector2(200, 6), UI.C_FOOD)
 	bar.shown_ratio = GameState.hunger / 100.0
 	bar.set_ratio(GameState.hunger / 100.0)

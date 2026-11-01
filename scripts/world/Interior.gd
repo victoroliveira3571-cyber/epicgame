@@ -31,6 +31,8 @@ const ROOMS := {
 	"forja": [18, 11, "floor_stone", "wall_stone"], "loja": [16, 10, "floor_wood", "wall_red"],
 	"arena": [30, 18, "floor_sand", "wall_stone"], "delegacia": [22, 13, "floor_stone", "wall_stone"],
 	"laboratorio": [24, 14, "floor_stone", "wall_cream"],
+	# v3.7: salas dos turnos de ofício (WorkShift)
+	"turno_cozinha": [22, 13, "floor_wood_dark", "wall_red"], "turno_forja": [22, 13, "floor_stone", "wall_stone"],
 }
 
 var id: String = "casa"
@@ -146,14 +148,16 @@ func _ready() -> void:
 		_build_jail()
 	elif id == "laboratorio":
 		_build_lab()
+	elif id.begins_with("turno_"):
+		WorkShift.attach(self)
 	else:
 		_build_resident_house()
 	_spawn_player()
 	var mod := CanvasModulate.new()
 	mod.color = Color(0.72, 0.7, 0.76) if id == "casa_pai" else Color(1.0, 0.94, 0.86)
 	add_child(mod)
-	Audio.play_music("musica_laboratorio" if id == "laboratorio" else ("interior_taverna" if id in ["restaurante", "casa_npc_1"] else ("home" if id == "casa_familia" else "interior_manor")))
-	Audio.set_place_loop("biblioteca_escrita" if id == "biblioteca" else ("ferraria_ambiente" if id == "forja" else ("lareira_casa" if id.begins_with("casa") else "")))
+	Audio.play_music("musica_laboratorio" if id == "laboratorio" else ("interior_taverna" if id in ["restaurante", "casa_npc_1", "turno_cozinha"] else ("home" if id == "casa_familia" else "interior_manor")))
+	Audio.set_place_loop("biblioteca_escrita" if id == "biblioteca" else ("ferraria_ambiente" if id in ["forja", "turno_forja"] else ("lareira_casa" if id.begins_with("casa") else "")))
 	HUD.on_scene_ready("interior")
 	if id == "casa_familia" and Story.step() == "p_prologo":
 		Prologue.start(self)
@@ -272,6 +276,12 @@ func _leave() -> void:
 		return
 	if id == "delegacia" and Law.is_jailed():
 		player.global_position.y -= 18.0
+		return
+	if id.begins_with("turno_"):
+		player.global_position.y -= 18.0
+		for c in get_children():
+			if c is WorkShift:
+				(c as WorkShift).request_exit()
 		return
 	if id == "casa_familia" and Story.step() in ["c1_casa", "a_casa", "p_prologo"]:
 		HUD.set_prompt("")
@@ -1135,6 +1145,8 @@ func _build_tailor(h: Dictionary, w: float) -> void:
 	prop("p_vaso_flores", Vector2(w / 2.0 + 6, 96), false)
 	shop_owner("costureira", "costureira", "Rosa", Vector2(w / 2.0 + 20, 92), h["lines"])
 	spot("Guarda-roupa da Rosa", Vector2(w - 40, 86), func() -> void: HUD.open_window("guarda_roupa"), 18.0)
+	# v3.7: ofício de Costureiro (mini-jogo de memória e precisão)
+	spot("Costurar para a Rosa (ofício)", Vector2(w / 2.0 - 10, 126), func() -> void: HUD.open_window("mg_costura"), 18.0)
 	light(Vector2(w / 2.0, 90), Color(1.0, 0.8, 0.55), 1.4, 0.3)
 
 

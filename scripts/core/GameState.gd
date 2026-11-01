@@ -77,6 +77,7 @@ const DIFFICULTY_SPEED := [1.0, 1.06, 1.14]    # velocidade dos monstros
 const DIFFICULTY_REWARD := [1.0, 1.2, 1.5]     # XP e ouro de monstros
 var difficulty: int = 1
 var minigame_plays: Dictionary = {}   # v3.1: {"date": hoje, "<id>": partidas hoje}
+var professions: Dictionary = {}      # v3.7: experiência de cada ofício {"cozinha": 120, ...}
 var auto_aim: bool = true      # v2.6: mira automática (corpo e ataques viram para o inimigo próximo)
 ## v3.7: zoom da câmera (antes fixo em 3x). Menor = vê mais do cenário. Teclas - e = ou a tela de Pausa regulam.
 const CAM_ZOOM_MIN := 1.5
@@ -234,6 +235,9 @@ func _compute_stats() -> Dictionary:
 		s["xp_pct"] += float(b.get("xp_pct", 0.0))
 		if b.has("dmg_taken_mult"):
 			s["dmg_taken_mult"] *= float(b["dmg_taken_mult"])
+	# v3.7: Rank de Estudo (horas de foco): +2% de XP por rank
+	if Story.started():
+		s["xp_pct"] += Data.STUDY_RANK_XP * float(Story.study_rank())
 	s["atk"] *= 1.0 + s["atk_pct"]
 	s["def"] *= 1.0 + s["def_pct"]
 	s["speed"] *= 1.0 + s["speed_pct"]
@@ -1329,6 +1333,44 @@ func set_sfx_volume(volume: float) -> void:
 const MINIGAME_FULL := 5
 
 
+## v3.7: ofício do caminho escolhido (história v4)? Antes da Formatura todos contam igual.
+func is_path_profession(id: String) -> bool:
+	var p := str(Data.PROFESSIONS.get(id, {}).get("path", ""))
+	return p != "" and p == Story.path()
+
+
+func profession_xp(id: String) -> int:
+	return int(professions.get(id, 0))
+
+
+func profession_rank(id: String) -> int:
+	var xp := profession_xp(id)
+	var r := 0
+	for i in Data.PROF_XP.size():
+		if xp >= int(Data.PROF_XP[i]):
+			r = i
+	return r
+
+
+func profession_rank_name(id: String) -> String:
+	return Data.PROF_RANKS[profession_rank(id)]
+
+
+## Soma a experiência de ofício de uma partida (`score` 0..1) e devolve {gain, rank_before, rank_after}.
+func add_profession_xp(id: String, score: float) -> Dictionary:
+	var before := profession_rank(id)
+	var gain := int(round(clampf(score, 0.0, 1.0) * 40.0)) + 4
+	if is_path_profession(id):
+		gain *= 2
+	professions[id] = profession_xp(id) + gain
+	var after := profession_rank(id)
+	if after > before:
+		Audio.jingle("levelup", -4.0)
+		toast.emit("Patente de ofício: %s %s!" % [Data.PROF_RANKS[after], str(Data.PROFESSIONS[id]["name"])], Color("ffd27a"))
+	_queue_save()
+	return {"gain": gain, "before": before, "after": after}
+
+
 func minigame_reward(id: String, score: float) -> Dictionary:
 	score = clampf(score, 0.0, 1.0)
 	if str(minigame_plays.get("date", "")) != _today():
@@ -1336,8 +1378,10 @@ func minigame_reward(id: String, score: float) -> Dictionary:
 	var played := int(minigame_plays.get(id, 0))
 	minigame_plays[id] = played + 1
 	var factor := 1.0 if played < MINIGAME_FULL else 0.25
-	var xp_gain := int(round(float(Data.xp_for_level(level)) * 0.03 * score * factor))
-	var gold_gain := int(round((10.0 + float(level) * 1.5) * score * factor))
+	# v3.7: o ofício do seu caminho rende +25%; a patente do ofício soma +5% por patente
+	var prof_k := (1.25 if is_path_profession(id) else 1.0) * (1.0 + 0.05 * float(profession_rank(id)))
+	var xp_gain := int(round(float(Data.xp_for_level(level)) * 0.03 * score * factor * prof_k))
+	var gold_gain := int(round((10.0 + float(level) * 1.5) * score * factor * prof_k))
 	if score > 0.0:
 		xp_gain = maxi(xp_gain, 1)
 		gold_gain = maxi(gold_gain, 1)
@@ -1435,7 +1479,7 @@ func save_now() -> void:
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
 		"music_volume": music_volume, "sfx_volume": sfx_volume,
-		"music_on": music_on, "difficulty": difficulty, "minigame_plays": minigame_plays, "auto_aim": auto_aim, "cam_zoom": cam_zoom, "combat_zoom": combat_zoom, "safe_zone": safe_zone, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
+		"music_on": music_on, "difficulty": difficulty, "minigame_plays": minigame_plays, "professions": professions, "auto_aim": auto_aim, "cam_zoom": cam_zoom, "combat_zoom": combat_zoom, "safe_zone": safe_zone, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
 	}
 	# grava num arquivo temporário e troca: uma queda de energia não corrompe o save
 	var tmp_path := save_path + ".tmp"
@@ -1529,6 +1573,7 @@ func load_game() -> void:
 		music_on = bool(d.get("music_on", true))
 		difficulty = clampi(int(d.get("difficulty", 1)), 0, 2)
 		minigame_plays = _dict_of(d.get("minigame_plays", {}))
+		professions = _dict_of(d.get("professions", {}))
 		auto_aim = bool(d.get("auto_aim", true))
 		cam_zoom = clampf(float(d.get("cam_zoom", CAM_ZOOM_DEFAULT)), CAM_ZOOM_MIN, CAM_ZOOM_MAX)
 		combat_zoom = bool(d.get("combat_zoom", true))
@@ -1650,6 +1695,7 @@ func _reset_defaults() -> void:
 	starve_left = -1.0
 	difficulty = 1
 	minigame_plays = {}
+	professions = {}
 	talent_points = 0
 	energy = Data.ENERGY_DAILY_MIN
 	for slot in Data.EQUIP_SLOTS:
