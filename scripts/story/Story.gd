@@ -302,6 +302,7 @@ func _talk(npc: String) -> void:
 			if s == "c1_casa":
 				await say("c1_despedida")
 				set_flag("bussola")
+				HUD.show_compass_gain()
 				set_step("c1_marta")
 			else:
 				await say("mae_livre")

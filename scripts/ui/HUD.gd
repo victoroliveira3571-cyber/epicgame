@@ -826,10 +826,22 @@ class Minimap extends Control:
 		draw_rect(Rect2(2 + pc.x * CELL - 1, 2 + pc.y * CELL - 1, 4, 4), UI.C_TEXT)
 
 
+var _compass: ObjectiveCompass
+
+
+## v2.9: animação de item recebido (Bússola da mãe) e a seta de objetivo na borda da tela.
+func show_compass_gain() -> void:
+	if _compass != null:
+		_compass.play_gain()
+		Audio.jingle("success2", -4.0)
+
+
 func _build_minimap() -> void:
 	_minimap = Minimap.new()
 	_minimap.position = Vector2(UI.SIZE.x - 130, 62)
 	root.add_child(_minimap)
+	_compass = ObjectiveCompass.new()
+	root.add_child(_compass)
 
 
 # ================================================================== Chefe

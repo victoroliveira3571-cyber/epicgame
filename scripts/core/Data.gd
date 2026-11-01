@@ -874,11 +874,14 @@ const FURNITURE := {
 	"mesa_toalha": {"name": "Mesa com Toalha", "price": 90, "desc": "Decoração.", "stat": {}, "icon": "lpc_mesa_toalha"},
 	"mesa_redonda": {"name": "Mesa Redonda", "price": 80, "desc": "Decoração.", "stat": {}, "icon": "lpc_mesa_redonda"},
 	"mesa_centro": {"name": "Mesa de Centro", "price": 40, "desc": "Decoração.", "stat": {}, "icon": "lpc_mesa_centro"},
+	# v2.9: divisórias para repartir a sala (têm colisão; cada peça tem 3 tiles de largura)
+	"divisoria_madeira": {"name": "Divisória de Madeira", "price": 50, "desc": "Parede baixa para dividir cômodos.", "stat": {}, "icon": "divisoria_madeira"},
+	"divisoria_pedra": {"name": "Divisória de Pedra", "price": 90, "desc": "Parede baixa de pedra para dividir cômodos.", "stat": {}, "icon": "divisoria_pedra"},
 }
 const FURNITURE_ORDER := ["cama", "mesa", "estante", "planta", "tapete", "lareira", "trofeu", "relogio",
 	"poltrona", "sofa", "comoda", "tapete_azul", "tatame", "vaso_flores", "planta_pequena", "lampiao",
 	"sofa_veludo", "sofa_imperial", "banco_estofado", "cadeira", "pufe", "abajur", "armario", "louceiro", "lareira_tijolos",
-	"barris", "mesa_toalha", "mesa_redonda", "mesa_centro"]
+	"barris", "mesa_toalha", "mesa_redonda", "mesa_centro", "divisoria_madeira", "divisoria_pedra"]
 
 # ---------------------------------------------------------------------- Energia
 const ENERGY_MAX := 10
