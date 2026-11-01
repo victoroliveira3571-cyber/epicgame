@@ -104,7 +104,7 @@ func _collect(player: Player) -> void:
 	var world := get_parent()
 	match kind:
 		"gold":
-			var gained := GameState.add_gold(amount, true)
+			var gained := GameState.add_gold(int(round(float(amount) * GameState.reward_mult())), true)
 			Game.run_add("gold", gained)
 			Audio.sfx("coin_big" if amount >= 25 else "coin", -8.0, 0.12)
 			Fx.float_text(world, "+%d" % gained, global_position + Vector2(0, -10), Color("ffd84a"))

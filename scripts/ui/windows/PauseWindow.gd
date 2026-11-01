@@ -51,10 +51,33 @@ func build() -> void:
 		Audio.ui_click()
 		GameState.set_music_on(not GameState.music_on)
 		music.text = "Música: ligada" if GameState.music_on else "Música: desligada")
+	var diff := UI.button("Dificuldade: " + GameState.DIFFICULTY_NAMES[GameState.difficulty], Callable(), 130)
+	diff.tooltip_text = "Fácil: -30% de dano recebido, -20% de recompensa. Difícil: +40% de dano, +30% de recompensa."
+	diff.pressed.connect(func() -> void:
+		Audio.ui_click()
+		GameState.set_difficulty((GameState.difficulty + 1) % 3)
+		diff.text = "Dificuldade: " + GameState.DIFFICULTY_NAMES[GameState.difficulty])
 	var toggles := UI.hbox(6)
 	toggles.add_child(mute)
 	toggles.add_child(music)
+	toggles.add_child(diff)
+	var aim := UI.button("Mira: automática" if GameState.auto_aim else "Mira: manual", Callable(), 120)
+	aim.tooltip_text = "Automática: vira para o inimigo próximo ao atacar. Manual: ataca para onde você olha."
+	aim.pressed.connect(func() -> void:
+		Audio.ui_click()
+		GameState.set_auto_aim(not GameState.auto_aim)
+		aim.text = "Mira: automática" if GameState.auto_aim else "Mira: manual")
+	var safe := UI.button("Zona segura: ligada" if GameState.safe_zone else "Zona segura: desligada", Callable(), 150)
+	safe.tooltip_text = "Ligada: golpes não ferem moradores na cidade (evita prisão por acidente). Desligada: a lei volta a valer."
+	safe.pressed.connect(func() -> void:
+		Audio.ui_click()
+		GameState.set_safe_zone(not GameState.safe_zone)
+		safe.text = "Zona segura: ligada" if GameState.safe_zone else "Zona segura: desligada")
+	var toggles2 := UI.hbox(6)
+	toggles2.add_child(aim)
+	toggles2.add_child(safe)
 	v.add_child(toggles)
+	v.add_child(toggles2)
 	v.add_child(UI.hline())
 	v.add_child(UI.label("Controles", UI.C_ORANGE_L))
 	var keys := [

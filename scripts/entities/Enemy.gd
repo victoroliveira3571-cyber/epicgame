@@ -665,7 +665,7 @@ static func _retry_respawn(parent: Node, id: String, pos: Vector2, floor_number:
 
 
 func _award_and_drop() -> void:
-	var gained_xp := GameState.add_xp(xp_reward)
+	var gained_xp := GameState.add_xp(int(round(float(xp_reward) * GameState.reward_mult())))
 	Game.run_add("xp", gained_xp)
 	GameState.register_monster_defeated(is_boss)
 	Game.run_add("kills")

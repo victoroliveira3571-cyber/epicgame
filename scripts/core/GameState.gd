@@ -65,6 +65,13 @@ var audio_muted: bool = false
 var audio_volume: float = 1.0
 var music_volume: float = 0.7
 var sfx_volume: float = 1.0  # efeitos (golpes, magias, passos, sons de ação)
+# v2.4: dificuldade (0 fácil, 1 médio, 2 difícil): dano recebido e recompensa de monstros (XP e ouro)
+const DIFFICULTY_NAMES := ["Fácil", "Médio", "Difícil"]
+const DIFFICULTY_DMG := [0.7, 1.0, 1.4]
+const DIFFICULTY_REWARD := [0.8, 1.0, 1.3]
+var difficulty: int = 1
+var auto_aim: bool = true      # v2.6: mira automática (corpo e ataques viram para o inimigo próximo)
+var safe_zone: bool = true     # v2.6: fora de floresta e masmorra os golpes não atingem moradores
 var music_on: bool = true    # liga/desliga só a música (Pomodoro e pausa)
 var clock_on: bool = true    # tique-taque do relógio durante o foco
 var tutorial_done: Dictionary = {}
@@ -79,6 +86,8 @@ var _save_queued: bool = false
 var _save_timer: float = 0.0
 var _regen_accum: float = 0.0
 var _hunger_accum: float = 0.0
+const STARVE_SECONDS := 60.0
+var starve_left: float = -1.0           # v2.4: fome zerada = 1 min para comer, senão desmaia (-1 = sem contagem)
 var _day_check_timer: float = 0.0
 
 
@@ -730,7 +739,7 @@ func is_alive() -> bool:
 func take_damage(raw: float) -> int:
 	var st := get_stats()
 	var reduction: float = float(st["def"]) / (float(st["def"]) + 40.0)
-	var amount := maxi(1, int(round(raw * (1.0 - reduction) * float(st["dmg_taken_mult"]))))
+	var amount := maxi(1, int(round(raw * (1.0 - reduction) * float(st["dmg_taken_mult"]) * float(DIFFICULTY_DMG[difficulty]))))
 	hp = maxi(hp - amount, 0)
 	if no_death and hp <= 0:
 		hp = 1
@@ -757,6 +766,9 @@ func full_heal() -> void:
 
 func revive_after_defeat() -> void:
 	hp = maxi(1, int(get_max_hp() / 2.0))
+	if hunger <= 0:
+		hunger = 30   # senão a fome mataria de novo logo ao acordar
+	starve_left = -1.0
 	_queue_save()
 	stats_changed.emit()
 
@@ -776,6 +788,7 @@ func _tick_regen_and_hunger(delta: float) -> void:
 				_regen_accum -= whole
 				hp = mini(max_hp, hp + whole)
 				stats_changed.emit()
+	_tick_starvation(delta)
 	if in_dungeon:
 		_hunger_accum += delta * stat("hunger_mult")
 		if _hunger_accum >= 45.0:
@@ -787,6 +800,35 @@ func _tick_regen_and_hunger(delta: float) -> void:
 					toast.emit("Você está com fome! Coma algo (F).", Color("ffb23e"))
 					Audio.sfx("cough", -4.0)
 				stats_changed.emit()
+
+
+## Fome zerada: contagem regressiva de 1 minuto. Comer cancela; se zerar, o herói desmaia
+## (mesmo caminho da derrota: player_died, a cena leva de volta à cidade).
+func _tick_starvation(delta: float) -> void:
+	if hunger > 0 or hp <= 0:
+		starve_left = -1.0
+		return
+	if starve_left < 0.0:
+		starve_left = STARVE_SECONDS
+		toast.emit("Fome! Você tem 1 minuto para comer (F).", Color("ff6a5a"))
+		return
+	var before := starve_left
+	starve_left = maxf(starve_left - delta, 0.0)
+	for mark in [30.0, 10.0]:
+		if before > mark and starve_left <= mark:
+			toast.emit("Faltam %d s para desmaiar de fome!" % int(mark), Color("ff6a5a"))
+	if int(ceil(before)) != int(ceil(starve_left)):
+		stats_changed.emit()
+	if starve_left <= 0.0:
+		starve_left = -1.0
+		toast.emit("Você desmaiou de fome.", Color("ff6a5a"))
+		if no_death:
+			hp = 1
+			hunger = 20
+		else:
+			hp = 0
+			player_died.emit()
+		stats_changed.emit()
 
 
 # ======================================================================= Fome
@@ -1109,12 +1151,45 @@ func buy_furniture(furniture_id: String) -> bool:
 
 
 # ===================================================================== Hábitos
+func _new_habit(n: int) -> Dictionary:
+	return {"name": "Hábito %d" % n, "streak": 0, "best_streak": 0,
+		"last_completed_date": "", "total_completions": 0, "difficulty": 1}
+
+
+## Só preenche os 5 iniciais num jogo novo: a lista é do jogador (v2.5: adicionar, remover, dificuldade).
 func _ensure_habits() -> void:
-	while habits.size() < Data.HABIT_SLOTS:
-		habits.append({
-			"name": "Hábito %d" % (habits.size() + 1), "streak": 0, "best_streak": 0,
-			"last_completed_date": "", "total_completions": 0,
-		})
+	if habits.is_empty():
+		for i in Data.HABIT_SLOTS:
+			habits.append(_new_habit(i + 1))
+
+
+func add_habit() -> bool:
+	if habits.size() >= Data.HABIT_MAX:
+		return false
+	habits.append(_new_habit(habits.size() + 1))
+	_queue_save()
+	stats_changed.emit()
+	return true
+
+
+func remove_habit(index: int) -> void:
+	if index < 0 or index >= habits.size() or habits.size() <= 1:
+		return
+	habits.remove_at(index)
+	_queue_save()
+	stats_changed.emit()
+
+
+func set_habit_difficulty(index: int, d: int) -> void:
+	if index < 0 or index >= habits.size():
+		return
+	habits[index]["difficulty"] = clampi(d, 0, 2)
+	_queue_save()
+	stats_changed.emit()
+
+
+func habit_mult(index: int) -> float:
+	return float(Data.HABIT_DIFF_MULT[clampi(int(habits[index].get("difficulty", 1)), 0, 2)])
 
 
 func rename_habit(index: int, new_name: String) -> void:
@@ -1153,8 +1228,9 @@ func complete_habit(index: int) -> Dictionary:
 	habit["total_completions"] = int(habit.get("total_completions", 0)) + 1
 	habits[index] = habit
 	var bonus := int(new_streak / 5.0)
-	var xp_gain := 8 + bonus * 3
-	var gold_gain := 6 + bonus * 4
+	var m := habit_mult(index)
+	var xp_gain := int(round(float(8 + bonus * 3) * m))
+	var gold_gain := int(round(float(6 + bonus * 4) * m))
 	bump("habit_marks")
 	add_gold(gold_gain)
 	add_xp(xp_gain, false)
@@ -1200,6 +1276,26 @@ func set_sfx_volume(volume: float) -> void:
 	stats_changed.emit()
 
 
+func set_difficulty(d: int) -> void:
+	difficulty = clampi(d, 0, 2)
+	_queue_save()
+	stats_changed.emit()
+
+
+func set_auto_aim(on: bool) -> void:
+	auto_aim = on
+	_queue_save()
+
+
+func set_safe_zone(on: bool) -> void:
+	safe_zone = on
+	_queue_save()
+
+
+func reward_mult() -> float:
+	return float(DIFFICULTY_REWARD[difficulty])
+
+
 func set_music_on(on: bool) -> void:
 	music_on = on
 	_queue_save()
@@ -1239,7 +1335,7 @@ func save_now() -> void:
 		"counters": counters, "claimed_missions": claimed_missions, "daily": daily,
 		"habits": habits, "audio_muted": audio_muted, "audio_volume": audio_volume,
 		"music_volume": music_volume, "sfx_volume": sfx_volume,
-		"music_on": music_on, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
+		"music_on": music_on, "difficulty": difficulty, "auto_aim": auto_aim, "safe_zone": safe_zone, "clock_on": clock_on, "tutorial_done": tutorial_done, "pomo_cfg": pomo_cfg,
 	}
 	# grava num arquivo temporário e troca: uma queda de energia não corrompe o save
 	var tmp_path := save_path + ".tmp"
@@ -1330,6 +1426,9 @@ func load_game() -> void:
 		daily = _dict_of(d.get("daily", {}))
 		music_volume = float(d.get("music_volume", 0.7))
 		music_on = bool(d.get("music_on", true))
+		difficulty = clampi(int(d.get("difficulty", 1)), 0, 2)
+		auto_aim = bool(d.get("auto_aim", true))
+		safe_zone = bool(d.get("safe_zone", true))
 		clock_on = bool(d.get("clock_on", true))
 		tutorial_done = _dict_of(d.get("tutorial_done", {}))
 		var pc := _dict_of(d.get("pomo_cfg", {}))
@@ -1444,6 +1543,8 @@ func _reset_defaults() -> void:
 	xp_to_next = Data.xp_for_level(1)
 	gold = 25
 	hunger = 100
+	starve_left = -1.0
+	difficulty = 1
 	talent_points = 0
 	energy = Data.ENERGY_DAILY_MIN
 	for slot in Data.EQUIP_SLOTS:

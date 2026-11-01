@@ -299,6 +299,8 @@ func _attack() -> void:
 	if heavy:
 		combo = 0
 	swing_time = 0.16
+	if not Data.CLASSES[GameState.player_class]["ranged"]:
+		_face_nearest_enemy()
 	_play_attack_anim(family, heavy)
 	attacked.emit()
 	if Data.CLASSES[GameState.player_class]["ranged"]:
@@ -309,6 +311,15 @@ func _attack() -> void:
 		_shoot(heavy)
 	else:
 		_melee(family, heavy)
+
+
+## Zona segura: na cidade e dentro de prédios os golpes ignoram moradores (sem agressão nem prisão
+## por acidente). Desligável na Pausa.
+func _npcs_protected() -> bool:
+	if not GameState.safe_zone:
+		return false
+	var scene := get_tree().current_scene
+	return scene == null or not (scene.is_in_group("forest") or scene.is_in_group("dungeon"))
 
 
 func _melee(family: String, heavy: bool) -> void:
@@ -327,7 +338,10 @@ func _melee(family: String, heavy: bool) -> void:
 	if state == State.DEAD:
 		return
 	var hit_any := false
-	for e in get_tree().get_nodes_in_group("enemy") + get_tree().get_nodes_in_group("npc_hit"):
+	var victims: Array = get_tree().get_nodes_in_group("enemy")
+	if not _npcs_protected():
+		victims += get_tree().get_nodes_in_group("npc_hit")
+	for e in victims:
 		if not is_instance_valid(e) or not e.has_method("take_hit"):
 			continue
 		if e.has_method("is_targetable") and not e.is_targetable():
@@ -372,7 +386,16 @@ func _swing_visual(dir: Vector2, heavy: bool) -> void:
 	tw.tween_callback(func() -> void: weapon_pivot.visible = false)
 
 
+## Mira automática (corpo a corpo): vira para o inimigo mais próximo ao atacar.
+func _face_nearest_enemy() -> void:
+	var t := _best_target(64.0, 180.0)
+	if t != null:
+		facing = ((t.global_position + Vector2(0, -4)) - (global_position + Vector2(0, -6))).normalized()
+
+
 func _best_target(max_dist: float, cone_deg: float) -> Node2D:
+	if not GameState.auto_aim:
+		return null
 	var best: Node2D = null
 	var best_score := INF
 	var origin := global_position + Vector2(0, -6)

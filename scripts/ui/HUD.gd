@@ -239,7 +239,10 @@ func _refresh_card() -> void:
 	var max_hp := GameState.get_max_hp()
 	_hp_bar.set_ratio(float(GameState.hp) / float(max_hp), "%d/%d" % [GameState.hp, max_hp])
 	_xp_bar.set_ratio(float(GameState.xp) / float(maxi(1, GameState.xp_to_next)))
-	_food_bar.set_ratio(float(GameState.hunger) / 100.0)
+	if GameState.starve_left >= 0.0:
+		_food_bar.set_ratio(0.0, "%d s" % int(ceil(GameState.starve_left)))
+	else:
+		_food_bar.set_ratio(float(GameState.hunger) / 100.0)
 	_food_bar.fill = UI.C_FOOD if GameState.hunger > 20 else UI.C_BAD
 	_gold_label.text = "%s" % UI.fmt_int(GameState.gold)
 	_gold_label.position.x = 8

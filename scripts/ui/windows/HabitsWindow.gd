@@ -1,6 +1,6 @@
 extends UIWindow
 
-## Hábitos (T): 5 hábitos diários com sequência. Cada marcação dá XP e ouro.
+## Hábitos (T): hábitos diários (5 iniciais, até 12) com sequência e dificuldade. Cada marcação dá XP e ouro.
 
 var _editing: LineEdit = null
 
@@ -18,7 +18,12 @@ func refresh() -> void:
 
 
 func build() -> void:
-	add_to_body(UI.label("Marque cada hábito uma vez por dia. A sequência aumenta as recompensas.", UI.C_DIM), Vector2(0, 0))
+	add_to_body(UI.label("Uma marcação por dia. Sequência e dificuldade rendem mais.", UI.C_DIM), Vector2(0, 0))
+	var add := UI.button("+ Novo", func() -> void:
+		if not GameState.add_habit():
+			Audio.sfx("ui_error"), 54)
+	add.disabled = GameState.habits.size() >= Data.HABIT_MAX
+	add_to_body(add, Vector2(466, -2))
 	var col := scroll_column(Vector2(0, 18), Vector2(520, 254))
 	for i in GameState.habits.size():
 		var h: Dictionary = GameState.habits[i]
@@ -29,12 +34,12 @@ func build() -> void:
 		var row := UI.hbox(8)
 		card.add_child(row)
 		var left := UI.vbox(2)
-		left.custom_minimum_size.x = 250
+		left.custom_minimum_size.x = 190
 		row.add_child(left)
 		var name_edit := LineEdit.new()
 		name_edit.text = h["name"]
 		name_edit.max_length = 26
-		name_edit.custom_minimum_size = Vector2(240, 16)
+		name_edit.custom_minimum_size = Vector2(180, 16)
 		name_edit.add_theme_font_override("font", Pix.font(1))
 		name_edit.add_theme_font_size_override("font_size", 12)
 		name_edit.text_submitted.connect(func(t: String) -> void:
@@ -54,10 +59,21 @@ func build() -> void:
 		row.add_child(sv)
 		sv.add_child(UI.label("Sequência: %d" % streak, UI.C_ORANGE_L if streak > 0 else UI.C_DIM))
 		var bonus := int((streak + (0 if done else 1)) / 5.0)
-		sv.add_child(UI.label("+%d XP +%d ouro" % [8 + bonus * 3, 6 + bonus * 4], UI.C_DIM))
+		var m := GameState.habit_mult(i)
+		sv.add_child(UI.label("+%d XP +%d ouro" % [int(round(float(8 + bonus * 3) * m)), int(round(float(6 + bonus * 4) * m))], UI.C_DIM))
+		var dl := int(h.get("difficulty", 1))
+		var db := UI.button(Data.HABIT_DIFF_NAMES[dl], func() -> void:
+			Audio.ui_click()
+			GameState.set_habit_difficulty(i, (dl + 1) % 3), 56)
+		db.tooltip_text = "Dificuldade do hábito: quanto mais difícil, mais XP e ouro"
+		row.add_child(db)
 		var b := UI.button("Feito hoje" if done else "Marcar", func() -> void: _mark(i), 70)
 		b.disabled = done
 		row.add_child(b)
+		var rm := UI.button("X", func() -> void:
+			HUD.confirm("Apagar o hábito \"%s\"?" % str(h["name"]), func() -> void: GameState.remove_habit(i)), 16)
+		rm.disabled = GameState.habits.size() <= 1
+		row.add_child(rm)
 
 
 func _days_since(date_str: String) -> int:

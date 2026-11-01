@@ -879,3 +879,6 @@ const ENERGY_PER_RUN := 1
 
 # ------------------------------------------------------------------------ Hábitos
 const HABIT_SLOTS := 5
+const HABIT_MAX := 12
+const HABIT_DIFF_NAMES := ["Fácil", "Médio", "Difícil"]
+const HABIT_DIFF_MULT := [0.7, 1.0, 1.6]   # XP e ouro proporcionais à dificuldade do hábito
