@@ -130,6 +130,12 @@ func _ready() -> void:
 
 
 func _build_sprite() -> void:
+	if data.get("kind", "") == "dt2":
+		var d: Dictionary = DT2Data.SIZES.get(data["dt2"], {})
+		sprite.sprite_frames = Pix.dt2_frames(str(data["dt2"]))
+		sprite.offset = Vector2(0, -(float(d.get("h", 16)) - 16.0) / 2.0)
+		sprite.self_modulate = data.get("tint", Color.WHITE)
+		return
 	var folder := "chars" if data.get("kind", "") == "char" else "monsters"
 	sprite.sprite_frames = Pix.actor_frames("%s/%s.png" % [folder, data["sheet"]])
 	sprite.self_modulate = data.get("tint", Color.WHITE)

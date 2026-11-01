@@ -135,6 +135,40 @@ static func animal_frames(sheet: String) -> SpriteFrames:
 
 
 ## Chefes: várias tiras (idle/walk/hit) em um único SpriteFrames.
+## Monstro do Dungeon Tileset II (tiras em assets/custom/dt2): idle_/walk_/attack_ nas 4 direções (esquerda usa a tira espelhada).
+static func dt2_frames(id: String) -> SpriteFrames:
+	var key := "dt2:" + id
+	if _frames_cache.has(key):
+		return _frames_cache[key]
+	var sf := SpriteFrames.new()
+	sf.remove_animation("default")
+	var d: Dictionary = DT2Data.SIZES.get(id, {})
+	if d.is_empty():
+		_frames_cache[key] = sf
+		return sf
+	var fw: int = d["w"]
+	var fh: int = d["h"]
+	for dn in ["down", "up", "left", "right"]:
+		var suffix := "_l" if dn == "left" else ""
+		for pair in [["idle", "idle", 5.0], ["walk", "run", 9.0], ["attack", "run", 12.0]]:
+			var file := "res://assets/custom/dt2/%s_%s%s.png" % [id, pair[1], suffix]
+			var t: Texture2D = load(file) if ResourceLoader.exists(file) else null
+			var anim: String = "%s_%s" % [pair[0], dn]
+			sf.add_animation(anim)
+			sf.set_animation_speed(anim, float(pair[2]))
+			sf.set_animation_loop(anim, pair[0] != "attack")
+			if t == null:
+				continue
+			var n: int = mini(int(d[pair[1]]), int(t.get_width() / fw))
+			for i in n:
+				var a := AtlasTexture.new()
+				a.atlas = t
+				a.region = Rect2(i * fw, 0, fw, fh)
+				sf.add_frame(anim, a)
+	_frames_cache[key] = sf
+	return sf
+
+
 static func boss_frames(boss_id: String) -> SpriteFrames:
 	var key := "boss:" + boss_id
 	if _frames_cache.has(key):
@@ -142,6 +176,24 @@ static func boss_frames(boss_id: String) -> SpriteFrames:
 	var b: Dictionary = Data.boss_def(boss_id)
 	var sf := SpriteFrames.new()
 	sf.remove_animation("default")
+	if b.has("dt2"):
+		# chefe do Dungeon Tileset II: idle, walk e hit saem das tiras do monstro
+		var d: Dictionary = DT2Data.SIZES.get(b["dt2"], {})
+		for pair in [["idle", "idle", 5.0], ["walk", "run", 9.0], ["hit", "idle", 10.0]]:
+			sf.add_animation(pair[0])
+			sf.set_animation_speed(pair[0], float(pair[2]))
+			sf.set_animation_loop(pair[0], pair[0] != "hit")
+			var file := "res://assets/custom/dt2/%s_%s.png" % [b["dt2"], pair[1]]
+			if d.is_empty() or not ResourceLoader.exists(file):
+				continue
+			var t: Texture2D = load(file)
+			for i in mini(int(d[pair[1]]), int(t.get_width() / int(d["w"]))):
+				var a := AtlasTexture.new()
+				a.atlas = t
+				a.region = Rect2(i * int(d["w"]), 0, int(d["w"]), int(d["h"]))
+				sf.add_frame(pair[0], a)
+		_frames_cache[key] = sf
+		return sf
 	for anim in b["anims"]:
 		var spec: Array = b["anims"][anim]
 		var rel := "bosses/%s_%s.png" % [b["folder"], spec[0]]

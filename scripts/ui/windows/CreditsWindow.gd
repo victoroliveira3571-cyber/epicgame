@@ -27,6 +27,9 @@ const SECTIONS := [
 	["Cidades", [
 		"Casas e cercas: Kenney Tiny Town (CC0, kenney.nl). Barcos: Pixel Boats, de minzinn (arte reduzida e recolorida).",
 	]],
+	["Monstros", [
+		"Dungeon Tileset II, de 0x72 (CC0): duendes, orcs, zumbis, ogros, demônios e os chefes novos.",
+	]],
 	["Mini-jogos", [
 		"Forja: kanmandev (Blacksmith), Anvil 2 (OpenGameArt, CC0), life-in-pixels (Sword and hammer character).",
 		"Cozinha: Lucky Loops (64 Food Icons), Luca Pixel (CC0), ElectrikJelli, caldeirão CC0 (OpenGameArt).",

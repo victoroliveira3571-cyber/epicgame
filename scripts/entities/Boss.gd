@@ -59,8 +59,8 @@ func _setup_stats() -> void:
 	gold_range = [int(round(float(boss_data["gold"][0]) * Data.BOSS_GOLD_MULT)), int(round(float(boss_data["gold"][1]) * Data.BOSS_GOLD_MULT))]
 	aggro_radius = 170.0
 	leash_radius = 400.0
-	base_scale = float(boss_data.get("scale", 1.0)) if char_sheet != "" else 1.0
-	if char_sheet != "":
+	base_scale = float(boss_data.get("scale", 1.0)) if (char_sheet != "" or boss_data.has("dt2")) else 1.0
+	if char_sheet != "" or boss_data.has("dt2"):
 		body_radius = float(boss_data["radius"]) / base_scale   # a colisão já multiplica pela escala
 	attack_cd = 1.5
 	if story_boss and String(boss_data.get("quiz", "")) != "":
@@ -91,7 +91,7 @@ func _build_sprite() -> void:
 	else:
 		sprite.sprite_frames = Pix.boss_frames(boss_id)
 		var t: Texture2D = sprite.sprite_frames.get_frame_texture("idle", 0)
-		frame_h = float(t.get_height()) if t != null else 32.0
+		frame_h = (float(t.get_height()) if t != null else 32.0) * (base_scale if boss_data.has("dt2") else 1.0)
 	sprite.self_modulate = boss_data.get("tint", Color.WHITE)
 
 

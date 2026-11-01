@@ -611,6 +611,26 @@ const MONSTERS := {
 	"guardiao": {"name": "Guardião de Pedra", "sheet": "Statue", "kind": "char", "hp": 70, "dmg": 13, "speed": 26.0, "behavior": "melee", "xp": 14, "gold": [5, 12], "radius": 6.0, "tint": Color(0.75, 0.78, 0.82)},
 	"pagina": {"name": "Página Viva", "sheet": "Larva", "hp": 24, "dmg": 9, "speed": 48.0, "behavior": "flyer", "xp": 8, "gold": [3, 8], "radius": 4.0, "tint": Color(1.0, 0.95, 0.8)},
 	"sombra": {"name": "Sombra Esquecida", "sheet": "Skeleton", "kind": "char", "hp": 52, "dmg": 14, "speed": 38.0, "behavior": "melee", "xp": 13, "gold": [5, 12], "radius": 5.0, "tint": Color(0.5, 0.45, 0.65)},
+	# --- v3.4: monstros do Dungeon Tileset II (0x72, CC0)
+	"duende": {"name": "Duende Ladrão", "kind": "dt2", "dt2": "duende", "hp": 24, "dmg": 8, "speed": 52.0, "behavior": "melee", "xp": 9, "gold": [4, 12], "radius": 5.0},
+	"zumbi": {"name": "Zumbi", "kind": "dt2", "dt2": "zumbi", "hp": 58, "dmg": 12, "speed": 22.0, "behavior": "melee", "xp": 11, "gold": [4, 11], "radius": 5.0},
+	"necromante": {"name": "Necromante", "kind": "dt2", "dt2": "necromante", "hp": 34, "dmg": 13, "speed": 28.0, "behavior": "ranged", "xp": 14, "gold": [6, 14], "radius": 5.0, "proj": "orb", "range": 120.0, "cooldown": 2.6},
+	"lodoso": {"name": "Lodoso", "kind": "dt2", "dt2": "lodoso", "hp": 42, "dmg": 10, "speed": 26.0, "behavior": "hopper", "xp": 9, "gold": [3, 9], "radius": 5.0},
+	"pantaneiro": {"name": "Pantaneiro", "kind": "dt2", "dt2": "pantaneiro", "hp": 38, "dmg": 11, "speed": 30.0, "behavior": "ranged", "xp": 11, "gold": [4, 10], "radius": 5.0, "proj": "spore", "range": 100.0, "cooldown": 2.2},
+	"lesma": {"name": "Lesma Gigante", "kind": "dt2", "dt2": "lesma", "hp": 30, "dmg": 7, "speed": 18.0, "behavior": "hopper", "xp": 7, "gold": [2, 7], "radius": 5.0},
+	"diabrete": {"name": "Diabrete", "kind": "dt2", "dt2": "diabrete", "hp": 28, "dmg": 11, "speed": 48.0, "behavior": "charger", "xp": 12, "gold": [5, 12], "radius": 5.0},
+	"chort": {"name": "Chort", "kind": "dt2", "dt2": "chort", "hp": 52, "dmg": 14, "speed": 38.0, "behavior": "melee", "xp": 14, "gold": [6, 14], "radius": 5.0},
+	"orc_guerreiro": {"name": "Orc Guerreiro", "kind": "dt2", "dt2": "orc_guerreiro", "hp": 66, "dmg": 15, "speed": 32.0, "behavior": "melee", "xp": 16, "gold": [7, 16], "radius": 5.0},
+	"orc_mascarado": {"name": "Orc Mascarado", "kind": "dt2", "dt2": "orc_mascarado", "hp": 54, "dmg": 14, "speed": 44.0, "behavior": "charger", "xp": 15, "gold": [6, 15], "radius": 5.0},
+	"orc_xama": {"name": "Orc Xamã", "kind": "dt2", "dt2": "orc_xama", "hp": 40, "dmg": 13, "speed": 28.0, "behavior": "ranged", "xp": 15, "gold": [6, 15], "radius": 5.0, "proj": "orb", "range": 115.0, "cooldown": 2.3},
+	"ogro": {"name": "Ogro", "kind": "dt2", "dt2": "ogro", "hp": 100, "dmg": 18, "speed": 26.0, "behavior": "melee", "xp": 22, "gold": [10, 22], "radius": 8.0},
+	"wogol": {"name": "Wogol", "kind": "dt2", "dt2": "wogol", "hp": 56, "dmg": 14, "speed": 36.0, "behavior": "melee", "xp": 15, "gold": [6, 15], "radius": 5.0},
+	"zumbi_gelo": {"name": "Zumbi Gélido", "kind": "dt2", "dt2": "zumbi_gelo", "hp": 64, "dmg": 14, "speed": 24.0, "behavior": "melee", "xp": 14, "gold": [6, 14], "radius": 5.0},
+	"zumbi_pequeno": {"name": "Zumbi Pequeno", "kind": "dt2", "dt2": "zumbi_pequeno", "hp": 30, "dmg": 9, "speed": 34.0, "behavior": "melee", "xp": 8, "gold": [3, 8], "radius": 4.0},
+	"anjo": {"name": "Anjo Caído", "kind": "dt2", "dt2": "anjo", "hp": 36, "dmg": 13, "speed": 42.0, "behavior": "flyer", "xp": 14, "gold": [6, 14], "radius": 5.0},
+	"abobora": {"name": "Abóbora Maldita", "kind": "dt2", "dt2": "abobora", "hp": 46, "dmg": 12, "speed": 30.0, "behavior": "melee", "xp": 12, "gold": [5, 12], "radius": 5.0},
+	"doutor": {"name": "Doutor Maluco", "kind": "dt2", "dt2": "doutor", "hp": 40, "dmg": 12, "speed": 26.0, "behavior": "ranged", "xp": 13, "gold": [5, 13], "radius": 5.0, "proj": "orb", "range": 110.0, "cooldown": 2.4},
+	"lesminha": {"name": "Lesminha", "kind": "dt2", "dt2": "lesminha", "hp": 20, "dmg": 6, "speed": 22.0, "behavior": "hopper", "xp": 6, "gold": [2, 6], "radius": 4.0},
 }
 
 # Chefes: sprites em tiras horizontais. frames = quantidade; w = largura de cada quadro.
@@ -626,10 +646,18 @@ const BOSSES := {
 		"patterns": ["charge", "burst", "summon", "slam"], "anims": {"idle": ["Idle", 82, 6, 6], "walk": ["Walk", 82, 10, 9], "hit": ["Hit", 82, 8, 10]}, "summon": "chama"},
 	"samurai_azul": {"name": "Samurai Gigante", "folder": "GiantBlueSamurai", "hp": 2300, "dmg": 46, "speed": 34.0, "xp": 1000, "gold": [320, 450], "radius": 15.0,
 		"patterns": ["charge", "slam", "burst"], "anims": {"idle": ["Idle", 48, 12, 7], "walk": ["Walk", 48, 12, 10], "hit": ["Hit", 48, 8, 10]}, "summon": "fera"},
+	"ogro_ancestral": {"name": "Ogro Ancestral", "dt2": "ogro", "scale": 2.4, "hp": 950, "dmg": 27, "speed": 28.0, "xp": 380, "gold": [130, 190], "radius": 18.0,
+		"patterns": ["slam", "charge", "burst"], "anims": {}, "summon": "orc_guerreiro"},
+	"zumbi_colossal": {"name": "Zumbi Colossal", "dt2": "zumbi_grande", "scale": 2.4, "hp": 1450, "dmg": 34, "speed": 24.0, "xp": 600, "gold": [200, 290], "radius": 18.0,
+		"patterns": ["slam", "summon", "burst"], "anims": {}, "summon": "zumbi", "tint": Color(0.85, 1.0, 0.85)},
+	"demonio_abissal": {"name": "Demônio Abissal", "dt2": "demonio_grande", "scale": 2.4, "hp": 2000, "dmg": 42, "speed": 34.0, "xp": 850, "gold": [280, 390], "radius": 18.0,
+		"patterns": ["charge", "burst", "summon", "slam"], "anims": {}, "summon": "diabrete"},
+	"orc_senhor": {"name": "Senhor da Guerra Orc", "dt2": "ogro", "scale": 2.6, "hp": 2600, "dmg": 50, "speed": 32.0, "xp": 1150, "gold": [360, 500], "radius": 19.0,
+		"patterns": ["charge", "slam", "burst", "summon"], "anims": {}, "summon": "orc_mascarado", "tint": Color(1.0, 0.75, 0.7)},
 	"guaxinim_gigante": {"name": "Guaxinim Gigante", "folder": "GiantRacoon", "hp": 2900, "dmg": 54, "speed": 32.0, "xp": 1300, "gold": [400, 560], "radius": 14.0,
 		"patterns": ["slam", "burst", "summon", "charge"], "anims": {"idle": ["Idle", 60, 6, 6], "walk": ["Idle", 60, 6, 8], "hit": ["Idle", 60, 6, 10]}, "summon": "ciclope"},
 }
-const BOSS_ORDER := ["slime_gigante", "ciclope_demoniaco", "sapo_gigante", "tengu_rubro", "samurai_azul", "guaxinim_gigante"]
+const BOSS_ORDER := ["slime_gigante", "ciclope_demoniaco", "ogro_ancestral", "sapo_gigante", "zumbi_colossal", "tengu_rubro", "demonio_abissal", "samurai_azul", "orc_senhor", "guaxinim_gigante"]
 
 # Chefes da história. "char" = usa a folha de personagem (4 direções) ampliada por "scale".
 # gate_hours: horas de foco acumuladas para o chefe aceitar a luta. quiz: formato das perguntas
@@ -739,9 +767,12 @@ const PET_ORDER := ["corvin", "brisa", "lumen", "airevis"]
 # Biomas: 4 camadas de 5 andares. floor_style escolhe a paleta do chão/parede.
 const BIOMES := [
 	{"name": "Caverna Úmida", "music": "dungeon1", "style": 0, "enemies": ["slime", "rato", "morcego", "cogumelo"], "boss_color": Color.WHITE},
-	{"name": "Cripta Esquecida", "music": "dungeon2", "style": 1, "enemies": ["esqueleto", "cranio", "espirito", "aranha", "lagarto"], "boss_color": Color.WHITE},
-	{"name": "Pântano Sombrio", "music": "dungeon3", "style": 2, "enemies": ["kappa", "cobra", "polvo", "reptil", "slime_verde"], "boss_color": Color.WHITE},
-	{"name": "Forja Infernal", "music": "dungeon4", "style": 3, "enemies": ["chama", "ciclope", "fera", "polvo_vermelho", "demonio"], "boss_color": Color.WHITE},
+	{"name": "Cripta Esquecida", "music": "dungeon2", "style": 1, "enemies": ["esqueleto", "cranio", "espirito", "aranha", "lagarto", "duende", "zumbi", "necromante"], "boss_color": Color.WHITE},
+	{"name": "Pântano Sombrio", "music": "dungeon3", "style": 2, "enemies": ["kappa", "cobra", "polvo", "reptil", "slime_verde", "lodoso", "pantaneiro", "lesma"], "boss_color": Color.WHITE},
+	{"name": "Forja Infernal", "music": "dungeon4", "style": 3, "enemies": ["chama", "ciclope", "fera", "polvo_vermelho", "demonio", "diabrete", "chort"], "boss_color": Color.WHITE},
+	{"name": "Fortaleza Orc", "music": "dungeon3", "style": 2, "enemies": ["orc_guerreiro", "orc_mascarado", "orc_xama", "ogro", "wogol"], "boss_color": Color.WHITE},
+	{"name": "Catacumbas Geladas", "music": "dungeon2", "style": 1, "enemies": ["zumbi_gelo", "zumbi_pequeno", "anjo"], "boss_color": Color.WHITE},
+	{"name": "Jardim Maldito", "music": "dungeon1", "style": 0, "enemies": ["abobora", "doutor", "lesminha"], "boss_color": Color.WHITE},
 ]
 
 
