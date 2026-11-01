@@ -326,6 +326,8 @@ const BOOT_SPEED := [2.0, 3.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0]
 const AMULET_CRIT := [2.0, 3.0, 4.5, 6.5, 9.0, 12.0, 15.0, 18.0]
 const AMULET_LUCK := [1.0, 2.0, 3.5, 5.0, 7.0, 10.0, 13.0, 16.0]
 const TIER_PRICE := [30, 90, 260, 700, 1800, 4500, 11000, 28000]
+# v3.5: ícone do amuleto por tier (Kyrise's 16x16 RPG Icon Pack, assets/custom/icons_k): o resto do equipamento usa o desenho do herói
+const AMULET_ICONS := ["necklace_01a", "necklace_01b", "necklace_02b", "necklace_02d", "necklace_01c", "necklace_03e", "necklace_03a", "necklace_03d"]
 const SLOT_PRICE_MULT := {"weapon": 1.3, "helmet": 0.7, "armor": 1.2, "shield": 0.9, "boots": 0.6, "amulet": 1.0}
 
 const UPGRADE_MAX := 5
@@ -336,8 +338,8 @@ const MATERIALS := {
 	"barra_prata": {"name": "Barra de Prata", "icon": "items/resource/BarSilver", "price": 80, "tier": 2},
 	"barra_ouro": {"name": "Barra de Ouro", "icon": "items/resource/BarGold", "price": 160, "tier": 3},
 	"barra_mithril": {"name": "Barra de Mithril", "icon": "items/resource/BarMithril", "price": 320, "tier": 4},
-	"barra_obsidiana": {"name": "Barra de Obsidiana", "icon": "items/resource/BarMithril", "price": 640, "tier": 5, "tint": Color(0.55, 0.42, 0.75)},
-	"barra_adamantium": {"name": "Barra de Adamantium", "icon": "items/resource/BarMithril", "price": 1300, "tier": 6, "tint": Color(0.45, 0.95, 0.8)},
+	"barra_obsidiana": {"name": "Barra de Obsidiana", "icon": "res://assets/custom/icons_k/crystal_01i.png", "price": 640, "tier": 5},
+	"barra_adamantium": {"name": "Barra de Adamantium", "icon": "res://assets/custom/icons_k/gem_01a.png", "price": 1300, "tier": 6},
 	"gema_verde": {"name": "Gema Verde", "icon": "items/resource/GemGreen", "price": 60, "tier": 1},
 	"gema_roxa": {"name": "Gema Roxa", "icon": "items/resource/GemPurple", "price": 120, "tier": 2},
 	"gema_vermelha": {"name": "Gema Vermelha", "icon": "items/resource/GemRed", "price": 240, "tier": 3},
@@ -459,6 +461,8 @@ func _build_items() -> void:
 			if slot == "boots":
 				it["speed"] = BOOT_SPEED[t]
 			if slot == "amulet":
+				it["icon"] = "res://assets/custom/icons_k/%s.png" % AMULET_ICONS[t]
+				it["tint"] = Color.WHITE
 				it["crit"] = AMULET_CRIT[t]
 				it["luck"] = AMULET_LUCK[t]
 			ITEMS[it["id"]] = it

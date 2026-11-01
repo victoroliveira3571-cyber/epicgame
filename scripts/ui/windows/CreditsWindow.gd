@@ -27,6 +27,10 @@ const SECTIONS := [
 	["Cidades", [
 		"Casas e cercas: Kenney Tiny Town (CC0, kenney.nl). Barcos: Pixel Boats, de minzinn (arte reduzida e recolorida).",
 	]],
+	["Ícones", [
+		"Amuletos e barras de Obsidiana e Adamantium: Kyrise's 16x16 RPG Icon Pack (Kyrise, CC-BY 4.0).",
+		"Estações animadas das cidades: Pixel Crawler, de Anokolisa.",
+	]],
 	["Monstros", [
 		"Dungeon Tileset II, de 0x72 (CC0): duendes, orcs, zumbis, ogros, demônios e os chefes novos.",
 	]],

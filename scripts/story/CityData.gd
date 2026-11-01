@@ -42,6 +42,10 @@ const CITIES := {
 			["i_board", [29, 27]], ["k_cerca_3", [14, 33]], ["k_placa", [17, 27]], ["n_pedra_cinza", [3, 38]], ["n_pedra_cinza_g", [57, 40]],
 			["barco_vela_marrom", [24, 41]], ["barco_vela_azul", [49, 40]], ["barco_remo", [12, 40]], ["barco_caiaque", [34, 42]], ["barco_remo", [45, 38]],
 		],
+		"anim": [
+			{"sheet": "pc_grill1.png", "fw": 64, "fh": 64, "cols": 4, "from": 0, "n": 4, "fps": 5.0, "tile": [21, 29]},
+			{"sheet": "pc_fire1.png", "fw": 32, "fh": 48, "cols": 4, "from": 0, "n": 4, "fps": 8.0, "tile": [37, 30]},
+		],
 		"label": Color("cfe8ff"),
 	},
 	"pedralta": {
@@ -76,6 +80,10 @@ const CITIES := {
 		],
 		"ore": [["barra_mithril", "Mithril", [20, 13]], ["barra_mithril", "Mithril", [36, 14]], ["barra_obsidiana", "Obsidiana", [14, 17]],
 			["barra_obsidiana", "Obsidiana", [42, 17]], ["barra_adamantium", "Adamantium", [28, 8]]],
+		"anim": [
+			{"sheet": "pc_furnace_iron3.png", "fw": 48, "fh": 64, "cols": 2, "from": 0, "n": 4, "fps": 5.0, "tile": [11, 29]},
+			{"sheet": "pc_anvil1.png", "fw": 64, "fh": 80, "cols": 8, "from": 0, "n": 14, "fps": 7.0, "tile": [19, 30]},
+		],
 		"label": Color("27406a"),
 	},
 	"academia": {
@@ -108,6 +116,10 @@ const CITIES := {
 			["h_estatua_grande_verde", [24, 22]], ["h_estatua_grande_verde", [31, 22]], ["h_estatua_pequena", [26, 28]], ["h_estatua_pequena", [29, 28]],
 			["n_arvore_redonda", [6, 20]], ["n_arvore_grande", [50, 20]], ["n_arvores_trio", [6, 32]], ["n_arvore_redonda2", [50, 32]],
 			["n_flor_margarida", [20, 30]], ["n_flor_trevo", [36, 30]], ["i_stool", [17, 25]], ["i_stool", [38, 25]], ["k_cerca_3", [32, 37]], ["k_placa", [28, 27]],
+		],
+		"anim": [
+			{"sheet": "pc_alchemy1.png", "fw": 32, "fh": 64, "cols": 6, "from": 0, "n": 6, "fps": 4.0, "tile": [22, 29]},
+			{"sheet": "pc_alchemy1.png", "fw": 32, "fh": 64, "cols": 6, "from": 6, "n": 20, "fps": 7.0, "tile": [34, 29]},
 		],
 		"label": Color("e4dcff"),
 	},

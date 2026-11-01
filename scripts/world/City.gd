@@ -61,6 +61,7 @@ func _ready() -> void:
 	_build_npcs()
 	_build_decor()
 	_build_ore()
+	_build_anim_decor()
 	_build_exit()
 	_build_title()
 	_spawn_player()
@@ -284,6 +285,39 @@ func _build_decor() -> void:
 			var y0 := holder.position.y
 			tw.tween_property(holder, "position:y", y0 + 2.0, 1.4 + rng.randf() * 0.6).set_trans(Tween.TRANS_SINE)
 			tw.tween_property(holder, "position:y", y0 - 1.0, 1.4 + rng.randf() * 0.6).set_trans(Tween.TRANS_SINE)
+
+
+## v3.5: estações animadas do Pixel Crawler (forno de ferro, grelha, fogueira, bigorna, mesa de alquimia) como cenário vivo.
+func _build_anim_decor() -> void:
+	for d in city.get("anim", []):
+		var sf := SpriteFrames.new()
+		sf.remove_animation("default")
+		sf.add_animation("loop")
+		sf.set_animation_speed("loop", float(d["fps"]))
+		sf.set_animation_loop("loop", true)
+		for i in int(d["n"]):
+			sf.add_frame("loop", MgArt.sheet(str(d["sheet"]), int(d["from"]) + i, int(d["cols"]), int(d["fw"]), int(d["fh"])))
+		var t: Array = d["tile"]
+		var holder := Node2D.new()
+		holder.position = _tile_pos(int(t[0]), int(t[1])).round()
+		world.add_child(holder)
+		var spr := AnimatedSprite2D.new()
+		spr.sprite_frames = sf
+		spr.centered = true
+		spr.offset = Vector2(0, -float(d["fh"]) / 2.0)
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		holder.add_child(spr)
+		spr.play("loop")
+		spr.frame = rng.randi() % int(d["n"])
+		var body := StaticBody2D.new()
+		body.collision_layer = 1
+		var c := CollisionShape2D.new()
+		var r := RectangleShape2D.new()
+		r.size = Vector2(minf(float(d["fw"]) - 8.0, 28.0), 10.0)
+		c.shape = r
+		c.position = Vector2(0, -5)
+		body.add_child(c)
+		holder.add_child(body)
 
 
 ## Veios de minério de Pedralta: metal fino (mithril, obsidiana, adamantium) para o aprimoramento.
