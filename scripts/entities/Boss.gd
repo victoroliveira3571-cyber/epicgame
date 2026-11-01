@@ -93,6 +93,31 @@ func _build_sprite() -> void:
 		var t: Texture2D = sprite.sprite_frames.get_frame_texture("idle", 0)
 		frame_h = (float(t.get_height()) if t != null else 32.0) * (base_scale if boss_data.has("dt2") else 1.0)
 	sprite.self_modulate = boss_data.get("tint", Color.WHITE)
+	if bool(boss_data.get("whiten", false)):
+		# v3.7: chefe provisório "branco" (Pé Grande): tons de cinza clareados puxando para o azul-gelo
+		var mat := ShaderMaterial.new()
+		mat.shader = _whiten_shader()
+		sprite.material = mat
+
+
+static var _whiten: Shader = null
+
+
+static func _whiten_shader() -> Shader:
+	if _whiten == null:
+		_whiten = Shader.new()
+		_whiten.code = """shader_type canvas_item;
+varying vec4 vcol;
+void vertex() {
+	vcol = COLOR;
+}
+void fragment() {
+	vec4 c = texture(TEXTURE, UV);
+	float g = dot(c.rgb, vec3(0.3, 0.59, 0.11));
+	vec3 w = mix(vec3(0.42, 0.48, 0.62), vec3(1.0, 1.0, 1.05), smoothstep(0.08, 0.7, g));
+	COLOR = vec4(w, c.a) * vcol;
+}"""
+	return _whiten
 
 
 func _start_anim() -> void:

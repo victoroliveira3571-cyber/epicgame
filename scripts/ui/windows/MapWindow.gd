@@ -137,6 +137,7 @@ func build() -> void:
 		side.add_child(UI.label("Objetivo", UI.C_GOLD))
 		side.add_child(UI.wrap_label(Story.objective_text(), UI.C_TEXT, 190))
 		side.add_child(UI.hline())
+	add_to_body(UI.button("Vicerus (mapa-múndi) >", func() -> void: HUD.open_window("mundo"), 160), Vector2(410, 286))
 	side.add_child(UI.label("Locais", UI.C_ORANGE_L))
 	if is_dungeon:
 		side.add_child(UI.wrap_label("Verde: escada de subida. Dourado: escada para baixo. Vermelho: chefe. Só aparece o que você já explorou.", UI.C_DIM, 190))

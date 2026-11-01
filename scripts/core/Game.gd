@@ -17,6 +17,7 @@ var current_floor: int = 0
 var run: Dictionary = {}
 var city_id: String = ""            # v3.2: cidade atual ("porto" | "pedralta" | "academia")
 var city_spawn: String = "start"
+var road_dest: String = ""          # v3.7: destino da viagem quando a carruagem sofre emboscada na estrada
 var town_spawn: String = "start"      # "start" | "gate" | "forest" | "door:<id do interior>"
 var forest_spawn: String = "town"     # "town" | "door:<id do interior>"
 var interior_id: String = ""
@@ -277,6 +278,13 @@ func go_to_city(id: String, spawn: String = "start") -> void:
 	else:
 		var c := CityData.get_city(id)
 		change_scene(CITY_SCENE, 0.6, str(c["name"]), str(c["subtitle"]))
+
+
+## v3.7: emboscada na estrada (monstros no caminho). A carruagem para; você luta na estrada e segue a pé até
+## `dest` pela borda leste (ou foge pelo mesmo caminho: os monstros ficam para trás).
+func travel_road(dest: String) -> void:
+	road_dest = dest
+	go_to_city("estrada")
 
 
 # ============================================================ Floresta

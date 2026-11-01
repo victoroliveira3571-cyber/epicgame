@@ -55,6 +55,9 @@ static func _destinations() -> Array:
 	return out
 
 
+const AMBUSH_CHANCE := 0.3
+
+
 static func _coach() -> void:
 	var dest := _destinations()
 	if dest.is_empty():
@@ -86,6 +89,11 @@ static func _coach() -> void:
 	elif Story.step() == "a_viagem":
 		await Story.say(StoryV4.COCHEIRO_BOLSA)
 	await Story.say([["cocheiro", "Segure firme. Lá vamos nós!"]])
+	# v3.7: monstros no caminho. Viagens pagas podem ter emboscada (a primeira ida à Academia, não)
+	if cost > 0 and randf() < AMBUSH_CHANCE:
+		await Story.say([["cocheiro", "Ôa! Monstros na estrada! Desça e abra caminho, {heroi}; eu espero do outro lado."]])
+		Game.travel_road(id)
+		return
 	Game.go_to_city(id)
 
 

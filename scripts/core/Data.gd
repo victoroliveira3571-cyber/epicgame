@@ -698,7 +698,7 @@ const BOSSES := {
 	# v3.7: Pé Grande (side quest). PROVISÓRIO: Guaxinim Gigante tingido de branco até a compra do pack de iéti (Elthen).
 	"pe_grande": {"name": "Pé Grande", "folder": "GiantRacoon", "hp": 900, "dmg": 26, "speed": 30.0, "xp": 420, "gold": [140, 200], "radius": 14.0,
 		"patterns": ["slam", "charge", "burst", "summon"], "anims": {"idle": ["Idle", 60, 6, 6], "walk": ["Idle", 60, 6, 8], "hit": ["Idle", 60, 6, 10]},
-		"summon": "zumbi_gelo", "tint": Color(0.95, 0.98, 1.15), "power": 9},
+		"summon": "zumbi_gelo", "whiten": true, "power": 9},
 	"guaxinim_gigante": {"name": "Guaxinim Gigante", "folder": "GiantRacoon", "hp": 2900, "dmg": 54, "speed": 32.0, "xp": 1300, "gold": [400, 560], "radius": 14.0,
 		"patterns": ["slam", "burst", "summon", "charge"], "anims": {"idle": ["Idle", 60, 6, 6], "walk": ["Idle", 60, 6, 8], "hit": ["Idle", 60, 6, 10]}, "summon": "ciclope"},
 }

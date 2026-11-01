@@ -10,6 +10,7 @@ const WINDOWS := {
 	"mg_lab": "res://scripts/ui/windows/MiniLabWindow.gd",
 	"mg_turno": "res://scripts/ui/windows/ShiftWindow.gd",
 	"mg_costura": "res://scripts/ui/windows/MiniSewWindow.gd",
+	"mundo": "res://scripts/ui/windows/WorldMapWindow.gd",
 	"personagem": "res://scripts/ui/windows/CharacterWindow.gd",
 	"loja": "res://scripts/ui/windows/ShopWindow.gd",
 	"forja": "res://scripts/ui/windows/ForgeWindow.gd",
@@ -1133,9 +1134,12 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 				return
 			if action == "pause" and is_window_open():
 				return  # a própria janela fecha com Esc
-			if action == "map" and scene_kind in ["", "interior"]:
-				# v2.4: dentro de prédios não há mapa. Antes só o menu inicial era barrado: no interior a janela
-				# abria, não achava cena, se fechava dentro do build e deixava o jogo pausado (engasgo ao apertar M)
+			if action == "map" and scene_kind == "":
+				return
+			if action == "map" and scene_kind == "interior":
+				# v3.7: dentro de prédios a tecla M abre o mapa-múndi de Vicerus (não há mapa local da sala)
+				get_viewport().set_input_as_handled()
+				toggle_window("mundo")
 				return
 			get_viewport().set_input_as_handled()
 			toggle_window(shortcuts[action])

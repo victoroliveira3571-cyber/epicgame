@@ -185,6 +185,25 @@ const CITIES := {
 		],
 		"label": Color("6a3a10"),
 	},
+	# v3.7: estrada entre os reinos, onde a carruagem sofre emboscada (Game.travel_road). Saída a leste = destino.
+	"estrada": {
+		"name": "Estrada entre os reinos", "subtitle": "Emboscada! Monstros no caminho",
+		"W": 48, "H": 22, "base_row": 12, "tint": Color(0.98, 1.0, 0.95), "path_origin": Vector2i(0, 7), "path_set": "floor",
+		"music": "ambience_nature", "ambience": "",
+		"exit": "east", "spawn": Vector2i(4, 11),
+		"paths": [[0, 10, 47, 12]],
+		"water": [],
+		"piers": [],
+		"buildings": [],
+		"npcs": [],
+		"decor": [
+			["n_arvore_redonda", [6, 5]], ["n_arvores_trio", [14, 4]], ["n_arvore_grande", [24, 5]], ["n_arvore_redonda2", [34, 4]],
+			["n_arvores_trio_b", [42, 5]], ["n_arvore_redonda3", [9, 17]], ["n_arvore_pinheiro", [19, 18]], ["n_arvores_trio", [30, 17]],
+			["n_arvore_redonda", [40, 18]], ["n_pedra_cinza_g", [12, 14]], ["n_pedra_marrom", [27, 8]], ["n_arbusto3", [36, 14]],
+			["n_toco1", [21, 14]], ["n_mato2", [16, 8]], ["n_mato4", [44, 14]],
+		],
+		"label": Color("d9ffc2"),
+	},
 }
 
 const SPEAKERS := {

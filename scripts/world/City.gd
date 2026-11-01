@@ -97,7 +97,12 @@ func _process(delta: float) -> void:
 			out = p.y < 1.5 * T
 	if out:
 		_leaving = true
-		Game.go_to_town("city")
+		if city_id == "estrada" and Game.road_dest != "" and CityData.CITIES.has(Game.road_dest):
+			var d := Game.road_dest
+			Game.road_dest = ""
+			Game.go_to_city(d)
+		else:
+			Game.go_to_town("city")
 
 
 # ================================================================== Máscaras
@@ -367,6 +372,8 @@ func _build_story() -> void:
 			var board := StoryProp.make("Quadro de missões especiais", func(_me: StoryProp) -> void: SideQuests.board(), null, 22.0, false)
 			board.position = bp
 			world.add_child(board)
+		"estrada":
+			_build_road_ambush()
 		"vila_neve":
 			var c: Array = city.get("cave", [20, 6])
 			var cp := _tile_pos(int(c[0]), int(c[1]))
@@ -398,11 +405,35 @@ class CaveMouth extends Node2D:
 		draw_colored_polygon(pts2, Color(0, 0, 0, 1))
 
 
+## v3.7: emboscada na estrada (Game.travel_road): monstros do caminho conforme o destino; segue a pé pela borda leste.
+const ROAD_FOES := {
+	"academia": [2, ["lobo", "guaxinim", "slime_verde"]], "porto": [3, ["lobo", "guaxinim", "esqueleto"]],
+	"pedralta": [4, ["lobo", "urso", "orc_guerreiro"]], "vila_neve": [5, ["zumbi_gelo", "lobo_sombra", "urso"]],
+	"oasis": [4, ["cobra", "lagarto", "reptil"]],
+}
+
+
+func _build_road_ambush() -> void:
+	var dest := Game.road_dest
+	var info: Array = ROAD_FOES.get(dest, [3, ["lobo", "esqueleto"]])
+	var n := 4 + int(info[0]) / 2
+	for i in n:
+		var p := _tile_pos(14 + rng.randi_range(0, 26), 8 + rng.randi_range(0, 6))
+		var foes: Array = info[1]
+		var e := Enemy.spawn(world, str(foes[rng.randi() % foes.size()]), p, int(info[0]), i == n - 1)
+		e.respawn_s = 0.0
+	var dname := str(CityData.CITIES.get(dest, {}).get("name", "Focus Town"))
+	_label("Continuar para %s >" % dname, _tile_pos(W - 4, 9), Color("ffe9a8"))
+	extra_landmarks.append(["destino", "Para " + dname, _tile_pos(W - 2, 11)])
+
+
 func is_academy() -> bool:
 	return city_id == "academia"
 
 
 func _build_exit() -> void:
+	if city_id == "estrada":
+		return
 	var sp: Vector2i = city["spawn"]
 	var pos := _tile_pos(sp.x, sp.y)
 	var txt := "Estrada para Focus Town"
@@ -455,6 +486,13 @@ func _on_player_died() -> void:
 	Audio.jingle("defeat", -4.0)
 	await get_tree().create_timer(2.0).timeout
 	GameState.revive_after_defeat()
+	if city_id == "estrada":
+		# caiu na emboscada: o Tobias volta com você para Focus Town (custa 1 crédito, como na floresta)
+		Story.lose_credit_on_death()
+		Game.road_dest = ""
+		HUD.show_toast("Você desmaiou na estrada. O Tobias te levou de volta para Focus Town.", UI.C_BAD)
+		Game.go_to_town("start")
+		return
 	HUD.show_toast("Você desmaiou. A enfermaria de %s cuidou de você." % str(city["name"]), UI.C_BAD)
 	Game.go_to_city(city_id)
 
