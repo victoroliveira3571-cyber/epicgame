@@ -180,8 +180,12 @@ static func compose_dungeon(cells: PackedByteArray, w: int, h: int, style: int, 
 # ===================================================================== Floresta
 ## Gramado + trilhas de terra + rio/pântano + chão de pedra das ruínas. `dark` (0..255 por tile)
 ## escurece a mata fechada e o pântano.
+## v3.7 (referências do Victor): manchas de grama escura com borda suave, canteiros de flores agrupados,
+## nenúfares e pedras nas lagoas (`ponds`), penhascos com face de pedra (`high` = platô, `skip` = onde a face
+## não é desenhada: cascata e escadas) e a mata fechada escurecendo a borda do mapa.
 static func compose_forest(w: int, h: int, dirt: PackedByteArray, water: PackedByteArray, stone: PackedByteArray,
-		dark: PackedByteArray, rng: RandomNumberGenerator) -> Image:
+		dark: PackedByteArray, rng: RandomNumberGenerator, high: PackedByteArray = PackedByteArray(),
+		skip: PackedByteArray = PackedByteArray(), ponds: PackedByteArray = PackedByteArray()) -> Image:
 	var canvas := new_canvas(w, h)
 	var floor_set := tileset("TilesetFloor")
 	var water_set := tileset("TilesetWater")
@@ -191,6 +195,13 @@ static func compose_forest(w: int, h: int, dirt: PackedByteArray, water: PackedB
 		for x in w:
 			var g: Vector2i = grass_variants[rng.randi() % grass_variants.size()]
 			blit(canvas, floor_set, g.x, g.y, x, y)
+	var noise := FastNoiseLite.new()
+	noise.seed = rng.randi()
+	noise.frequency = 0.09
+	var bloom := FastNoiseLite.new()
+	bloom.seed = rng.randi()
+	bloom.frequency = 0.16
+	_grass_patches(canvas, floor_set, w, h, noise)
 	var details := [Vector2i(3, 10), Vector2i(4, 10), Vector2i(5, 10), Vector2i(7, 10), Vector2i(8, 10), Vector2i(9, 10)]
 	var flowers := [Vector2i(0, 11), Vector2i(1, 11), Vector2i(2, 11), Vector2i(3, 11), Vector2i(6, 11)]
 	for y in h:
@@ -199,26 +210,175 @@ static func compose_forest(w: int, h: int, dirt: PackedByteArray, water: PackedB
 			if dirt[i] != 0 or water[i] != 0 or stone[i] != 0:
 				continue
 			var r := rng.randf()
-			if r < 0.09:
+			# canteiros: as flores nascem em grupos (ruído), não espalhadas uma a uma
+			var in_bed := bloom.get_noise_2d(x, y) > 0.42 and dark[i] < 70
+			if in_bed and r < 0.55:
+				var fb: Vector2i = flowers[absi(x * 7 + y * 3 + int(bloom.get_noise_2d(y, x) * 10.0)) % flowers.size()]
+				blend(canvas, nature, fb.x, fb.y, x, y)
+			elif r < 0.08:
 				var d: Vector2i = details[rng.randi() % details.size()]
 				blend(canvas, nature, d.x, d.y, x, y)
-			elif r < 0.11 and dark[i] < 60:
+			elif r < 0.09 and dark[i] < 60:
 				var f: Vector2i = flowers[rng.randi() % flowers.size()]
 				blend(canvas, nature, f.x, f.y, x, y)
 	autotile(canvas, floor_set, dirt, w, h, Vector2i(0, 7))
 	var stone_img := src_img("res://assets/custom/tiles/TilesetFloorStone.png")
 	autotile(canvas, stone_img if stone_img != null else floor_set, stone, w, h, Vector2i(0, 7))
 	autotile(canvas, water_set, water, w, h, Vector2i(0, 6))
+	# nenúfares e pedras só no miolo das lagoas (o tile do pack já vem com o azul da água)
+	if ponds.size() == w * h:
+		for y in range(1, h - 1):
+			for x in range(1, w - 1):
+				var pi := y * w + x
+				if ponds[pi] == 0 or water[pi] == 0:
+					continue
+				if water[pi - 1] == 0 or water[pi + 1] == 0 or water[pi - w] == 0 or water[pi + w] == 0:
+					continue
+				var pr := rng.randf()
+				if pr < 0.16:
+					blit(canvas, water_set, 11, 3, x, y)
+				elif pr < 0.2:
+					blit(canvas, water_set, 12, 0, x, y)
+	if high.size() == w * h:
+		cliffs(canvas, high, skip if skip.size() == w * h else PackedByteArray(), w, h)
 	# sombra da mata: escurece por tile, com borda suave
 	var shade := Image.create(T, T, false, Image.FORMAT_RGBA8)
 	for y in h:
 		for x in w:
 			var a := float(dark[y * w + x]) / 255.0
+			# mata fechada na borda do mapa: escurece até quase preto nos 3 tiles de fora
+			var edge_d := mini(mini(x, y), mini(w - 1 - x, h - 1 - y))
+			if edge_d < 3:
+				a = maxf(a, [0.78, 0.5, 0.22][edge_d])
 			if a <= 0.0:
 				continue
 			shade.fill(Color(0.02, 0.06, 0.05, a))
 			canvas.blend_rect(shade, Rect2i(0, 0, T, T), Vector2i(x * T, y * T))
 	return canvas
+
+
+## Manchas de grama mais escura (TilesetFloor, variação verde-escura) com borda suave: cada quadrante de 8 px
+## recebe a grama escura com opacidade conforme o ruído, então a mancha não fica em degraus de tile.
+static func _grass_patches(canvas: Image, floor_set: Image, w: int, h: int, noise: FastNoiseLite) -> void:
+	var levels: Array[Image] = []
+	for a in [0.35, 0.65, 0.9]:
+		var tile := floor_set.get_region(Rect2i(11 * T, 12 * T, T, T))
+		for py in T:
+			for px in T:
+				var c := tile.get_pixel(px, py)
+				c.a *= a
+				tile.set_pixel(px, py, c)
+		levels.append(tile)
+	for y in h * 2:
+		for x in w * 2:
+			var n := noise.get_noise_2d(x * 0.5, y * 0.5)
+			var lv := -1
+			if n > 0.38:
+				lv = 2
+			elif n > 0.3:
+				lv = 1
+			elif n > 0.24:
+				lv = 0
+			if lv < 0:
+				continue
+			var qx := (x % 2) * 8
+			var qy := (y % 2) * 8
+			canvas.blend_rect(levels[lv], Rect2i(qx, qy, 8, 8), Vector2i(x * 8, y * 8))
+
+
+# ===================================================================== Penhascos (TilesetRelief)
+static var _relief: Image = null
+
+
+## TilesetRelief do Ninja com o "chão" do platô (lilás / areia) e os vãos (azul-claro / laranja-claro)
+## transparentes: assim a grama da floresta aparece no alto do platô e só o aro e a face são desenhados.
+## Linhas 0..4 = penhasco de pedra cinza; 5..9 = penhasco de terra (o da floresta, como nas referências).
+static func relief() -> Image:
+	if _relief != null:
+		return _relief
+	_relief = tileset("TilesetRelief").duplicate()
+	var keys := [Color8(242, 234, 241), Color8(184, 220, 229), Color8(255, 203, 141), Color8(242, 173, 125)]
+	for y in _relief.get_height():
+		for x in _relief.get_width():
+			var c := _relief.get_pixel(x, y)
+			for k in keys:
+				if absf(c.r - k.r) < 0.02 and absf(c.g - k.g) < 0.02 and absf(c.b - k.b) < 0.02:
+					_relief.set_pixel(x, y, Color(0, 0, 0, 0))
+					break
+	return _relief
+
+
+static func _hi(high: PackedByteArray, w: int, h: int, x: int, y: int) -> bool:
+	if x < 0 or y < 0 or x >= w or y >= h:
+		return true
+	return high[y * w + x] != 0
+
+
+## Tile (x, y) é face de penhasco: chão baixo logo abaixo de um platô (face de 2 tiles de altura).
+static func is_face(high: PackedByteArray, w: int, h: int, x: int, y: int) -> bool:
+	if x < 0 or y < 0 or x >= w or y >= h or high[y * w + x] != 0:
+		return false
+	if y >= 1 and high[(y - 1) * w + x] != 0:
+		return true
+	return y >= 2 and high[(y - 1) * w + x] == 0 and high[(y - 2) * w + x] != 0
+
+
+## Aro do platô (bloco 3x2 do TilesetRelief) e face de 2 tiles abaixo da borda sul (colunas 4..6).
+## `row0` = 0 para pedra cinza, 5 para terra.
+static func cliffs(canvas: Image, high: PackedByteArray, skip: PackedByteArray, w: int, h: int, row0: int = 5) -> void:
+	var rel := relief()
+	var has_skip := skip.size() == w * h
+	for y in h:
+		for x in w:
+			var i := y * w + x
+			if has_skip and skip[i] != 0:
+				continue
+			if high[i] != 0:
+				var n := _hi(high, w, h, x, y - 1)
+				var wl := _hi(high, w, h, x - 1, y)
+				var e := _hi(high, w, h, x + 1, y)
+				if n and wl and e:
+					continue
+				var row := 0 if not n else 1
+				var col := 1 if not wl else (3 if not e else 2)
+				blend(canvas, rel, col, row0 + row, x, y)
+			elif is_face(high, w, h, x, y):
+				var top := y >= 1 and high[(y - 1) * w + x] != 0
+				var fl := is_face(high, w, h, x - 1, y) and not (has_skip and x >= 1 and skip[i - 1] != 0)
+				var fr := is_face(high, w, h, x + 1, y) and not (has_skip and x + 1 < w and skip[i + 1] != 0)
+				var col := 5
+				if not fl:
+					col = 4
+				elif not fr:
+					col = 6
+				blend(canvas, rel, col, row0 + (0 if top else 2), x, y)
+
+
+## Ponte do TilesetHouse (madeira 10..13 x 15..17, pedra 10..13 x 19..21): cabeceira + `length - 2` vãos do meio
+## + cabeceira. Em pé ela corre norte-sul (corrimão dos lados); `horizontal` gira 90° para atravessar um rio
+## norte-sul. A de pedra em pé serve de escadaria no penhasco.
+static func bridge_image(stone: bool, length: int, horizontal: bool) -> Image:
+	var house := tileset("TilesetHouse")
+	var y0 := 19 if stone else 15
+	var n := maxi(length, 2)
+	var im := Image.create(4 * T, n * T, false, Image.FORMAT_RGBA8)
+	im.fill(Color(0, 0, 0, 0))
+	for k in n:
+		var src_row := y0 + (0 if k == 0 else (2 if k == n - 1 else 1))
+		im.blit_rect(house, Rect2i(10 * T, src_row * T, 4 * T, T), Vector2i(0, k * T))
+	if horizontal:
+		im.rotate_90(CLOCKWISE)
+	return im
+
+
+## Cascata: tiles de água do pack (TilesetWater, miolo azul) empilhados; o shader do Forest rola a imagem.
+static func waterfall_image(cols: int, rows: int) -> Image:
+	var water_set := tileset("TilesetWater")
+	var im := Image.create(cols * T, rows * T, false, Image.FORMAT_RGBA8)
+	for y in rows:
+		for x in cols:
+			im.blit_rect(water_set, Rect2i(11 * T, (1 + (y % 2)) * T, T, T), Vector2i(x * T, y * T))
+	return im
 
 
 # ===================================================================== Cidade

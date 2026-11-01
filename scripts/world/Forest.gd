@@ -13,6 +13,14 @@ const T := 16
 const PATH_Y := 36              # linha da trilha principal (leste-oeste)
 const RIVER_X := 46             # rio (colunas RIVER_X..RIVER_X+2), ponte na trilha
 const RUINS_X := 17             # oeste disto: ruínas
+# v3.7 (referências do Victor): a Mata sobe num platô de pedra ao norte; o rio cai em cascata na borda dele
+const PLATEAU_X0 := 19
+const PLATEAU_X1 := 58
+const PLATEAU_EDGE := 17         # última linha do platô perto do rio e da escadaria (face nas 2 linhas abaixo)
+const STAIRS_X := 26             # escadaria do platô: colunas 26..29 (passagem 27..28, a trilha da Mata)
+const FALLS_X := RIVER_X - 1     # cascata: colunas 45..47
+const MESA := Rect2i(90, 45, 12, 5)   # Rochedo da Borda (platô pequeno com baú)
+const MESA_STAIRS_X := 94        # colunas 94..97 (passagem 95..96)
 
 var rng := RandomNumberGenerator.new()
 var world: Node2D
@@ -25,6 +33,11 @@ var water := PackedByteArray()
 var stone := PackedByteArray()
 var dark := PackedByteArray()
 var reserved := PackedByteArray()
+var high := PackedByteArray()      # platôs (penhascos)
+var skip := PackedByteArray()      # face não desenhada: cascata e escadas
+var block := PackedByteArray()     # colisão dos penhascos (face + aro)
+var ponds := PackedByteArray()     # lagoas (nenúfares)
+var water_draw := PackedByteArray()  # água desenhada (inclui a que fica sob as pontes)
 var placed_points: Array = []
 var door_spawns: Dictionary = {}
 var forced_hour: float = -1.0
@@ -50,7 +63,8 @@ func _ready() -> void:
 	add_to_group("town")
 	add_to_group("forest")
 	_build_masks()
-	var img := TileComposer.compose_forest(W, H, dirt, water, stone, dark, rng)
+	var img := TileComposer.compose_forest(W, H, dirt, water_draw, stone, dark, rng, high, skip, ponds)
+	_stamp_structures(img)
 	var small := img.duplicate() as Image
 	small.resize(W * 2, H * 2, Image.INTERPOLATE_BILINEAR)
 	minimap_tex = ImageTexture.create_from_image(small)
@@ -64,6 +78,8 @@ func _ready() -> void:
 	add_child(world)
 	_build_bounds()
 	_build_water_colliders()
+	_build_cliff_colliders()
+	_build_terrain()
 	_build_houses()
 	_build_ruins()
 	if Story.step() == "c1_portao":
@@ -137,10 +153,36 @@ func zone_at(tx: int, ty: int) -> String:
 	return "mata"
 
 
+## Borda sul do platô norte em cada coluna (última linha alta). Plana na escadaria e no rio (a cascata fica reta).
+func plateau_edge(x: int) -> int:
+	if x < PLATEAU_X0 or x > PLATEAU_X1:
+		return -1
+	if x >= STAIRS_X - 1 and x <= STAIRS_X + 4:
+		return PLATEAU_EDGE
+	if x >= RIVER_X - 4 and x <= RIVER_X + 4:
+		return PLATEAU_EDGE
+	if x > RIVER_X + 4:
+		return PLATEAU_EDGE - 1
+	return PLATEAU_EDGE + int(round(sin(float(x) * 0.2) * 1.4))
+
+
 func _build_masks() -> void:
-	for m in [dirt, water, stone, dark, reserved]:
+	for m in [dirt, water, stone, dark, reserved, high, skip, block, ponds]:
 		m.resize(W * H)
 		m.fill(0)
+	# platô norte da Mata (os dois lados do rio) e o Rochedo da Borda
+	for x in range(PLATEAU_X0, PLATEAU_X1 + 1):
+		for y in range(0, plateau_edge(x) + 1):
+			high[_idx(x, y)] = 1
+	_fill(high, MESA.position.x, MESA.position.y, MESA.end.x - 1, MESA.end.y - 1)
+	# trilha no alto do platô: sobe a escadaria, cruza o rio por uma ponte e acaba no Mirante da Cascata
+	_fill(dirt, 27, 9, 28, PLATEAU_EDGE)
+	_fill(dirt, 27, 9, 53, 10)
+	_fill(dirt, 52, 9, 53, 13)
+	_ellipse(dirt, 53, 13, 2.6, 1.6)
+	# trilha do Rochedo: sai do cruzamento da Árvore Marcada para o sul e contorna até a escadaria
+	_fill(dirt, 86, PATH_Y, 87, MESA.end.y + 3)
+	_fill(dirt, 86, MESA.end.y + 2, MESA_STAIRS_X + 2, MESA.end.y + 3)
 	# trilha principal (leste-oeste) com curvas suaves
 	for x in range(4, W):
 		var wob := int(round(sin(float(x) * 0.13) * 1.6))
@@ -154,17 +196,38 @@ func _build_masks() -> void:
 	_fill(dirt, 27, 14, 28, PATH_Y)
 	# Clareira das Casas: campo aberto
 	_ellipse(dirt, 64, 36, 10.0, 7.0)
-	# rio (norte-sul) e lagoas do pântano
+	# rio (norte-sul) e lagoas do pântano; na borda do platô o leito fica reto (colunas da cascata)
 	for y in H:
 		var bend := int(round(sin(float(y) * 0.2) * 1.2))
+		if y >= PLATEAU_EDGE - 2 and y <= PLATEAU_EDGE + 2:
+			bend = FALLS_X - RIVER_X
 		_fill(water, RIVER_X + bend, y, RIVER_X + 2 + bend, y)
 	for pond in [Vector4(24, 52, 4, 3), Vector4(37, 56, 5, 3), Vector4(26, 63, 5, 3), Vector4(39, 66, 4, 2), Vector4(20, 45, 2, 2)]:
 		_ellipse(water, pond.x, pond.y, pond.z, pond.w)
-	# ponte: a trilha passa por cima do rio
+		_ellipse(ponds, pond.x, pond.y, pond.z, pond.w)
+	# poço ao pé da cascata
+	_ellipse(water, FALLS_X + 1, PLATEAU_EDGE + 4.5, 3.4, 1.9)
+	water_draw = water.duplicate()
+	# ponte principal: a trilha passa por cima do rio (a água continua desenhada embaixo, sem colisão)
 	for y in range(PATH_Y - 1, PATH_Y + 2):
 		for x in range(RIVER_X - 2, RIVER_X + 5):
-			water[_idx(x, y)] = 0
-			dirt[_idx(x, y)] = 1
+			var i := _idx(x, y)
+			if water[i] != 0:
+				water[i] = 0
+				dirt[i] = 0
+			else:
+				dirt[i] = 1
+	# ponte do alto do platô
+	for y in range(9, 11):
+		for x in range(RIVER_X - 2, RIVER_X + 5):
+			var i2 := _idx(x, y)
+			if water[i2] != 0:
+				water[i2] = 0
+				dirt[i2] = 0
+	# cascata e escadarias: sem face de pedra (a peça do pack entra por cima)
+	_fill(skip, FALLS_X, PLATEAU_EDGE + 1, FALLS_X + 2, PLATEAU_EDGE + 2)
+	_fill(skip, STAIRS_X, PLATEAU_EDGE, STAIRS_X + 3, PLATEAU_EDGE + 2)
+	_fill(skip, MESA_STAIRS_X, MESA.end.y - 1, MESA_STAIRS_X + 3, MESA.end.y + 1)
 	# ruínas: chão de pedra
 	_ellipse(stone, 9, 36, 8.0, 9.0)
 	_fill(stone, 14, PATH_Y - 1, 18, PATH_Y + 1)
@@ -174,6 +237,7 @@ func _build_masks() -> void:
 			if stone[i] != 0:
 				dirt[i] = 0
 				water[i] = 0
+				water_draw[i] = 0
 	# sombra da mata e do pântano
 	for y in H:
 		for x in W:
@@ -195,6 +259,35 @@ func _build_masks() -> void:
 			if dirt[_idx(x, y)] != 0 or water[_idx(x, y)] != 0 or stone[_idx(x, y)] != 0:
 				_fill(reserved, x - 1, y - 1, x + 1, y + 1)
 	_fill(reserved, 52, 22, 76, 50)     # a clareira fica aberta (casas e acampamento)
+	# penhascos: a face e o aro bloqueiam; escadas e cascata ficam livres (a água da cascata já tem colisão)
+	var walk := PackedByteArray()
+	walk.resize(W * H)
+	_fill(walk, STAIRS_X + 1, PLATEAU_EDGE, STAIRS_X + 2, PLATEAU_EDGE + 2)
+	_fill(walk, MESA_STAIRS_X + 1, MESA.end.y - 1, MESA_STAIRS_X + 2, MESA.end.y + 1)
+	for y in H:
+		for x in W:
+			var i := _idx(x, y)
+			if walk[i] != 0 or water[i] != 0:
+				continue
+			var blocked := false
+			if high[i] != 0:
+				var hn := y == 0 or high[_idx(x, y - 1)] != 0
+				var hw := x == 0 or high[_idx(x - 1, y)] != 0
+				var he := x == W - 1 or high[_idx(x + 1, y)] != 0
+				blocked = not (hn and hw and he)
+			elif TileComposer.is_face(high, W, H, x, y):
+				blocked = true
+			if blocked:
+				block[i] = 1
+	# nada de árvore na face, no aro, na beira de cima nem na frente das escadas e da cascata
+	for y in H:
+		for x in W:
+			var i := _idx(x, y)
+			var edge_row := high[i] != 0 and y + 1 < H and high[_idx(x, y + 1)] == 0
+			if block[i] != 0 or skip[i] != 0 or edge_row:
+				_fill(reserved, x - 1, y - 1, x + 1, y + 1)
+	_fill(reserved, FALLS_X - 3, PLATEAU_EDGE + 1, FALLS_X + 5, PLATEAU_EDGE + 8)
+	_fill(reserved, MESA_STAIRS_X - 1, MESA.end.y - 1, MESA_STAIRS_X + 4, MESA.end.y + 4)
 
 
 ## Suaviza a sombra entre zonas (borda, clareira, mata, pântano): a luz muda aos poucos, sem degrau.
@@ -258,6 +351,131 @@ func _build_water_colliders() -> void:
 				x += 1
 
 
+func _build_cliff_colliders() -> void:
+	var body := StaticBody2D.new()
+	body.collision_layer = 1
+	add_child(body)
+	for y in H:
+		var x := 0
+		while x < W:
+			if block[_idx(x, y)] != 0:
+				var x0 := x
+				while x < W and block[_idx(x, y)] != 0:
+					x += 1
+				var c := CollisionShape2D.new()
+				var s := RectangleShape2D.new()
+				s.size = Vector2((x - x0) * T, T)
+				c.shape = s
+				c.position = Vector2(x0 * T + (x - x0) * T / 2.0, y * T + T / 2.0)
+				body.add_child(c)
+			else:
+				x += 1
+
+
+## Pontes e escadarias do TilesetHouse carimbadas no chão (o herói anda por cima delas).
+func _stamp_structures(img: Image) -> void:
+	var main_bridge := TileComposer.bridge_image(false, 5, true)
+	img.blend_rect(main_bridge, Rect2i(Vector2i.ZERO, main_bridge.get_size()), Vector2i((RIVER_X) * T, PATH_Y * T + 8 - 32))
+	var top_bridge := TileComposer.bridge_image(false, 5, true)
+	img.blend_rect(top_bridge, Rect2i(Vector2i.ZERO, top_bridge.get_size()), Vector2i((RIVER_X) * T, 8 * T))
+	var stairs := TileComposer.bridge_image(true, 3, false)
+	img.blend_rect(stairs, Rect2i(Vector2i.ZERO, stairs.get_size()), Vector2i(STAIRS_X * T, PLATEAU_EDGE * T))
+	img.blend_rect(stairs, Rect2i(Vector2i.ZERO, stairs.get_size()), Vector2i(MESA_STAIRS_X * T, (MESA.end.y - 1) * T))
+
+
+## Cascata (água do pack rolando num shader), espuma e névoa no poço, barco na lagoa, baús dos mirantes e
+## pedras/tocos que "assentam" os penhascos no cenário.
+const FALLS_SHADER := "shader_type canvas_item;
+uniform float speed = 0.9;
+void fragment() {
+	vec2 uv = vec2(UV.x, fract(UV.y - TIME * speed));
+	vec4 c = texture(TEXTURE, uv);
+	float streak = smoothstep(0.82, 1.0, fract(UV.x * 5.0 + sin(UV.y * 9.0 - TIME * 4.0) * 0.06));
+	float lip = smoothstep(0.18, 0.0, UV.y);
+	c.rgb = mix(c.rgb, vec3(0.92, 0.98, 1.0), 0.28 + 0.35 * streak + 0.4 * lip);
+	COLOR = c;
+}"
+
+
+func _build_terrain() -> void:
+	var falls := Sprite2D.new()
+	falls.texture = ImageTexture.create_from_image(TileComposer.waterfall_image(3, 2))
+	falls.centered = false
+	falls.position = Vector2(FALLS_X * T, (PLATEAU_EDGE + 1) * T)
+	falls.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	falls.z_index = -90
+	var mat := ShaderMaterial.new()
+	var sh := Shader.new()
+	sh.code = FALLS_SHADER
+	mat.shader = sh
+	falls.material = mat
+	add_child(falls)
+	var foam := CPUParticles2D.new()
+	foam.position = Vector2((FALLS_X + 1.5) * T, (PLATEAU_EDGE + 3) * T + 2)
+	foam.z_index = -80
+	foam.amount = 26
+	foam.lifetime = 0.9
+	foam.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	foam.emission_rect_extents = Vector2(T * 1.4, 2)
+	foam.direction = Vector2(0, -1)
+	foam.spread = 70.0
+	foam.initial_velocity_min = 8.0
+	foam.initial_velocity_max = 22.0
+	foam.gravity = Vector2(0, 30)
+	foam.scale_amount_min = 1.0
+	foam.scale_amount_max = 2.5
+	foam.color = Color(0.95, 0.99, 1.0, 0.85)
+	add_child(foam)
+	Fx.make_light(foam, Vector2(0, -8), Color(0.7, 0.9, 1.0), 0.8, 0.35)
+	Audio.emitter(world, foam.position, "amb_margem", -4.0, true, 0.0, 260.0)
+	# barco de remo encostado na lagoa grande do pântano
+	_add_prop("barco_remo", _tile_pos(37, 56) + Vector2(0, 6))
+	# pedras e tocos na base dos penhascos (como nas referências: o penhasco "assenta" no chão)
+	for x in range(PLATEAU_X0, PLATEAU_X1 + 1):
+		var foot := plateau_edge(x) + 3
+		if rng.randf() > 0.16 or foot >= H or reserved[_idx(x, foot)] != 0 or water[_idx(x, foot)] != 0:
+			continue
+		var rock: String = ["n_pedra_cinza_p1", "n_pedra_cinza_p2", "n_pedra_cinza_p3", "n_toco1", "n_arbusto3", "n_mato2"][rng.randi() % 6]
+		var pt := _tile_pos(x, foot) + Vector2(rng.randf_range(-4, 4), -2)
+		_add_prop(rock, pt, 3.5)
+		placed_points.append(pt)
+	# mirantes: baú do dia e placa
+	_daily_chest("bau_mirante", _tile_pos(54, 12), 6)
+	_daily_chest("bau_rochedo", _tile_pos(98, 46), 3)
+	for sgn in [[_tile_pos(51, 12), "Mirante da Cascata", "Daqui se vê a cascata inteira e, ao sul, a fumaça da Clareira das Casas."],
+			[_tile_pos(93, 46), "Rochedo da Borda", "Dizem que os caçadores guardam provisões aqui em cima."]]:
+		var sp := StoryProp.make("Ler a placa", func(_me: StoryProp) -> void:
+			Story.say([["narr", "\"%s\" - %s" % [sgn[1], sgn[2]]]]), null, 20.0, false)
+		sp.position = sgn[0]
+		world.add_child(sp)
+		_add_prop("i_board", sgn[0], 4.0)
+		placed_points.append(sgn[0])
+
+
+## Baú que reabre uma vez por dia (data guardada na história): recompensa por explorar os mirantes.
+func _daily_chest(key: String, pos: Vector2, floor_n: int) -> void:
+	var chest := DailyChest.new()
+	chest.key = key
+	chest.floor_n = floor_n
+	chest.position = pos
+	world.add_child(chest)
+	placed_points.append(pos)
+	if str(Story.flag(key, "")) == Time.get_date_string_from_system():
+		chest.opened = true
+		chest.enabled = false
+		chest.sprite.texture = chest.tex_open
+
+
+class DailyChest extends DungeonObjects.Chest:
+	var key: String = ""
+
+	func interact(player: Node) -> void:
+		if opened:
+			return
+		Story.set_flag(key, Time.get_date_string_from_system())
+		super(player)
+
+
 # ================================================================== Peças
 func _add_prop(prop: String, pos: Vector2, collide_radius: float = 0.0, tint: Color = Color.WHITE) -> Node2D:
 	var tex := Interior.prop_tex(prop)
@@ -306,7 +524,7 @@ func _random_spot(zone: String, min_d: float = 0.0, on_path_ok: bool = false) ->
 		if zone != "" and zone_at(x, y) != zone:
 			continue
 		var i := _idx(x, y)
-		if water[i] != 0:
+		if water[i] != 0 or block[i] != 0 or skip[i] != 0:
 			continue
 		if not on_path_ok and reserved[i] != 0 and dirt[i] == 0 and stone[i] == 0:
 			continue
