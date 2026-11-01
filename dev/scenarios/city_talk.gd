@@ -1,7 +1,7 @@
 extends Node
 
 ## v3.2: abre o diálogo do fragmento de Pedralta (com horas suficientes) e tira um print no meio.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 
 func run(dev: Node) -> void:

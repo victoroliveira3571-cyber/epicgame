@@ -2,7 +2,7 @@ extends Node
 
 ## Revisão visual: Arena na cidade, escolha de classe, janela de personagem, chefes humanos em LPC
 ## (Ivo, Cavaleiro, Bibliotecário), Ivo preso e casa do Lin. Prints em _shots/review_*.png.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var dev: Node
 
 

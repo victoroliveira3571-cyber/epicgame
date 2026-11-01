@@ -1,7 +1,7 @@
 extends Node
 
 ## v2.2 lote 4: cela no Pomodoro, arena sem arquibancada, magia inicial, nome x visual na rua, Rei LPC.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var ok := true
 
 

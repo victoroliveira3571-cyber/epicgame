@@ -1,7 +1,7 @@
 extends Node
 
 ## v2.2: ringue cercado, torcida por prestígio e quadro de resultado. Prints em _shots/arena_*.png.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 
 func _skip() -> void:

@@ -847,7 +847,10 @@ func _build_minimap() -> void:
 	_minimap.position = Vector2(UI.SIZE.x - 130, 62)
 	root.add_child(_minimap)
 	_compass = ObjectiveCompass.new()
+	_compass.minimap = _minimap
 	root.add_child(_compass)
+	# v3.7: a seta e o texto "Missão N" passavam por cima do Pomodoro e do objetivo: a bússola fica por baixo dos painéis
+	root.move_child(_compass, 0)
 
 
 # ================================================================== Chefe
@@ -1196,6 +1199,11 @@ func set_bottom_hidden(hidden: bool) -> void:
 
 
 var _top_was_visible: Dictionary = {}
+
+
+## true enquanto o modo Decorar esconde os painéis (a bússola presa também some).
+func is_top_hidden() -> bool:
+	return not _top_was_visible.is_empty()
 
 
 ## v2.7: o modo Decorar também esconde o cartão do jogador, o Pomodoro, o objetivo e o minimapa,

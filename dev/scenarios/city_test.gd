@@ -1,7 +1,7 @@
 extends Node
 
 ## v3.2: as três cidades: carrega cada uma, confere prédios/NPCs/mapa, joga o fragmento e a saída.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var fails := 0
 
 

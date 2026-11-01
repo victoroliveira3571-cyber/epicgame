@@ -1,7 +1,7 @@
 extends Node
 
 ## Abre andares da masmorra com o HUD ligado, tira prints e testa pontos básicos.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 func run(dev: Node) -> void:
 	GameState.debug_reset()

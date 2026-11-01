@@ -40,6 +40,10 @@ func shot(path: String) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var img := get_viewport().get_texture().get_image()
+	if img == null:
+		print("[Dev] sem imagem (rodando sem tela): ", path)
+		return
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	img.save_png(path)
 	print("[Dev] print salvo: ", path, " ", img.get_size())
 

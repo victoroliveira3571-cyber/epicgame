@@ -1,7 +1,7 @@
 extends Node
 
 ## Rei Demônio (chifres, asas e cauda): quadros parado nas 4 direções, andando e conjurando.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 func run(d: Node) -> void:
 	var look: Dictionary = Looks.of("rei_demonio")

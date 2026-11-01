@@ -1,7 +1,7 @@
 extends Node
 
 ## v3.4: monstros e chefes novos (Dungeon Tileset II): monta todos, confere animações e tira um print da fila.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var fails := 0
 
 

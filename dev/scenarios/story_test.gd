@@ -4,7 +4,7 @@ extends Node
 ## perguntas dos chefes e teleporta o jogador. Confere os passos e tira prints em _shots/story_*.png.
 ## Rodar: tools/run_godot.sh 600 --resolution 1280x720 -- --scenario=story_test --save=dev_save.json
 
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var dev: Node
 var fails: int = 0
 

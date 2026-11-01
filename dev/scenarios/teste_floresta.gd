@@ -2,7 +2,7 @@ extends Node
 
 ## Diagnóstico da passagem para a Mata Profunda (lado escuro): com Rank C, procura a barreira da
 ## Guilda e os colisores que bloqueiam a trilha. Saída só no console e um print.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 
 func run(dev: Node) -> void:

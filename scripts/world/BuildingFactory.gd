@@ -3,7 +3,8 @@ extends RefCounted
 
 ## v3.3: monta casas a partir das peças do Kenney Tiny Town (CC0, assets/custom/city/kenney_tiny_town.png).
 ## O nome do prop define a casa: "k_<parede>_<telhado>_<largura em tiles>", por exemplo "k_pedra_cinza_5"
-## (parede de pedra, telhado cinza, 5 tiles de largura) ou "k_tijolo_vermelho_6". Também: "k_cerca_<n>" (cerca) e "k_placa".
+## (parede de pedra, telhado cinza, 5 tiles de largura) ou "k_tijolo_vermelho_6". Também: "k_cerca_<n>" (cerca),
+## "k_cercav_<n>" (cerca em pé, de cima para baixo; v3.7) e "k_placa".
 
 const SHEET := "res://assets/custom/city/kenney_tiny_town.png"
 const COLS := 12
@@ -58,6 +59,12 @@ static func _build(name: String) -> Image:
 		for x in n:
 			_put(f, 80 if x == 0 else (82 if x == n - 1 else 81), x, 0)
 		return f
+	if parts[1] == "cercav":
+		var nv := int(parts[2]) if parts.size() > 2 else 3
+		var fv := Image.create(T, nv * T, false, Image.FORMAT_RGBA8)
+		for y in nv:
+			_put(fv, 47 if y == 0 else (71 if y == nv - 1 else 59), 0, y)
+		return fv
 	if parts[1] == "placa":
 		var s := Image.create(T, T, false, Image.FORMAT_RGBA8)
 		_put(s, 83, 0, 0)

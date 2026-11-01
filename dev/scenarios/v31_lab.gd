@@ -1,7 +1,7 @@
 extends Node
 
 ## v3.1: joga o laboratório v2 por script.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var fails := 0
 
 

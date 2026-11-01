@@ -1,7 +1,7 @@
 extends Node
 
 ## v3.4: entra em andares com os biomas novos, lista os monstros e tira um print perto de um inimigo.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 
 func run(dev: Node) -> void:

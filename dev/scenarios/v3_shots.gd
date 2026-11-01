@@ -2,7 +2,7 @@ extends Node
 
 ## Corpos, armas por item, loja com provador, interiores novos e duelo na Arena.
 ## Prints em _shots/v3_*.png. Rodar: tools/run_godot.sh 200 --resolution 1280x720 -- --scenario=v3_shots --save=dev_save.json
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var dev: Node
 
 

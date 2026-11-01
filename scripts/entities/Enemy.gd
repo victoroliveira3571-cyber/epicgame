@@ -73,6 +73,14 @@ static func spawn(parent: Node, id: String, pos: Vector2, floor_number: int, eli
 	return e
 
 
+## v3.7: a dificuldade (Pausa) também muda a vida e a velocidade dos monstros e chefes (o dano recebido
+## é aplicado em GameState.take_damage).
+func _apply_difficulty() -> void:
+	max_hp *= GameState.enemy_hp_mult()
+	hp = max_hp
+	move_speed *= GameState.enemy_speed_mult()
+
+
 func _setup_stats() -> void:
 	data = Data.MONSTERS[def_id]
 	display_name = data["name"]
@@ -98,6 +106,7 @@ func _setup_stats() -> void:
 
 func _ready() -> void:
 	_setup_stats()
+	_apply_difficulty()
 	add_to_group("enemy")
 	collision_layer = 4
 	collision_mask = 1

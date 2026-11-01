@@ -68,8 +68,13 @@ var music_volume: float = 0.7
 var sfx_volume: float = 1.0  # efeitos (golpes, magias, passos, sons de ação)
 # v2.4: dificuldade (0 fácil, 1 médio, 2 difícil): dano recebido e recompensa de monstros (XP e ouro)
 const DIFFICULTY_NAMES := ["Fácil", "Médio", "Difícil"]
-const DIFFICULTY_DMG := [0.7, 1.0, 1.4]
-const DIFFICULTY_REWARD := [0.8, 1.0, 1.3]
+## v3.7 (pedido do Victor: "o difícil ainda está fácil"): antes só o dano recebido mudava (0,7 / 1,0 / 1,4) e os
+## monstros tinham a mesma vida e velocidade em todo nível. Agora o Fácil é o antigo Difícil e os outros dois sobem:
+## dano recebido, vida e velocidade dos monstros (chefes e Arena incluídos) e a recompensa acompanham.
+const DIFFICULTY_DMG := [1.4, 1.75, 2.2]       # dano que o herói recebe
+const DIFFICULTY_HP := [1.0, 1.25, 1.6]        # vida dos monstros
+const DIFFICULTY_SPEED := [1.0, 1.06, 1.14]    # velocidade dos monstros
+const DIFFICULTY_REWARD := [1.0, 1.2, 1.5]     # XP e ouro de monstros
 var difficulty: int = 1
 var minigame_plays: Dictionary = {}   # v3.1: {"date": hoje, "<id>": partidas hoje}
 var auto_aim: bool = true      # v2.6: mira automática (corpo e ataques viram para o inimigo próximo)
@@ -1353,6 +1358,25 @@ func set_safe_zone(on: bool) -> void:
 
 func reward_mult() -> float:
 	return float(DIFFICULTY_REWARD[difficulty])
+
+
+func enemy_hp_mult() -> float:
+	return float(DIFFICULTY_HP[difficulty])
+
+
+func enemy_speed_mult() -> float:
+	return float(DIFFICULTY_SPEED[difficulty])
+
+
+## Texto da dificuldade para a tela de Pausa.
+func difficulty_desc(d: int = -1) -> String:
+	var i := difficulty if d < 0 else clampi(d, 0, 2)
+	return "%s: dano recebido x%s, vida dos monstros x%s, velocidade x%s, recompensa x%s." % [DIFFICULTY_NAMES[i],
+		_num(DIFFICULTY_DMG[i]), _num(DIFFICULTY_HP[i]), _num(DIFFICULTY_SPEED[i]), _num(DIFFICULTY_REWARD[i])]
+
+
+static func _num(v: float) -> String:
+	return ("%.2f" % v).trim_suffix("0").trim_suffix("0").trim_suffix(".").replace(".", ",")
 
 
 func set_music_on(on: bool) -> void:

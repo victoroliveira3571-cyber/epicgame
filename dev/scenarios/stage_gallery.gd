@@ -1,7 +1,7 @@
 extends Node
 
 ## Galeria dos cenários do palco de diálogos. Prints em _shots/stage_<cenario>.png.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 
 func run(dev: Node) -> void:

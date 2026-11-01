@@ -4,3 +4,6 @@
 _shots/
 # cópias criadas pela sincronização da Mesa (iCloud)
 * [2-9].*
+
+# cache do Python das ferramentas
+__pycache__/

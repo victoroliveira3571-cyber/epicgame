@@ -1,7 +1,7 @@
 extends Node
 
 ## v3.1: joga a forja v2 por script e tira prints de cada etapa.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var fails := 0
 
 

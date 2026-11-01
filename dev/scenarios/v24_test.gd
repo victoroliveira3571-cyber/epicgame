@@ -44,7 +44,11 @@ func run(_dev: Node) -> void:
 	var hard := gs.take_damage(100.0)
 	check(easy < normal and normal < hard, "dano: fácil %d < médio %d < difícil %d" % [easy, normal, hard])
 	gs.set_difficulty(1)
-	check(is_equal_approx(gs.reward_mult(), 1.0), "médio recompensa x1")
+	check(is_equal_approx(gs.reward_mult(), 1.2), "médio recompensa x1,2 (v3.7)")
+	# v3.7: o fácil é o antigo difícil (dano x1,4) e vida/velocidade dos monstros sobem com a dificuldade
+	check(is_equal_approx(gs.DIFFICULTY_DMG[0], 1.4), "fácil = antigo difícil")
+	check(gs.DIFFICULTY_HP[0] < gs.DIFFICULTY_HP[1] and gs.DIFFICULTY_HP[1] < gs.DIFFICULTY_HP[2], "vida dos monstros cresce")
+	check(gs.DIFFICULTY_SPEED[0] < gs.DIFFICULTY_SPEED[2], "monstros mais rápidos no difícil")
 	# v2.6: hábitos
 	var n0: int = gs.habits.size()
 	check(gs.add_habit() and gs.habits.size() == n0 + 1, "hábito novo")

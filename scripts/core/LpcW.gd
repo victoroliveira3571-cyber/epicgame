@@ -151,7 +151,8 @@ func layers(look_in: Dictionary, expr_override: String = "") -> Array:
 			head_swap = true
 	if int(gear.get("helmet", -1)) >= 0:
 		hidden["cabeca"] = true
-		hidden["cabelo"] = true
+		if not helmet_keeps_hair(int(gear["helmet"]), str(look.get("gear_family", ""))):
+			hidden["cabelo"] = true
 	if int(gear.get("armor", -1)) >= 0:
 		hidden["torso_over"] = true
 	var head: Dictionary = _cat.get("heads", {}).get(str(look["head"]), {})
@@ -185,21 +186,12 @@ func layers(look_in: Dictionary, expr_override: String = "") -> Array:
 		var r2 := _ramp(look, str(ex[1]) if ex.size() > 1 else "")
 		for l in p2.get("layers", {}).get(bt, []):
 			out.append(_lay(l, r2))
+	var family := str(look.get("gear_family", ""))
 	for slot in ["boots", "armor", "helmet", "shield"]:
 		var t := int(gear.get(slot, -1))
-		var tiers: Array = _cat.get("equip", {}).get(slot, [])
-		if t < 0 or tiers.is_empty():
+		if t < 0:
 			continue
-		var e: Dictionary = tiers[clampi(t, 0, tiers.size() - 1)]
-		var col := str(e.get("palette", ""))
-		var r3 := _ramp(look, col, str(e.get("material", "")))
-		for l in e.get("layers", {}).get(bt, []):
-			out.append(_lay(l, r3))
-		if slot == "armor" and t >= 3:
-			var legs: Array = _cat.get("equip", {}).get("legs_heavy", [])
-			if not legs.is_empty():
-				for l in legs[0].get("layers", {}).get(bt, []):
-					out.append(_lay(l, r3))
+		out.append_array(gear_layers(look, slot, t, bt, family))
 	var wid := weapon_visual(str(look.get("weapon", "")))
 	if wid != "":
 		var wpal := str(look.get("weapon_pal", ""))
@@ -207,6 +199,313 @@ func layers(look_in: Dictionary, expr_override: String = "") -> Array:
 		for l in _cat.get("weapons", {}).get(wid, []):
 			out.append(_lay(l, wr))
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["z"]) < int(b["z"]))
+	return out
+
+
+# ================================================================== Armaduras por classe (v3.7)
+## Pedido do Victor: cada classe veste a armadura do seu jeito. O tier do item (0 a 5 no catálogo) continua
+## decidindo a força e o brilho; a família da classe troca as peças LPC (todas já no jogo, CC-BY-SA/GPL/OGA-BY):
+## mago de túnica e chapéu, arqueiro de couro verde e capuz, assassino de couro escuro e capa rasgada,
+## escudeiro de cota e tabardo, paladino de placa branca e capa; o cavaleiro usa o conjunto padrão do catálogo.
+## Cada camada: [arquivo masculino, arquivo feminino, z, paleta, material].
+const _ROBE := ["torso_clothes_robe_female.png", "torso_clothes_robe_female.png", 35]
+const _ROBE_BELT := ["torso_waist_belt_robe_male.png", "torso_waist_belt_robe_female.png", 70]
+const _LEATHER := ["torso_armour_leather_male.png", "torso_armour_leather_female.png", 60]
+const _CHAIN := ["torso_chainmail_male.png", "torso_chainmail_female.png", 50]
+const _PLATE := ["torso_armour_plate_male.png", "torso_armour_plate_female.png", 60]
+const _LEGION := ["torso_armour_legion_male.png", "torso_armour_legion_female.png", 60]
+const _LEGION_SH := ["shoulders_legion_male.png", "shoulders_legion_female.png", 62]
+const _PAULDRONS := ["shoulders_pauldrons_male.png", "shoulders_pauldrons_thin.png", 62]
+const _BAULDRON := ["shoulders_bauldron_male.png", "shoulders_bauldron_thin.png", 63]
+const _ARMS_PLATE := ["arms_armour_plate_male.png", "arms_armour_plate_thin.png", 60]
+const _BRACERS := ["arms_bracers_male.png", "arms_bracers_thin.png", 70]
+const _GLOVES := ["arms_hands_gloves_male.png", "arms_hands_gloves_thin.png", 71]
+const _TABARD := ["torso_jacket_tabard_male.png", "torso_jacket_tabard_female.png", 65]
+const _CAPE_TRIM := ["cape_trim.png", "cape_trim.png", 90]
+const _CAPE_FG := ["cape_solid_fg.png", "cape_solid_fg.png", 85]
+const _CAPE_BG := ["cape_solid_bg.png", "cape_solid_bg.png", 5]
+const _CAPE_T_FG := ["cape_tattered_fg.png", "cape_tattered_fg.png", 85]
+const _CAPE_T_BG := ["cape_tattered_bg.png", "cape_tattered_bg.png", 5]
+const _CLIP := ["neck_capeclip_male.png", "neck_capeclip_thin.png", 91]
+const _HOOD := ["hat_cloth_hood_adult.png", "hat_cloth_hood_adult.png", 130]
+const _CAP := ["hat_cloth_leather_cap_adult.png", "hat_cloth_leather_cap_adult.png", 130]
+const _BANDANA := ["hat_cloth_bandana_adult.png", "hat_cloth_bandana_adult.png", 130]
+const _WIZ := ["hat_magic_wizard_base_adult.png", "hat_magic_wizard_base_adult.png", 130]
+const _WIZ_BELT := ["hat_magic_wizard_belt_adult.png", "hat_magic_wizard_belt_adult.png", 131]
+const _WIZ_BUCKLE := ["hat_magic_wizard_buckle_adult.png", "hat_magic_wizard_buckle_adult.png", 132]
+const _MOON := ["hat_magic_celestial_moon_adult.png", "hat_magic_celestial_moon_adult.png", 130]
+const _CAVALIER := ["hat_pirate_cavalier_adult.png", "hat_pirate_cavalier_adult.png", 130]
+const _FEATHER := ["hat_pirate_cavalier_feather_adult.png", "hat_pirate_cavalier_feather_adult.png", 131]
+const _MAIL_H := ["hat_helmet_mail_adult.png", "hat_helmet_mail_adult.png", 130]
+const _NASAL := ["hat_helmet_nasal_adult.png", "hat_helmet_nasal_adult.png", 130]
+const _BARBUTA := ["hat_helmet_barbuta_male.png", "hat_helmet_barbuta_female.png", 130]
+const _ARMET := ["hat_helmet_armet_adult.png", "hat_helmet_armet_adult.png", 130]
+const _SPANGEN := ["hat_helmet_spangenhelm_adult.png", "hat_helmet_spangenhelm_adult.png", 130]
+const _TIARA := ["hat_formal_tiara_adult.png", "hat_formal_tiara_adult.png", 131]
+const _CROWN := ["hat_formal_crown_adult.png", "hat_formal_crown_adult.png", 131]
+
+# peças baixadas na v3.7 (tools/build_lpc_extra.py, catálogo "extra")
+const _WINGS := ["body_wings_feathered_adult_fg.png", "body_wings_feathered_adult_fg.png", 105]
+const _WINGS_BG := ["body_wings_feathered_adult_bg.png", "body_wings_feathered_adult_bg.png", 5]
+const _BAT := ["body_wings_bat_adult_fg.png", "body_wings_bat_adult_fg.png", 105]
+const _BAT_BG := ["body_wings_bat_adult_bg.png", "body_wings_bat_adult_bg.png", 5]
+const _LUNAR := ["body_wings_lunar_fg.png", "body_wings_lunar_fg.png", 105]
+const _LUNAR_BG := ["body_wings_lunar_bg.png", "body_wings_lunar_bg.png", 5]
+const _GREATHELM := ["hat_helmet_greathelm_male.png", "hat_helmet_greathelm_female.png", 130]
+const _CLOSE := ["hat_helmet_close_male.png", "hat_helmet_close_female.png", 130]
+const _MAXIMUS := ["hat_helmet_maximus_adult.png", "hat_helmet_maximus_adult.png", 130]
+const _LEGION_H := ["hat_helmet_legion_adult.png", "hat_helmet_legion_adult.png", 130]
+const _BASCINET := ["hat_helmet_bascinet_adult.png", "hat_helmet_bascinet_adult.png", 130]
+const _BASCINET_R := ["hat_helmet_bascinet_round_adult.png", "hat_helmet_bascinet_round_adult.png", 130]
+const _SUGARLOAF := ["hat_helmet_sugarloaf_male.png", "hat_helmet_sugarloaf_female.png", 130]
+const _HORNED := ["hat_helmet_horned_adult.png", "hat_helmet_horned_adult.png", 130]
+const _VISOR_SLIT := ["hat_visor_slit_adult.png", "hat_visor_slit_adult.png", 132]
+const _VISOR_GRATED := ["hat_visor_grated_adult.png", "hat_visor_grated_adult.png", 132]
+const _PLUME := ["hat_accessory_plumage_adult.png", "hat_accessory_plumage_adult.png", 139]
+const _CREST := ["hat_accessory_crest_adult.png", "hat_accessory_crest_adult.png", 139]
+const _HORNS := ["hat_accessory_horns_upward_fg_adult.png", "hat_accessory_horns_upward_fg_adult.png", 139]
+const _HORNS_BG := ["hat_accessory_horns_upward_bg_adult.png", "hat_accessory_horns_upward_bg_adult.png", 95]
+const _HWINGS := ["hat_accessory_wings_fg_adult.png", "hat_accessory_wings_fg_adult.png", 139]
+const _HWINGS_BG := ["hat_accessory_wings_bg_adult.png", "hat_accessory_wings_bg_adult.png", 125]
+const _MANTAL := ["shoulders_mantal_male.png", "shoulders_mantal_thin.png", 75]
+const _EPAULETS := ["shoulders_epaulets_male.png", "shoulders_epaulets_thin.png", 60]
+const _BOOTS := ["feet_boots_basic_male.png", "feet_boots_basic_thin.png", 25]
+const _BOOTS_FOLD := ["feet_boots_fold_male.png", "feet_boots_fold_thin.png", 25]
+const _GREAVES := ["feet_armour_plate_male.png", "feet_armour_plate_thin.png", 15]
+const _SH_ROUND := ["shield_round.png", "shield_round.png", 110]
+const _SH_HEATER_BG := ["shield_heater_original_wood_bg.png", "shield_heater_original_wood_bg.png", 2]
+const _SH_HEATER := ["shield_heater_original_wood_fg.png", "shield_heater_original_wood_fg.png", 110]
+const _SH_SPARTAN_BG := ["shield_spartan_bg.png", "shield_spartan_bg.png", 2]
+const _SH_SPARTAN := ["shield_spartan_fg.png", "shield_spartan_fg.png", 110]
+const _SH_CRUSADER_BG := ["shield_crusader_bg.png", "shield_crusader_bg.png", 2]
+const _SH_CRUSADER := ["shield_crusader_fg_male.png", "shield_crusader_fg_female.png", 110]
+
+## família -> slot -> 8 tiers, um por material (Data.TIER_NAMES): Madeira, Pedra, Ferro, Ouro, Diamante,
+## Obsidiana, Adamantium, Supremo. A cor segue o material: madeira = couro marrom, pedra = ferro escuro, ferro = aço,
+## ouro = dourado, diamante = azul-claro brilhante, obsidiana = preto com roxo, adamantium = verde-azulado,
+## supremo = ouro e branco com asas. Antes eram 6 visuais (os tiers 6 e 7 repetiam o 5) e as cores não batiam com o
+## nome: a armadura de Ouro era cinza-azulada e a de Diamante, lilás.
+## Cada tier: {"l": [[peça, paleta, material], ...], "legs": true = pernas de placa}. "_mat" vale para todas as classes.
+## O tier 7 do capacete é a "Coroa do Rei Divino": todas as classes usam coroa (ou tiara sobre o capuz/chapéu).
+const CLASS_GEAR := {
+	"_mat": {
+		"boots": [
+			{"l": [[_BOOTS, "leather", "cloth"]]},
+			{"l": [[_BOOTS_FOLD, "gray", "cloth"]]},
+			{"l": [[_GREAVES, "steel", "metal"]]},
+			{"l": [[_GREAVES, "gold", "metal"]]},
+			{"l": [[_GREAVES, "sky", "cloth"]]},
+			{"l": [[_GREAVES, "black", "cloth"]]},
+			{"l": [[_GREAVES, "teal", "cloth"]]},
+			{"l": [[_GREAVES, "gold", "metal"]]},
+		],
+		"shield": [
+			{"l": [[_SH_ROUND, "", ""]]},
+			{"l": [[_SH_ROUND, "", ""]]},
+			{"l": [[_SH_HEATER_BG, "", ""], [_SH_HEATER, "", ""]]},
+			{"l": [[_SH_SPARTAN_BG, "gold", "metal"], [_SH_SPARTAN, "gold", "metal"]]},
+			{"l": [[_SH_CRUSADER_BG, "sky", "cloth"], [_SH_CRUSADER, "sky", "cloth"]]},
+			{"l": [[_SH_SPARTAN_BG, "black", "cloth"], [_SH_SPARTAN, "purple", "cloth"]]},
+			{"l": [[_SH_CRUSADER_BG, "teal", "cloth"], [_SH_CRUSADER, "teal", "cloth"]]},
+			{"l": [[_SH_CRUSADER_BG, "gold", "metal"], [_SH_CRUSADER, "white", "cloth"]]},
+		],
+	},
+	"cavaleiro": {
+		"armor": [
+			{"l": [[_LEATHER, "leather", "cloth"]]},
+			{"l": [[_CHAIN, "gray", "cloth"], [_BRACERS, "gray", "cloth"]]},
+			{"l": [[_PLATE, "steel", "metal"], [_BRACERS, "steel", "metal"]]},
+			{"l": [[_PLATE, "gold", "metal"], [_PAULDRONS, "gold", "metal"], [_ARMS_PLATE, "gold", "metal"]], "legs": true},
+			{"l": [[_PLATE, "sky", "cloth"], [_PAULDRONS, "silver", "metal"], [_ARMS_PLATE, "sky", "cloth"], [_CAPE_TRIM, "white", "cloth"]], "legs": true},
+			{"l": [[_PLATE, "black", "cloth"], [_PAULDRONS, "purple", "cloth"], [_ARMS_PLATE, "black", "cloth"], [_CAPE_T_BG, "purple", "cloth"], [_CAPE_T_FG, "purple", "cloth"]], "legs": true},
+			{"l": [[_PLATE, "teal", "cloth"], [_PAULDRONS, "silver", "metal"], [_ARMS_PLATE, "teal", "cloth"], [_CAPE_BG, "green", "cloth"], [_CAPE_FG, "green", "cloth"], [_CLIP, "silver", "metal"]], "legs": true},
+			{"l": [[_PLATE, "gold", "metal"], [_PAULDRONS, "gold", "metal"], [_BAULDRON, "white", "cloth"], [_ARMS_PLATE, "gold", "metal"], [_CAPE_BG, "white", "cloth"], [_CAPE_FG, "white", "cloth"], [_WINGS_BG, "white", "cloth"], [_WINGS, "white", "cloth"]], "legs": true},
+		],
+		"helmet": [
+			{"l": [[_HOOD, "leather", "cloth"]]},
+			{"l": [[_MAIL_H, "gray", "cloth"]]},
+			{"l": [[_NASAL, "steel", "metal"]]},
+			{"l": [[_ARMET, "gold", "metal"]]},
+			{"l": [[_CLOSE, "silver", "metal"], [_PLUME, "sky", "cloth"]]},
+			{"l": [[_GREATHELM, "iron", "metal"], [_HORNS_BG, "purple", "cloth"], [_HORNS, "purple", "cloth"]]},
+			{"l": [[_MAXIMUS, "teal", "cloth"], [_CREST, "silver", "metal"]]},
+			{"l": [[_CROWN, "gold", "metal"]]},
+		],
+	},
+	"mago": {
+		"armor": [
+			{"l": [[_ROBE, "brown", "cloth"], [_ROBE_BELT, "leather", "cloth"]]},
+			{"l": [[_ROBE, "gray", "cloth"], [_ROBE_BELT, "charcoal", "cloth"]]},
+			{"l": [[_ROBE, "blue", "cloth"], [_ROBE_BELT, "steel", "metal"]]},
+			{"l": [[_ROBE, "maroon", "cloth"], [_ROBE_BELT, "gold", "metal"], [_CAPE_TRIM, "yellow", "cloth"]]},
+			{"l": [[_ROBE, "sky", "cloth"], [_ROBE_BELT, "silver", "metal"], [_MANTAL, "white", "cloth"], [_CAPE_BG, "white", "cloth"], [_CAPE_FG, "white", "cloth"]]},
+			{"l": [[_ROBE, "black", "cloth"], [_ROBE_BELT, "purple", "cloth"], [_MANTAL, "purple", "cloth"], [_CAPE_T_BG, "purple", "cloth"], [_CAPE_T_FG, "purple", "cloth"]]},
+			{"l": [[_ROBE, "teal", "cloth"], [_ROBE_BELT, "silver", "metal"], [_MANTAL, "green", "cloth"], [_CAPE_BG, "green", "cloth"], [_CAPE_FG, "green", "cloth"], [_CLIP, "silver", "metal"]]},
+			{"l": [[_ROBE, "white", "cloth"], [_ROBE_BELT, "gold", "metal"], [_MANTAL, "yellow", "cloth"], [_CAPE_BG, "white", "cloth"], [_CAPE_FG, "white", "cloth"], [_LUNAR_BG, "white", "cloth"], [_LUNAR, "white", "cloth"]]},
+		],
+		"helmet": [
+			{"l": [[_HOOD, "brown", "cloth"]]},
+			{"l": [[_HOOD, "gray", "cloth"]]},
+			{"l": [[_HOOD, "blue", "cloth"]]},
+			{"l": [[_WIZ, "", ""], [_WIZ_BELT, "", ""], [_WIZ_BUCKLE, "", ""]]},
+			{"l": [[_MOON, "sky", "cloth"]]},
+			{"l": [[_MOON, "black", "cloth"]]},
+			{"l": [[_MOON, "teal", "cloth"]]},
+			{"l": [[_MOON, "white", "cloth"], [_TIARA, "gold", "metal"]]},
+		],
+	},
+	"arqueiro": {
+		"armor": [
+			{"l": [[_LEATHER, "leather", "cloth"]]},
+			{"l": [[_LEATHER, "walnut", "cloth"], [_BRACERS, "gray", "cloth"]]},
+			{"l": [[_LEATHER, "forest", "cloth"], [_BRACERS, "steel", "metal"], [_CAPE_TRIM, "green", "cloth"]]},
+			{"l": [[_LEATHER, "forest", "cloth"], [_BRACERS, "gold", "metal"], [_CAPE_BG, "forest", "cloth"], [_CAPE_FG, "forest", "cloth"], [_CLIP, "gold", "metal"]]},
+			{"l": [[_LEGION, "sky", "cloth"], [_LEGION_SH, "silver", "metal"], [_BRACERS, "silver", "metal"], [_CAPE_BG, "white", "cloth"], [_CAPE_FG, "white", "cloth"]]},
+			{"l": [[_LEATHER, "black", "cloth"], [_GLOVES, "purple", "cloth"], [_BRACERS, "iron", "metal"], [_CAPE_T_BG, "black", "cloth"], [_CAPE_T_FG, "black", "cloth"]]},
+			{"l": [[_LEGION, "teal", "cloth"], [_LEGION_SH, "silver", "metal"], [_MANTAL, "green", "cloth"], [_CAPE_BG, "green", "cloth"], [_CAPE_FG, "green", "cloth"]]},
+			{"l": [[_LEGION, "gold", "metal"], [_LEGION_SH, "gold", "metal"], [_BRACERS, "gold", "metal"], [_CAPE_BG, "white", "cloth"], [_CAPE_FG, "white", "cloth"], [_WINGS_BG, "white", "cloth"], [_WINGS, "white", "cloth"]]},
+		],
+		"helmet": [
+			{"l": [[_HOOD, "forest", "cloth"]]},
+			{"l": [[_CAP, "leather", "cloth"]]},
+			{"l": [[_HOOD, "green", "cloth"]]},
+			{"l": [[_CAVALIER, "forest", "cloth"], [_FEATHER, "gold", "metal"]]},
+			{"l": [[_CAVALIER, "sky", "cloth"], [_FEATHER, "white", "cloth"]]},
+			{"l": [[_HOOD, "black", "cloth"]]},
+			{"l": [[_CAVALIER, "teal", "cloth"], [_FEATHER, "green", "cloth"]]},
+			{"l": [[_CROWN, "gold", "metal"]]},
+		],
+	},
+	"assassino": {
+		"armor": [
+			{"l": [[_LEATHER, "charcoal", "cloth"]]},
+			{"l": [[_LEATHER, "black", "cloth"], [_BRACERS, "iron", "metal"]]},
+			{"l": [[_LEATHER, "black", "cloth"], [_GLOVES, "charcoal", "cloth"], [_BRACERS, "steel", "metal"], [_CAPE_T_BG, "black", "cloth"], [_CAPE_T_FG, "black", "cloth"]]},
+			{"l": [[_LEATHER, "maroon", "cloth"], [_GLOVES, "black", "cloth"], [_BRACERS, "gold", "metal"], [_CAPE_T_BG, "maroon", "cloth"], [_CAPE_T_FG, "maroon", "cloth"]]},
+			{"l": [[_LEATHER, "navy", "cloth"], [_GLOVES, "black", "cloth"], [_BRACERS, "silver", "metal"], [_CAPE_T_BG, "sky", "cloth"], [_CAPE_T_FG, "sky", "cloth"]]},
+			{"l": [[_LEGION, "black", "cloth"], [_LEGION_SH, "purple", "cloth"], [_GLOVES, "black", "cloth"], [_CAPE_T_BG, "purple", "cloth"], [_CAPE_T_FG, "purple", "cloth"], [_BAT_BG, "", ""], [_BAT, "", ""]]},
+			{"l": [[_LEATHER, "teal", "cloth"], [_GLOVES, "black", "cloth"], [_BRACERS, "silver", "metal"], [_MANTAL, "black", "cloth"], [_CAPE_T_BG, "teal", "cloth"], [_CAPE_T_FG, "teal", "cloth"]]},
+			{"l": [[_LEGION, "charcoal", "cloth"], [_LEGION_SH, "gold", "metal"], [_GLOVES, "black", "cloth"], [_CAPE_BG, "black", "cloth"], [_CAPE_FG, "black", "cloth"], [_CLIP, "gold", "metal"], [_BAT_BG, "", ""], [_BAT, "", ""]]},
+		],
+		"helmet": [
+			{"l": [[_HOOD, "charcoal", "cloth"]]},
+			{"l": [[_BANDANA, "black", "cloth"]]},
+			{"l": [[_HOOD, "black", "cloth"]]},
+			{"l": [[_HOOD, "maroon", "cloth"]]},
+			{"l": [[_HOOD, "navy", "cloth"]]},
+			{"l": [[_HOOD, "black", "cloth"], [_HORNS_BG, "purple", "cloth"], [_HORNS, "purple", "cloth"]]},
+			{"l": [[_HOOD, "teal", "cloth"]]},
+			{"l": [[_HOOD, "black", "cloth"], [_TIARA, "gold", "metal"]]},
+		],
+	},
+	"escudeiro": {
+		"armor": [
+			{"l": [[_LEATHER, "leather", "cloth"]]},
+			{"l": [[_CHAIN, "gray", "cloth"], [_BRACERS, "gray", "cloth"]]},
+			{"l": [[_CHAIN, "steel", "metal"], [_TABARD, "blue", "cloth"], [_BRACERS, "steel", "metal"]]},
+			{"l": [[_PLATE, "gold", "metal"], [_TABARD, "blue", "cloth"], [_ARMS_PLATE, "gold", "metal"]], "legs": true},
+			{"l": [[_PLATE, "sky", "cloth"], [_TABARD, "navy", "cloth"], [_PAULDRONS, "silver", "metal"], [_ARMS_PLATE, "sky", "cloth"]], "legs": true},
+			{"l": [[_PLATE, "black", "cloth"], [_TABARD, "purple", "cloth"], [_PAULDRONS, "black", "cloth"], [_ARMS_PLATE, "black", "cloth"]], "legs": true},
+			{"l": [[_PLATE, "teal", "cloth"], [_TABARD, "white", "cloth"], [_EPAULETS, "yellow", "cloth"], [_ARMS_PLATE, "teal", "cloth"]], "legs": true},
+			{"l": [[_PLATE, "gold", "metal"], [_TABARD, "white", "cloth"], [_PAULDRONS, "gold", "metal"], [_ARMS_PLATE, "gold", "metal"], [_CAPE_BG, "white", "cloth"], [_CAPE_FG, "white", "cloth"], [_WINGS_BG, "white", "cloth"], [_WINGS, "white", "cloth"]], "legs": true},
+		],
+		"helmet": [
+			{"l": [[_CAP, "leather", "cloth"]]},
+			{"l": [[_MAIL_H, "gray", "cloth"]]},
+			{"l": [[_NASAL, "steel", "metal"]]},
+			{"l": [[_BARBUTA, "gold", "metal"]]},
+			{"l": [[_BASCINET, "silver", "metal"], [_VISOR_GRATED, "silver", "metal"]]},
+			{"l": [[_SUGARLOAF, "iron", "metal"], [_VISOR_SLIT, "iron", "metal"]]},
+			{"l": [[_LEGION_H, "teal", "cloth"], [_PLUME, "white", "cloth"]]},
+			{"l": [[_CROWN, "gold", "metal"]]},
+		],
+	},
+	"paladino": {
+		"armor": [
+			{"l": [[_LEATHER, "white", "cloth"]]},
+			{"l": [[_CHAIN, "gray", "cloth"], [_TABARD, "white", "cloth"], [_BRACERS, "gray", "cloth"]]},
+			{"l": [[_PLATE, "steel", "metal"], [_TABARD, "white", "cloth"], [_ARMS_PLATE, "steel", "metal"]], "legs": true},
+			{"l": [[_PLATE, "gold", "metal"], [_PAULDRONS, "white", "cloth"], [_ARMS_PLATE, "gold", "metal"], [_CAPE_TRIM, "white", "cloth"]], "legs": true},
+			{"l": [[_PLATE, "sky", "cloth"], [_BAULDRON, "silver", "metal"], [_ARMS_PLATE, "silver", "metal"], [_CAPE_BG, "white", "cloth"], [_CAPE_FG, "white", "cloth"], [_CLIP, "silver", "metal"]], "legs": true},
+			{"l": [[_PLATE, "black", "cloth"], [_BAULDRON, "gold", "metal"], [_ARMS_PLATE, "black", "cloth"], [_CAPE_BG, "purple", "cloth"], [_CAPE_FG, "purple", "cloth"], [_CLIP, "gold", "metal"]], "legs": true},
+			{"l": [[_PLATE, "teal", "cloth"], [_MANTAL, "white", "cloth"], [_ARMS_PLATE, "teal", "cloth"], [_CAPE_BG, "white", "cloth"], [_CAPE_FG, "white", "cloth"]], "legs": true},
+			{"l": [[_PLATE, "gold", "metal"], [_PAULDRONS, "gold", "metal"], [_BAULDRON, "white", "cloth"], [_ARMS_PLATE, "gold", "metal"], [_CAPE_BG, "white", "cloth"], [_CAPE_FG, "white", "cloth"], [_CLIP, "gold", "metal"], [_WINGS_BG, "white", "cloth"], [_WINGS, "white", "cloth"]], "legs": true},
+		],
+		"helmet": [
+			{"l": [[_HOOD, "white", "cloth"]]},
+			{"l": [[_NASAL, "gray", "cloth"]]},
+			{"l": [[_ARMET, "steel", "metal"]]},
+			{"l": [[_ARMET, "gold", "metal"], [_PLUME, "white", "cloth"]]},
+			{"l": [[_BASCINET_R, "silver", "metal"], [_PLUME, "sky", "cloth"]]},
+			{"l": [[_CLOSE, "iron", "metal"], [_CREST, "gold", "metal"]]},
+			{"l": [[_MAXIMUS, "teal", "cloth"], [_HWINGS_BG, "white", "cloth"], [_HWINGS, "white", "cloth"]]},
+			{"l": [[_CROWN, "gold", "metal"]]},
+		],
+	},
+}
+
+
+## Chapéus que deixam o cabelo à mostra (coroa, tiara, chapéus de mago, de aba e boné). Antes todo capacete
+## escondia o cabelo, e o tier 5 do conjunto padrão (coroa) deixava o herói careca.
+const KEEP_HAIR_FILES := ["hat_formal_crown_adult.png", "hat_formal_tiara_adult.png", "hat_magic_wizard_base_adult.png",
+	"hat_magic_celestial_moon_adult.png", "hat_pirate_cavalier_adult.png", "hat_cloth_leather_cap_adult.png"]
+
+
+func helmet_keeps_hair(t: int, family: String = "") -> bool:
+	if t < 0:
+		return true
+	var fam: Dictionary = CLASS_GEAR.get(family, {})
+	var first := ""
+	if fam.has("helmet"):
+		var tiers: Array = fam["helmet"]
+		first = str((tiers[clampi(t, 0, tiers.size() - 1)]["l"][0][0] as Array)[0])
+	else:
+		var cat_tiers: Array = _cat.get("equip", {}).get("helmet", [])
+		if cat_tiers.is_empty():
+			return true
+		var layers: Array = (cat_tiers[clampi(t, 0, cat_tiers.size() - 1)] as Dictionary).get("layers", {}).get("male", [])
+		first = str(layers[0]["file"]) if not layers.is_empty() else ""
+	return first in KEEP_HAIR_FILES
+
+
+## Família de armadura da classe ("" = conjunto padrão do catálogo).
+static func gear_family(class_id: String) -> String:
+	return class_id if CLASS_GEAR.has(class_id) and not class_id.begins_with("_") else ""
+
+
+## Camadas prontas (com rampa de cor) de um equipamento: da família da classe, se ela tiver, ou do catálogo.
+func gear_layers(look: Dictionary, slot: String, t: int, bt: String, family: String = "") -> Array:
+	var out: Array = []
+	var fam: Dictionary = CLASS_GEAR.get(family, {})
+	# botas e escudos do herói seguem o material (NPCs sem família continuam com o catálogo)
+	if family != "" and not fam.has(slot) and CLASS_GEAR["_mat"].has(slot):
+		fam = CLASS_GEAR["_mat"]
+	if fam.has(slot):
+		var tiers: Array = fam[slot]
+		var e: Dictionary = tiers[clampi(t, 0, tiers.size() - 1)]
+		var fem := bt == "female"
+		for piece in e["l"]:
+			var spec: Array = piece[0]
+			out.append({"file": str(spec[1] if fem else spec[0]), "z": int(spec[2]), "ramp": _ramp(look, str(piece[1]), str(piece[2]))})
+		if bool(e.get("legs", false)):
+			var legs: Array = _cat.get("equip", {}).get("legs_heavy", [])
+			if not legs.is_empty():
+				var r := _ramp(look, str(e["l"][0][1]), str(e["l"][0][2]))
+				for l in legs[0].get("layers", {}).get(bt, []):
+					out.append(_lay(l, r))
+		return out
+	var cat_tiers: Array = _cat.get("equip", {}).get(slot, [])
+	if t < 0 or cat_tiers.is_empty():
+		return out
+	var ce: Dictionary = cat_tiers[clampi(t, 0, cat_tiers.size() - 1)]
+	var r3 := _ramp(look, str(ce.get("palette", "")), str(ce.get("material", "")))
+	for l in ce.get("layers", {}).get(bt, []):
+		out.append(_lay(l, r3))
+	if slot == "armor" and t >= 3:
+		var legs2: Array = _cat.get("equip", {}).get("legs_heavy", [])
+		if not legs2.is_empty():
+			for l in legs2[0].get("layers", {}).get(bt, []):
+				out.append(_lay(l, r3))
 	return out
 
 
@@ -317,7 +616,7 @@ func cached(look: Dictionary, mode: String) -> Texture2D:
 
 func look_key(look: Dictionary, mode: String) -> String:
 	if mode == "item":
-		return "item:%s:%s:%s" % [look["_item"], look["_bt"], item_frame(str(look["_item"]))]
+		return "item:%s:%s:%s:%s" % [look["_item"], look["_bt"], look.get("_fam", ""), item_frame(str(look["_item"]))]
 	return mode + ":" + str(resolve(look).hash())
 
 
@@ -331,7 +630,7 @@ func _run_queue() -> void:
 			var job: Array = _queue.pop_front()
 			batch.append(job)
 			if job[2] == "item":
-				budget += item_layers(str(job[1]["_item"]), str(job[1]["_bt"])).size()
+				budget += item_layers(str(job[1]["_item"]), str(job[1]["_bt"]), str(job[1].get("_fam", ""))).size()
 			else:
 				budget += layers(job[1]).size() * (PORTRAIT_EXPR.size() if job[2] == "portrait" else 1)
 		var vps: Array = []
@@ -373,7 +672,7 @@ func _make_viewport(look: Dictionary, mode: String) -> SubViewport:
 	if mode == "item":
 		var frame := item_frame(str(look["_item"]))
 		vp.size = Vector2i(frame.size)
-		for l in item_layers(str(look["_item"]), str(look["_bt"])):
+		for l in item_layers(str(look["_item"]), str(look["_bt"]), str(look.get("_fam", ""))):
 			var si := _sprite(l)
 			si.region_enabled = true
 			si.region_rect = frame
@@ -447,7 +746,7 @@ func item_frame(item_id: String) -> Rect2:
 
 
 ## Camadas do equipamento sozinho (sem corpo), na ordem de profundidade do personagem.
-func item_layers(item_id: String, bt: String = "male") -> Array:
+func item_layers(item_id: String, bt: String = "male", family: String = "") -> Array:
 	var it: Dictionary = Data.get_item(item_id)
 	var slot := str(it.get("slot", ""))
 	var base := {"skin": "light", "eyes": "brown", "hair_pal": "dark_brown"}
@@ -459,19 +758,7 @@ func item_layers(item_id: String, bt: String = "male") -> Array:
 		for l in _cat.get("weapons", {}).get(wid, []):
 			out.append(_lay(l, wr))
 	elif slot in ["armor", "helmet", "boots", "shield"]:
-		var tiers: Array = _cat.get("equip", {}).get(slot, [])
-		if tiers.is_empty():
-			return []
-		var t := clampi(int(it.get("tier", 0)), 0, tiers.size() - 1)
-		var e: Dictionary = tiers[t]
-		var r := _ramp(base, str(e.get("palette", "")), str(e.get("material", "")))
-		for l in e.get("layers", {}).get(bt, []):
-			out.append(_lay(l, r))
-		if slot == "armor" and t >= 3:
-			var legs: Array = _cat.get("equip", {}).get("legs_heavy", [])
-			if not legs.is_empty():
-				for l in legs[0].get("layers", {}).get(bt, []):
-					out.append(_lay(l, r))
+		out.append_array(gear_layers(base, slot, maxi(int(it.get("tier", 0)), 0), bt, family))
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["z"]) < int(b["z"]))
 	return out
 
@@ -484,7 +771,7 @@ func _hero_bt() -> String:
 func item_icon(item_id: String) -> Texture2D:
 	if Data.slot_of(item_id) not in ICON_SLOTS or not available():
 		return null
-	var job := {"_item": item_id, "_bt": _hero_bt()}
+	var job := {"_item": item_id, "_bt": _hero_bt(), "_fam": gear_family(GameState.player_class)}
 	var key := look_key(job, "item")
 	if _cache.has(key):
 		return _cache[key]

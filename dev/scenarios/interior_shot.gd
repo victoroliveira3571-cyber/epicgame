@@ -1,7 +1,7 @@
 extends Node
 
 ## Entra em cada interior e tira prints. Uso: --scenario=interior_shot -- --ids=casa,restaurante,guilda,casa_npc_0
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 func run(dev: Node) -> void:
 	var ids: PackedStringArray = ["casa", "restaurante", "guilda", "casa_npc_0"]

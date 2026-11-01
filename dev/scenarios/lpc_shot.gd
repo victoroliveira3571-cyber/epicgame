@@ -4,7 +4,7 @@ extends Node
 ## narração), cidade com NPCs e o herói com armadura. Prints em _shots/lpc_*.png.
 ## Rodar: tools/run_godot.sh 120 --resolution 1280x720 -- --scenario=lpc_shot --save=dev_save.json
 
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var dev: Node
 
 

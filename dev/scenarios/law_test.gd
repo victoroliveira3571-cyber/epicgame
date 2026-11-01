@@ -1,7 +1,7 @@
 extends Node
 
 ## v2.2 lote 3: moradores feridos, guarda, cela, pena em minutos de foco, regeneração e conversa de rua.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var ok := true
 
 

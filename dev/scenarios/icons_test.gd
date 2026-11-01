@@ -1,7 +1,7 @@
 extends Node
 
 ## v3.5: ícones de amuleto por tier e das barras novas.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var fails := 0
 
 

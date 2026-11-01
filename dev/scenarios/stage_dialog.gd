@@ -1,7 +1,7 @@
 extends Node
 
 ## Diálogo real (DialogueBox) por cima do palco: loja, chefe e rua (a rua não abre palco).
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 
 func _skip() -> void:

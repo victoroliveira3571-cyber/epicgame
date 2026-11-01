@@ -1,7 +1,7 @@
 extends Node
 
 ## Entra e sai dos interiores pelas portas da cidade (e confirma que nada está bloqueado por nível).
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 func run(dev: Node) -> void:
 	GameState.debug_reset()

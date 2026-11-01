@@ -1,7 +1,7 @@
 extends Node
 
 ## Laboratório: prédio na cidade, interior, apresentação do Dr. Faísca no palco, bancada, tônico e livro de magia (Z).
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var ok := true
 
 

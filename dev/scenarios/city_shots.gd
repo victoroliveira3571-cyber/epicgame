@@ -1,7 +1,7 @@
 extends Node
 
 ## v3.2: prints das cidades de dia (use --hour=12) em pontos de interesse.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 const SPOTS := {
 	"porto": [[28, 27], [30, 38]], "pedralta": [[28, 24], [28, 12]], "academia": [[28, 22], [30, 33]],
 }

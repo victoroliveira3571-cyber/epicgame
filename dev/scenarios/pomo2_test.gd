@@ -2,7 +2,7 @@ extends Node
 
 ## Pomodoro novo: janela (configuração, foco, painel Sons), troca livro/caneca, finalizar antes
 ## da hora (conta o tempo), playlist/ambiente, Guarda-roupa e Créditos. Prints em _shots/.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 var ok := true
 

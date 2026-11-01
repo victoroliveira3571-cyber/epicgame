@@ -2,7 +2,7 @@ extends Node
 
 ## Casa e modo Decorar: móveis comprados vão para a caixa, saem da caixa para a grade, giram,
 ## não entram em cima de outro, voltam para a caixa e a posição/giro ficam no save ao reentrar.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var fails := 0
 
 

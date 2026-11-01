@@ -41,7 +41,8 @@ func set_flag(key: String, value: Variant = true) -> void:
 func set_step(s: String) -> void:
 	st()["step"] = s
 	_save()
-	Audio.novo("npc_atribuir", -6.0)
+	# v3.7: saiu o som "npc_atribuir" daqui. O arquivo tem 8 falas em sequência (13,7 s): no fim de cada conversa
+	# que muda o objetivo (como a despedida da mãe) o personagem seguia "falando" e soltava um "waw" no final.
 	HUD.show_toast("Novo objetivo: " + objective_text(), UI.C_ORANGE_L)
 
 
@@ -128,7 +129,15 @@ func objective_target() -> String:
 
 
 ## Posição (px) do objetivo na cena `scene` (Town/Forest), ou null se ele não está nesta cena.
+## v3.7: a cena pode trocar o ponto por um alvo vivo (`objective_override`): a erva mais próxima, o Pietro
+## sendo atacado... `false` esconde a seta (a parte da missão nesta cena já foi feita).
 func objective_world_pos(scene: Node) -> Variant:
+	if scene != null and scene.has_method("objective_override"):
+		var o: Variant = scene.objective_override(step())
+		if o is Vector2:
+			return o
+		if o is bool and not o:
+			return null
 	var id := objective_target()
 	if id == "" or scene == null or not scene.has_method("map_landmarks"):
 		return null

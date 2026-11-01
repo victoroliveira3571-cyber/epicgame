@@ -36,7 +36,7 @@ func run(dev: Node) -> void:
 		d._spawn_enemy(pc + off)
 	await dev.wait(0.5)
 	await _measure(dev, "%d inimigos em volta" % get_tree().get_nodes_in_group("enemy").size())
-	await dev.shot("/Users/victor/Desktop/EPICGAME/game/_shots/perf.png")
+	await dev.shot(ProjectSettings.globalize_path("res://_shots/perf.png"))
 
 
 func _measure(dev: Node, label: String) -> void:

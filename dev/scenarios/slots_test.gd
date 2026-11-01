@@ -2,7 +2,7 @@ extends Node
 
 ## Menu inicial e espaços de save, em arquivos de teste (user://slot_test_N.json, nunca os reais).
 ## Rodar: tools/run_godot.sh 120 --resolution 1280x720 -- --scenario=slots_test --save=dev_save.json
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var fails := 0
 
 

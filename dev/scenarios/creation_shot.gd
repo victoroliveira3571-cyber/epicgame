@@ -1,7 +1,7 @@
 extends Node
 
 ## Criação do personagem com o editor de aparência e o espelho. Prints em _shots/creation_*.png.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 
 func run(dev: Node) -> void:

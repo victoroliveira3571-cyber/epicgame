@@ -2,7 +2,7 @@ extends Node
 
 ## v2.2: recall ativo no fim do foco (não fecha sem o mínimo de caracteres, fica salvo no histórico)
 ## e caixa de preocupações dentro do foco. Prints em _shots/.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 var ok := true
 

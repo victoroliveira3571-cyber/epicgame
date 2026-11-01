@@ -193,14 +193,82 @@ func sfx2(name: String, volume_db: float = 0.0, pitch_var: float = 0.05) -> void
 
 
 ## Efeito de "assets/audio/novos/<id>.mp3" (one-shot).
+## v3.7: se o arquivo tiver várias gravações em sequência (ver NOVO_PARTS), toca só uma, sorteada.
 func novo(id: String, volume_db: float = 0.0, pitch_var: float = 0.04, gap: float = 0.0) -> void:
 	var now := Time.get_ticks_msec()
 	if _last_played.has("n:" + id) and now - int(_last_played["n:" + id]) < maxi(60, int(gap * 1000.0)):
 		return
 	_last_played["n:" + id] = now
 	var stream := _load_stream(NOVOS_DIR + id + ".mp3")
-	if stream != null:
+	if stream == null:
+		return
+	if NOVO_PARTS.has(id):
+		_play_part(stream, NOVO_PARTS[id], volume_db, pitch_var)
+	else:
 		_play_on_pool(stream, volume_db, pitch_var)
+
+
+## v3.7: os sons enviados em "novos/" são, na maioria, pacotes com várias gravações separadas por silêncio
+## (o passo tem 9 passos, o golpe tem 4 golpes, o início do Pomodoro repete aos 20, 40 e 60 s...). Tocar o
+## arquivo inteiro a cada uso empilhava as gravações: passos sobrepostos, golpes que seguiam soando, a fala
+## do NPC que durava vários segundos. Aqui fica [início, duração] de cada gravação (medido com ffmpeg
+## silencedetect, -40 dB) e, em "max", um limite de duração (com fade) para os que são longos demais.
+## "window": arquivo contínuo (sem silêncio): toca uma janela curta de um ponto sorteado.
+const NOVO_PARTS := {
+	"arqueiro_entra": {"parts": [[0.0, 4.98], [6.07, 4.26], [11.38, 3.25], [15.73, 4.73], [21.52, 6.59]], "max": 3.0},
+	"ataque_espada": {"parts": [[0.0, 0.73], [1.65, 0.48], [3.42, 0.42]]},
+	"ataque_mago": {"parts": [[0.0, 0.59], [1.35, 0.32], [2.43, 0.54], [3.71, 0.58]]},
+	"equipar_armadura": {"parts": [[0.0, 0.25], [1.16, 0.24], [2.3, 0.33], [3.46, 1.03]]},
+	"ferraria_criar": {"parts": [[0.0, 1.44], [2.32, 2.12]]},
+	"flecha_alvo": {"parts": [[0.0, 1.14], [1.64, 1.32], [3.39, 1.31], [5.32, 1.42]], "max": 0.9},
+	"golpe_arma": {"parts": [[0.0, 0.97], [2.29, 0.53], [3.82, 0.48], [5.44, 0.5]]},
+	"golpe_desarmado": {"parts": [[0.0, 0.29], [1.31, 0.23], [2.57, 0.24], [3.84, 0.22], [5.1, 0.42]]},
+	"guilda_npc": {"parts": [[0.0, 1.19], [2.43, 1.04], [4.66, 1.42], [7.26, 1.54]]},
+	"heroi_acorda": {"parts": [[0.38, 0.9], [3.69, 2.03], [7.72, 0.98]]},
+	"magia_fogo": {"parts": [[0.0, 7.16], [10.14, 7.1], [20.2, 7.03], [30.21, 7.06], [40.21, 7.02]], "max": 2.2},
+	"monstro_correntes": {"parts": [[0.3, 2.28], [3.3, 0.48], [4.57, 0.96], [6.17, 1.23]], "max": 1.6},
+	"monstro_grande": {"parts": [[0.0, 2.53], [5.37, 1.23], [9.69, 3.59], [16.63, 3.57], [20.41, 0.7], [27.07, 2.05],
+		[32.14, 1.52], [39.18, 1.26], [41.59, 1.53], [53.77, 1.48], [57.97, 1.3], [66.86, 1.55], [71.04, 1.93],
+		[85.81, 1.77], [91.22, 1.48], [95.9, 1.34], [103.72, 1.33], [109.8, 2.63]], "max": 1.8},
+	"monstro_humanoide": {"parts": [[0.0, 1.17], [1.4, 0.6], [2.3, 1.43], [4.19, 1.96], [6.44, 2.59], [9.37, 2.41]], "max": 1.6},
+	"slime": {"parts": [[0.43, 0.46], [1.32, 1.17], [2.9, 1.77], [5.33, 0.3], [6.3, 2.47], [9.61, 3.87]], "max": 1.2},
+	"npc_som": {"parts": [[0.0, 0.68], [1.69, 1.16], [3.56, 0.6], [5.14, 0.65]]},
+	"npc_atribuir": {"parts": [[0.0, 1.0], [1.63, 0.96], [3.22, 0.9], [8.75, 0.89], [10.49, 1.38], [12.59, 1.16]]},
+	"pomodoro_inicio": {"parts": [[0.0, 2.83], [20.38, 3.03], [40.13, 2.72], [60.4, 3.03]]},
+	"sino_6_12_18": {"parts": [[0.0, 11.34]]},
+	# passos: uma pisada por chamada (o Player chama a cada ~0,42 s)
+	"passos_heroi": {"parts": [[0.0, 0.27], [0.95, 0.23], [1.86, 0.21], [2.81, 0.21], [3.69, 0.23], [4.68, 0.3], [5.64, 0.22], [6.55, 0.25], [7.43, 0.21]]},
+	"passos_interior": {"parts": [[0.0, 0.17], [0.61, 0.15], [1.18, 0.16], [1.83, 0.24], [2.36, 0.14], [2.86, 0.19], [3.44, 0.38]]},
+	"passos_arvores": {"parts": [[0.0, 0.81], [1.02, 1.51], [2.76, 0.69], [3.74, 1.52], [7.99, 0.58]], "max": 0.4},
+	"passos_masmorra": {"parts": [[0.38, 0.72], [1.33, 2.44], [4.01, 4.43], [8.67, 0.47], [9.41, 3.14], [12.87, 10.95], [24.12, 4.4]], "max": 0.4},
+	"passos_grama": {"window": 0.4},
+}
+
+
+func _play_part(stream: AudioStream, cfg: Dictionary, volume_db: float, pitch_var: float) -> void:
+	var from := 0.0
+	var length := 0.0
+	if cfg.has("window"):
+		length = float(cfg["window"])
+		from = randf() * maxf(stream.get_length() - length, 0.0)
+	else:
+		var parts: Array = cfg["parts"]
+		var part: Array = parts[randi() % parts.size()]
+		from = float(part[0])
+		length = float(part[1])
+	if cfg.has("max"):
+		length = minf(length, float(cfg["max"]))
+	var p := _make_player()
+	p.stream = stream
+	p.volume_db = volume_db - 3.0 + sfx_gain_db()
+	p.pitch_scale = 1.0 + randf_range(-pitch_var, pitch_var)
+	p.play(from)
+	var real_len := length / p.pitch_scale
+	var fade := minf(0.08, real_len * 0.3)
+	var tw := create_tween()
+	tw.tween_interval(maxf(real_len - fade, 0.0))
+	tw.tween_property(p, "volume_db", -60.0, fade)
+	tw.tween_callback(p.queue_free)
 
 
 ## Som de fundo em loop de um lugar (floresta, masmorra, biblioteca, casa com lareira, forja).

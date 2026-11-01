@@ -1,7 +1,7 @@
 extends Node
 
 ## Janela do Pomodoro: configuração e as 4 cenas rodando. Uso: -- --class=mago --scenes=estudo,cafeteria
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 func run(dev: Node) -> void:
 	var cls := "cavaleiro"

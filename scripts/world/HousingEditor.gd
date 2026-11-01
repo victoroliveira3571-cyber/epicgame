@@ -29,6 +29,9 @@ var _valid: bool = false
 var _ui: CanvasLayer
 var _bar: Control
 var _list: HBoxContainer
+var _cam: Camera2D = null           # v3.7: câmera do modo Decorar (mostra a casa inteira acima da caixa)
+
+const BAR_H := 62.0                 # altura da caixa de móveis (em unidades da interface, 640x360)
 
 
 func setup(r: Interior, fixed: Array) -> void:
@@ -173,14 +176,41 @@ func set_active(on: bool) -> void:
 	if on:
 		HUD.set_prompt("")
 		_build_ui()
+		_frame_room(true)
 	else:
 		HUD.set_hint("V  Decorar a casa")
 		if _ui != null:
 			_ui.queue_free()
 			_ui = null
+		_frame_room(false)
 	for fid in nodes:
 		_outline(nodes[fid], on)
 	queue_redraw()
+
+
+## v3.7: a caixa de móveis cobria a parte de baixo da casa (a câmera do herói fica em 3x e segue o herói).
+## No modo Decorar entra uma câmera própria que afasta a vista e centraliza a casa inteira no espaço acima da caixa.
+func _frame_room(on: bool) -> void:
+	if not on:
+		if _cam != null:
+			_cam.queue_free()
+			_cam = null
+		if room.player != null and is_instance_valid(room.player) and room.player.camera != null:
+			room.player.camera.make_current()
+			room.player.camera.reset_smoothing()
+		return
+	var vp := get_viewport().get_visible_rect().size
+	var px := room.room_px()
+	var ui_k := vp.y / UI.SIZE.y                       # quantos px de tela vale 1 unidade da interface
+	var free_h := vp.y - (BAR_H + 12.0) * ui_k          # altura livre acima da caixa
+	var zoom := minf((vp.x - 24.0) / px.x, (free_h - 16.0) / px.y)
+	zoom = clampf(zoom, 1.0, Player.CAMERA_ZOOM)
+	_cam = Camera2D.new()
+	_cam.zoom = Vector2(zoom, zoom)
+	# o centro da casa vai para o meio da área livre (acima da caixa), não para o meio da tela
+	_cam.position = px / 2.0 + Vector2(0, (vp.y / 2.0 - free_h / 2.0) / zoom)
+	room.add_child(_cam)
+	_cam.make_current()
 
 
 func _outline(node: Node2D, on: bool) -> void:
@@ -405,19 +435,18 @@ func _build_ui() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(root)
 	_bar = UI.card(Color(0.11, 0.09, 0.08, 0.94), UI.C_ORANGE)
-	_bar.position = Vector2(8, 278)
-	_bar.custom_minimum_size = Vector2(624, 76)
+	_bar.position = Vector2(8, UI.SIZE.y - BAR_H - 4.0)
+	_bar.custom_minimum_size = Vector2(624, BAR_H)
 	_bar.size = _bar.custom_minimum_size
 	root.add_child(_bar)
 	var v := UI.vbox(2)
 	_bar.add_child(v)
 	var head := UI.hbox(6)
 	v.add_child(head)
-	var title := UI.vbox(0)
+	var title := UI.label("Decorar: arraste ou clique num móvel. Esc cancela.", UI.C_ORANGE_L)
+	title.clip_text = true
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
-	title.add_child(UI.label("Decorar: caixa de móveis", UI.C_ORANGE_L))
-	title.add_child(UI.label("Arraste para a casa ou clique num móvel. Botão direito/Esc cancela.", UI.C_DIM))
 	head.add_child(UI.button("Girar (R)", func() -> void: _rotate(), 56))
 	head.add_child(UI.button("Guardar (G)", func() -> void:
 		var fid := held

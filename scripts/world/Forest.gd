@@ -32,6 +32,7 @@ var _zone: String = ""
 var _zone_timer: float = 0.0
 var _daylight_timer: float = 0.0
 var _barrier: StaticBody2D = null
+var _barrier_warned: bool = false
 var _pietro_c1: NPC = null
 var _leaving: bool = false
 
@@ -334,6 +335,31 @@ func map_landmarks() -> Array:
 	return out
 
 
+## v3.7: alvo vivo da seta de objetivo (ver Story.objective_world_pos). Na missão das ervas a seta vai para a
+## erva mais próxima; com as 5 colhidas, para o Pietro sendo atacado; com tudo feito, some até o passo mudar.
+func objective_override(step: String) -> Variant:
+	if step != "c1_ervas" or player == null:
+		return null
+	if int(Story.st().get("herbs", 0)) < 5:
+		var best: Variant = null
+		var best_d := INF
+		for h in get_tree().get_nodes_in_group("forest_herb"):
+			var n := h as StoryProp
+			if n == null or not is_instance_valid(n) or not n.enabled or n.is_queued_for_deletion():
+				continue
+			var d := n.global_position.distance_squared_to(player.global_position)
+			if d < best_d:
+				best_d = d
+				best = n.global_position
+		if best != null:
+			return best
+	if not Story.pets().has("corvin"):
+		if _pietro_c1 != null and is_instance_valid(_pietro_c1):
+			return _pietro_c1.global_position
+		return null
+	return false
+
+
 # ================================================================== Casas e ruínas
 func _build_houses() -> void:
 	var defs := [
@@ -489,6 +515,7 @@ func _build_herbs() -> void:
 			var p := _random_spot(z, 22.0)
 			var herb := StoryProp.make_herb()
 			herb.position = p
+			herb.add_to_group("forest_herb")
 			world.add_child(herb)
 			placed_points.append(p)
 
@@ -601,21 +628,25 @@ func _build_story() -> void:
 	elif s in ["c2_ruinas", "c2_sentinela"]:
 		_npc("Master", Vector2(RUINS_X + 2, PATH_Y - 2), "lin", "Mestre Lin")
 	# barreira da Mata: só Rank E ou maior
+	# v3.7: a parede ficava invisível a oeste da ponte (tile RIVER_X - 3), já dentro da sombra da Mata: o herói
+	# atravessava a ponte, entrava no escuro e batia em nada. Agora é uma cerca de verdade na cabeceira leste da
+	# ponte, antes de escurecer, com a placa ao lado. O rio fecha o resto do mapa; a parede vai de ponta a ponta
+	# para ninguém contornar pela margem.
 	if not Story.zone_unlocked("mata"):
+		var gate_x := (RIVER_X + 4) * T + 8
 		_barrier = StaticBody2D.new()
 		_barrier.collision_layer = 1
 		var c := CollisionShape2D.new()
 		var r := RectangleShape2D.new()
-		# v2.4: a parede cobre o mapa todo (antes só 7 tiles em volta da trilha: dava para contornar
-		# pelo norte ou pelo sul e a Mata abria sem o Rank)
-		r.size = Vector2(10, H * T)
+		r.size = Vector2(12, H * T)
 		c.shape = r
-		c.position = Vector2((RIVER_X - 3) * T, H * T / 2.0)
+		c.position = Vector2(gate_x, H * T / 2.0)
 		_barrier.add_child(c)
 		world.add_child(_barrier)
+		_add_prop("k_cercav_5", Vector2(gate_x, (PATH_Y + 3) * T))
 		var sign := StoryProp.make("Ler a placa", func(_me: StoryProp) -> void:
 			Story.say([["narr", "\"Mata Profunda e Pântano da Névoa: somente aventureiros de Rank E ou maior. - A Guilda\""]]), null, 24.0, false)
-		sign.position = _tile_pos(RIVER_X + 4, PATH_Y - 2)
+		sign.position = _tile_pos(RIVER_X + 6, PATH_Y - 2)
 		world.add_child(sign)
 		_add_prop("i_board", sign.position, 4.0)
 	# Sentinela de Pedra dorme no salão das ruínas até a hora dela
@@ -683,6 +714,10 @@ func _check_story_triggers() -> void:
 	if Story.is_busy() or HUD.is_dialogue_open():
 		return
 	var pp := player.global_position
+	# v3.7: encostou na cerca da Mata sem o Rank: avisa uma vez por visita
+	if _barrier != null and not _barrier_warned and pp.x < (RIVER_X + 6) * T and absf(pp.y - PATH_Y * T) < 4 * T:
+		_barrier_warned = true
+		HUD.show_toast("Cerca da Guilda: a Mata Profunda e o Pântano pedem Rank E.", UI.C_ENERGY)
 	if _pietro_c1 != null and is_instance_valid(_pietro_c1) and Story.step() == "c1_ervas" and not Story.flag("pietro_c1"):
 		if pp.distance_to(_pietro_c1.global_position) < 90.0:
 			Story.set_flag("pietro_c1")

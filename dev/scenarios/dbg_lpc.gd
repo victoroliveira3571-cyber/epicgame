@@ -20,5 +20,5 @@ func run(d: Node) -> void:
 			n[0] += 1)
 	await d.wait(1.0)
 	out.resize(640, 128, Image.INTERPOLATE_NEAREST)
-	out.save_png("/Users/victor/Desktop/EPICGAME/game/_shots/dbg_variants.png")
+	out.save_png(ProjectSettings.globalize_path("res://_shots/dbg_variants.png"))
 	print("n=", n)

@@ -6118,6 +6118,7 @@
    "Charles Sanchez (CharlesGabriel)",
    "dalonedrau",
    "DarkwallLKE",
+   "DCSS authors",
    "Durrani",
    "Eliza Wyatt (ElizaWy)",
    "ElizaWy",
@@ -6147,6 +6148,7 @@
    "Shaun Williams",
    "Stephen Challener (Redshrike)",
    "Thane Brimhall (pennomi)",
+   "The Foreman",
    "thecilekli",
    "TheraHedwig",
    "Tracy",
@@ -6160,13 +6162,380 @@
    "CC-BY 3.0+",
    "CC-BY 4.0",
    "CC-BY-SA 3.0",
+   "CC-BY-SA 4.0",
    "CC0",
    "GPL 2.0",
    "GPL 3.0",
    "OGA-BY 3.0",
    "OGA-BY 3.0+",
+   "OGA-BY 4.0",
    "OGA-SA 3.0"
   ]
  },
- "source": "Universal LPC Spritesheet Character Generator - github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator"
+ "source": "Universal LPC Spritesheet Character Generator - github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator",
+ "extra": {
+  "wings_feathered": {
+   "name": "Feathered Wings",
+   "layers": {
+    "male": [
+     {
+      "file": "body_wings_feathered_adult_fg.png",
+      "z": 105,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "body_wings_feathered_adult_bg.png",
+      "z": 5,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "body_wings_feathered_adult_fg.png",
+      "z": 105,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "body_wings_feathered_adult_bg.png",
+      "z": 5,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "wings_lunar": {
+   "name": "Lunar Wings",
+   "layers": {
+    "male": [
+     {
+      "file": "body_wings_lunar_fg.png",
+      "z": 105,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "body_wings_lunar_bg.png",
+      "z": 5,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "body_wings_lunar_fg.png",
+      "z": 105,
+      "ramp": "cloth:white"
+     },
+     {
+      "file": "body_wings_lunar_bg.png",
+      "z": 5,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "hat_helmet_greathelm": {
+   "name": "Greathelm",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_helmet_greathelm_male.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_helmet_greathelm_female.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "hat_helmet_close": {
+   "name": "Close helm",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_helmet_close_male.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_helmet_close_female.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "hat_helmet_maximus": {
+   "name": "Maximus",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_helmet_maximus_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_helmet_maximus_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "hat_helmet_legion": {
+   "name": "Legion",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_helmet_legion_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_helmet_legion_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "hat_helmet_bascinet": {
+   "name": "Bascinet",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_helmet_bascinet_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_helmet_bascinet_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "hat_helmet_bascinet_round": {
+   "name": "Round bascinet",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_helmet_bascinet_round_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_helmet_bascinet_round_adult.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "hat_helmet_sugarloaf": {
+   "name": "Sugarloaf greathelm",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_helmet_sugarloaf_male.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_helmet_sugarloaf_female.png",
+      "z": 130,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "hat_visor_slit": {
+   "name": "Slit visor",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_visor_slit_adult.png",
+      "z": 132,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_visor_slit_adult.png",
+      "z": 132,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "hat_visor_grated": {
+   "name": "Grated visor",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_visor_grated_adult.png",
+      "z": 132,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_visor_grated_adult.png",
+      "z": 132,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "hat_accessory_plumage": {
+   "name": "Plumage",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_accessory_plumage_adult.png",
+      "z": 139,
+      "ramp": "cloth:brown"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_accessory_plumage_adult.png",
+      "z": 139,
+      "ramp": "cloth:brown"
+     }
+    ]
+   }
+  },
+  "hat_accessory_crest": {
+   "name": "Crest",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_accessory_crest_adult.png",
+      "z": 139,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_accessory_crest_adult.png",
+      "z": 139,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "hat_accessory_horns_upward": {
+   "name": "Upward Horns",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_accessory_horns_upward_fg_adult.png",
+      "z": 139,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "hat_accessory_horns_upward_bg_adult.png",
+      "z": 95,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_accessory_horns_upward_fg_adult.png",
+      "z": 139,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "hat_accessory_horns_upward_bg_adult.png",
+      "z": 95,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "hat_accessory_wings": {
+   "name": "Helmet wings",
+   "layers": {
+    "male": [
+     {
+      "file": "hat_accessory_wings_fg_adult.png",
+      "z": 139,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "hat_accessory_wings_bg_adult.png",
+      "z": 125,
+      "ramp": "metal:steel"
+     }
+    ],
+    "female": [
+     {
+      "file": "hat_accessory_wings_fg_adult.png",
+      "z": 139,
+      "ramp": "metal:steel"
+     },
+     {
+      "file": "hat_accessory_wings_bg_adult.png",
+      "z": 125,
+      "ramp": "metal:steel"
+     }
+    ]
+   }
+  },
+  "shoulders_mantal": {
+   "name": "Mantal",
+   "layers": {
+    "male": [
+     {
+      "file": "shoulders_mantal_male.png",
+      "z": 75,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "shoulders_mantal_thin.png",
+      "z": 75,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  },
+  "shoulders_epaulets": {
+   "name": "Epaulets",
+   "layers": {
+    "male": [
+     {
+      "file": "shoulders_epaulets_male.png",
+      "z": 60,
+      "ramp": "cloth:white"
+     }
+    ],
+    "female": [
+     {
+      "file": "shoulders_epaulets_thin.png",
+      "z": 60,
+      "ramp": "cloth:white"
+     }
+    ]
+   }
+  }
+ }
 }

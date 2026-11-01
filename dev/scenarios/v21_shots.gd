@@ -2,7 +2,7 @@ extends Node
 
 ## v2.1: prints da escolha de classe, diálogo (retrato x mundo), inventário (ícones e comparação),
 ## créditos de viagem, editor da casa e progressão de habilidades. Prints em _shots/v21_*.png.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var dev: Node
 
 

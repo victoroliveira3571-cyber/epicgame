@@ -52,11 +52,12 @@ func build() -> void:
 		GameState.set_music_on(not GameState.music_on)
 		music.text = "Música: ligada" if GameState.music_on else "Música: desligada")
 	var diff := UI.button("Dificuldade: " + GameState.DIFFICULTY_NAMES[GameState.difficulty], Callable(), 130)
-	diff.tooltip_text = "Fácil: -30% de dano recebido, -20% de recompensa. Difícil: +40% de dano, +30% de recompensa."
+	diff.tooltip_text = "\n".join([GameState.difficulty_desc(0), GameState.difficulty_desc(1), GameState.difficulty_desc(2)])
 	diff.pressed.connect(func() -> void:
 		Audio.ui_click()
 		GameState.set_difficulty((GameState.difficulty + 1) % 3)
-		diff.text = "Dificuldade: " + GameState.DIFFICULTY_NAMES[GameState.difficulty])
+		diff.text = "Dificuldade: " + GameState.DIFFICULTY_NAMES[GameState.difficulty]
+		HUD.show_toast(GameState.difficulty_desc() + " Vale para os próximos monstros.", UI.C_XP))
 	var toggles := UI.hbox(6)
 	toggles.add_child(mute)
 	toggles.add_child(music)

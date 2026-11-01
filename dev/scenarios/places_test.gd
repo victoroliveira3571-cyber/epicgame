@@ -1,7 +1,7 @@
 extends Node
 
 ## Mesas de estudo: biblioteca, casa e taverna abrem o Pomodoro com o cenário do lugar (fixo).
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 
 func run(dev: Node) -> void:

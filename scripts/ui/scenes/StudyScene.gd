@@ -17,7 +17,11 @@ const SCENES := {
 }
 const ORDER := ["casa", "estudo", "livraria", "cafeteria", "taverna", "natureza"]
 const HS := 1.6          # escala do herói nas cenas
-const HERO_K := 4.0 / 3.0   # herói LPC um pouco maior que 1 px de arte: fica na proporção da mesa e da cadeira (4 px de tela por pixel)
+## v3.7: era 4/3 (4 px de tela por pixel do LPC). Medido no print: sentado, o topo da cabeça ficava na altura do topo
+## do encosto (46 px de arte acima do assento) e os ombros na altura do tampo da mesa: com a cabeça grande do LPC,
+## o herói parecia um anão na cadeira. 5/3 (5 px de tela por pixel, ainda inteiro e nítido) põe a cabeça acima do
+## encosto e o tronco acima da mesa; as pernas continuam atrás da frente da mesa (camada _fg).
+const HERO_K := 5.0 / 3.0
 
 # Pixel art (tools/gen_pomodoro_bg.py e gen_pomodoro_fx.py): fundo 400x208 em escala 3, subido 12 px.
 const ART_DIR := "res://assets/custom/pomodoro/"

@@ -1,7 +1,7 @@
 extends Node
 
 ## v3.7: habilidades nas teclas 1 a 4 e esquiva na R.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 var fails := 0
 
 

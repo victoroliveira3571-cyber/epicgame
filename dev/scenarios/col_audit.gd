@@ -1,7 +1,7 @@
 extends Node
 
 ## Mostra as formas de colisão sobre o mapa (cidade e floresta) para achar o que atravessa/trava.
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 
 func run(dev: Node) -> void:

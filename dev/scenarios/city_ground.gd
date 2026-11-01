@@ -1,7 +1,7 @@
 extends Node
 
 ## v3.2: gera o chão de teste de cada bioma de cidade (prints em _shots/city_ground_*.png).
-const OUT := "/Users/victor/Desktop/EPICGAME/game/_shots/"
+var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 
 
 func run(_dev: Node) -> void:

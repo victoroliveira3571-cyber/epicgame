@@ -226,6 +226,8 @@ static func hero() -> Dictionary:
 	if lk.get("hide_helmet", false):
 		gear.erase("helmet")
 	lk["gear"] = gear
+	# v3.7: cada classe veste a armadura do seu jeito (LpcW.CLASS_GEAR)
+	lk["gear_family"] = LpcW.gear_family(GameState.player_class) if GameState.has_chosen_class() else ""
 	lk["weapon"] = ""
 	lk.erase("weapon_pal")
 	var wid: String = GameState.equipped.get("weapon", "")
