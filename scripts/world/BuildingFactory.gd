@@ -71,6 +71,12 @@ static func _build(name: String) -> Image:
 		return fv
 	if parts[1] == "muralha":
 		return _wall(clampi(int(parts[2]) if parts.size() > 2 else 6, 2, 64))
+	if parts[1] == "muralhav":
+		return _wall_v(clampi(int(parts[2]) if parts.size() > 2 else 6, 2, 80))
+	if parts[1] == "torre":
+		var tw := Image.create(3 * T, 3 * T, false, Image.FORMAT_RGBA8)
+		_tower(tw, 0, 0)
+		return tw
 	if parts[1] == "portao":
 		return _gatehouse()
 	if parts[1] == "castelo":
@@ -123,6 +129,16 @@ static func _wall(w: int) -> Image:
 	for x in w:
 		_put(img, SLIT if x % 4 == 2 else BRICK, x, 1)
 		_put(img, BRICK, x, 2)
+	return img
+
+
+## Muralha vista de cima correndo norte-sul: passarela com ameias dos dois lados (2 tiles de largura).
+static func _wall_v(h: int) -> Image:
+	var img := Image.create(2 * T, h * T, false, Image.FORMAT_RGBA8)
+	for y in h:
+		var r := 0 if y == 0 else (2 if y == h - 1 else 1)
+		_put(img, int(TOWER[r][0]), 0, y)
+		_put(img, int(TOWER[r][2]), 1, y)
 	return img
 
 

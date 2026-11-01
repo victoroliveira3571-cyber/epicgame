@@ -33,6 +33,31 @@ const ROOMS := {
 	"laboratorio": [24, 14, "floor_stone", "wall_cream"],
 	# v3.7: salas dos turnos de ofício (WorkShift)
 	"turno_cozinha": [22, 13, "floor_wood_dark", "wall_red"], "turno_forja": [22, 13, "floor_stone", "wall_stone"],
+	# v3.7: salas do Castelo de Fontelúcida (AcademyCastle)
+	"acad_reitoria": [20, 12, "floor_wood_dark", "wall_stone"], "acad_aula": [24, 14, "floor_wood", "wall_cream"],
+	"acad_secretaria": [16, 11, "floor_wood", "wall_cream"], "acad_bibliotecario": [14, 10, "floor_wood_dark", "wall_cream"],
+	"acad_refeitorio": [26, 15, "floor_stone", "wall_red"], "acad_alojamento": [18, 11, "floor_wood_dark", "wall_stone"],
+	"acad_quarto": [12, 9, "floor_wood", "wall_cream"], "acad_dormitorio": [22, 12, "floor_wood", "wall_cream"],
+	"acad_comum": [20, 12, "floor_wood_dark", "wall_red"], "acad_lab": [18, 11, "floor_stone", "wall_stone"],
+	# v3.7: sala do trono de Pedralta e a cabana do Pietro (antes eram portas trancadas)
+	"castelo_rocuetos": [24, 15, "floor_stone", "wall_stone"], "cabana_pietro": [16, 10, "floor_wood_dark", "wall_stone"],
+}
+## v3.7: casas de morador das cidades (Interior "morador_<cidade>_<prédio>"): piso/parede por região e falas.
+const MORADOR_STYLE := {
+	"porto": ["floor_wood", "wall_cream"], "pedralta": ["floor_stone", "wall_stone"],
+	"vila_neve": ["floor_wood_dark", "wall_stone"], "oasis": ["floor_sand", "wall_cream"],
+}
+const MORADOR_LINES := {
+	"porto": ["A maré hoje está boa para a pesca.", "Feche a porta, o vento do mar entra!", "Meu avô dizia: rede remendada pesca mais.", "O Capitão Maré conta histórias no cais."],
+	"pedralta": ["Aqui em cima o fogo da lareira nunca apaga.", "Meu martelo tem mais anos que você.", "Rocuetos se ergue de pedra e disciplina.", "O sino da forja marca as horas da cidade."],
+	"vila_neve": ["Tire a neve das botas, por favor.", "Dizem que o Pé Grande uiva nas noites sem lua.", "Chá quente e cobertor: o segredo do inverno.", "O Ancião sabe tudo sobre a caverna."],
+	"oasis": ["Água é ouro por aqui.", "As caravanas chegam no fim da tarde.", "Sombra boa, conversa boa.", "Cuidado com as cobras perto das dunas."],
+}
+const MORADOR_SHEETS := ["Villager", "Villager2", "Villager3", "Villager4", "Woman", "OldMan", "OldWoman", "Boy"]
+const ACAD_TITLES := {
+	"acad_reitoria": "Reitoria", "acad_aula": "Sala de Aula", "acad_secretaria": "Secretaria da Academia",
+	"acad_bibliotecario": "Sala do Bibliotecário", "acad_refeitorio": "Refeitório", "acad_alojamento": "Alojamento dos Mestres",
+	"acad_quarto": "Meu Quarto", "acad_dormitorio": "Dormitório", "acad_comum": "Sala Comum", "acad_lab": "Laboratório de Alquimia",
 }
 
 var id: String = "casa"
@@ -62,7 +87,7 @@ var owner_npc: NPC = null
 static func prop_tex(name: String) -> Texture2D:
 	if BuildingFactory.is_factory_name(name):
 		return BuildingFactory.texture(name)
-	if name.begins_with("tile_") or name.begins_with("plot_"):
+	if name.begins_with("tile_") or name.begins_with("plot_") or name.begins_with("counterv_") or name.begins_with("descstairs_"):
 		return _tileset_prop(name)
 	var custom := "res://assets/custom/props/%s.png" % name
 	if ResourceLoader.exists(custom):
@@ -75,7 +100,9 @@ static var _tileset_cache: Dictionary = {}
 
 ## v3.7: peças recortadas direto dos tilesets do Ninja Adventure.
 ##   "tile_<Tileset>_<x>_<y>_<w>_<h>" = região do tileset (em tiles), ex. "tile_TilesetHouse_29_20_3_3" (arco de pedra);
-##   "plot_<w>_<h>" = canteiro de horta (terra arada do TilesetField em 9 partes, com a borda da frente).
+##   "plot_<w>_<h>" = canteiro de horta (terra arada do TilesetField em 9 partes, com a borda da frente);
+##   "counterv_<px>" = balcão lateral (de pé), recortado das pontas do balcão i_counter do Ninja;
+##   "descstairs_<w>_<h>" = escada descendo para o escuro (degraus da ponte de pedra + degradê), entrada de masmorra.
 static func _tileset_prop(name: String) -> Texture2D:
 	if _tileset_cache.has(name):
 		return _tileset_cache[name]
@@ -85,6 +112,35 @@ static func _tileset_prop(name: String) -> Texture2D:
 		var src := TileComposer.tileset(p[1])
 		if src != null:
 			img = src.get_region(Rect2i(int(p[2]) * T, int(p[3]) * T, int(p[4]) * T, int(p[5]) * T))
+	elif p[0] == "counterv" and p.size() >= 2:
+		var hpx := maxi(int(p[1]), 8)
+		var ct: Texture2D = Pix.tex("props/i_counter.png")
+		if ct != null:
+			var src_c := ct.get_image()
+			src_c.convert(Image.FORMAT_RGBA8)
+			var cw := src_c.get_width()
+			img = Image.create(10, hpx, false, Image.FORMAT_RGBA8)
+			for y in hpx:
+				var sy := 0 if y == 0 else (7 if y % 12 == 6 else 4)
+				for x in 10:
+					var sx := x if x < 5 else cw - 10 + x
+					img.set_pixel(x, y, src_c.get_pixel(sx, sy))
+	elif p[0] == "descstairs" and p.size() >= 3:
+		var sw := int(p[1])
+		var sh := int(p[2])
+		var house := TileComposer.tileset("TilesetHouse")
+		img = Image.create(sw, sh, false, Image.FORMAT_RGBA8)
+		var x_src := 11 * T + (32 - sw) / 2
+		for y in sh:
+			var row := 19 * T + 4 + (y % 32)
+			var k := clampf(1.0 - float(y) / float(sh), 0.0, 1.0)
+			var dark := 0.18 + 0.8 * pow(k, 1.3)
+			for x in sw:
+				var c := house.get_pixel(x_src + x, row)
+				var edge := 0.25 if (x < 2 or x >= sw - 2) else 0.0
+				c = c.darkened(clampf(dark + edge, 0.0, 0.97))
+				c.a = 1.0
+				img.set_pixel(x, y, c)
 	elif p[0] == "plot" and p.size() >= 3:
 		var wt := maxi(int(p[1]), 2)
 		var ht := maxi(int(p[2]), 2)
@@ -189,6 +245,14 @@ func _ready() -> void:
 		_build_lab()
 	elif id.begins_with("turno_"):
 		WorkShift.attach(self)
+	elif id.begins_with("acad_"):
+		_build_academy_room()
+	elif id.begins_with("morador_"):
+		_build_morador()
+	elif id == "castelo_rocuetos":
+		_build_throne_room()
+	elif id == "cabana_pietro":
+		_build_pietro_cabin()
 	else:
 		_build_resident_house()
 	_spawn_player()
@@ -217,6 +281,15 @@ func _ready() -> void:
 
 func _configure() -> void:
 	partitions = PARTITIONS.get(id, [])
+	if id.begins_with("morador_"):
+		var hh := absi(hash(id))
+		var city := id.split("_")[1] if id.split("_").size() > 1 else "porto"
+		var st: Array = MORADOR_STYLE.get(city, ["floor_wood", "wall_cream"])
+		cols = 14 + hh % 5
+		rows = 9 + (hh / 7) % 3
+		floor_tex = str(st[0])
+		wall_tex = str(st[1])
+		return
 	if ROOMS.has(id):
 		var r: Array = ROOMS[id]
 		cols = r[0]
@@ -515,6 +588,22 @@ func shop_owner(look: String, talk_id: String, title: String, pos: Vector2, line
 	return n
 
 
+## v3.7 (pedido do Victor): balcão fechado dos lados. `n` peças de balcão na frente (linha `front_y`) e duas
+## laterais que voltam até a parede ou divisória de trás (`back_y`), com colisão no retângulo inteiro: quem atende
+## fica "dentro" do balcão, como nas referências.
+func booth(cx: float, front_y: float, back_y: float, n: int = 2) -> void:
+	var pw := 45.0
+	var total := n * pw
+	var x0 := cx - total / 2.0
+	for i in n:
+		prop("i_counter", Vector2(x0 + pw * (i + 0.5), front_y), false)
+	var side_len := int(front_y - 10.0 - back_y)
+	if side_len > 8:
+		for sx in [x0 + 5.0, x0 + total - 5.0]:
+			prop("counterv_%d" % side_len, Vector2(sx, front_y - 8.0), false)
+	_block(Rect2(x0, back_y, total, front_y - back_y))
+
+
 ## Mesa com banquinhos, louça e, às vezes, vela.
 func table_set(t: Vector2, round_table: bool = false, deco: String = "i_bowl2", candle: bool = false) -> void:
 	prop("p_mesa_redonda" if round_table else "i_table", t, true)
@@ -633,9 +722,7 @@ func _build_library() -> void:
 	prop("p_vaso_flores", Vector2(cx - 84, 62), false)
 	prop("p_vaso_flores", Vector2(cx + 84, 62), false)
 	# balcão da bibliotecária
-	for dx in [-23.0, 22.0]:
-		prop("i_counter", Vector2(cx + dx, 112))
-	_block(Rect2(cx - 50, 70, 100, 44))
+	booth(cx, 112.0, 64.0, 2)
 	shop_owner("bibliotecaria", "bibliotecaria", "Dona Celeste", Vector2(cx, 94),
 		["Bem-vindo à biblioteca.", "As mesas de estudo estão livres.", "Um pomodoro por vez, sem pressa."])
 	prop("p_livros", Vector2(cx - 32, 104), false)
@@ -730,9 +817,7 @@ func _build_restaurant() -> void:
 	prop("p_prateleira_potes", Vector2(cx + 36, 52), false, true)
 	prop("i_shelf_big", Vector2(cx + 40, 62), false)
 	light(Vector2(cx - 40, 52), Color(1.0, 0.6, 0.3), 0.8, 0.7)
-	for dx in [-45.0, 0.0, 45.0]:
-		prop("i_counter", Vector2(cx + dx, 96))
-	_block(Rect2(cx - 70, 40, 140, 34))
+	booth(cx, 96.0, 32.0, 3)
 	var cook := npc("OldWoman", Vector2(cx - 18, 76), ["Hoje tem pão quentinho!", "Estudou hoje?", "Chá e foco: receita de vó."])
 	cook.sprite.z_index = 0
 	cook.add_to_group("speaker_marta")
@@ -788,9 +873,7 @@ func _build_guild() -> void:
 	light(Vector2(20, 18), Color(1.0, 0.6, 0.3), 0.6, 0.8)
 	light(Vector2(w - 20, 18), Color(1.0, 0.6, 0.3), 0.6, 0.8)
 	# balcão de recepção
-	for dx in [-45.0, 0.0, 45.0]:
-		prop("i_counter", Vector2(cx + dx, 104))
-	_block(Rect2(cx - 70, 44, 140, 38))
+	booth(cx, 104.0, 32.0, 3)
 	var helena := npc("Princess", Vector2(cx, 84), ["Bem-vind" + ("a" if str(Story.st().get("gender", "m")) == "f" else "o") + " à Guilda!", "As missões do dia estão no quadro.", "Quem foca, conquista."])
 	helena.add_to_group("speaker_helena")
 	helena.use_look("helena")
@@ -981,7 +1064,9 @@ func _build_weapon_shop() -> void:
 	prop("i_barrel", Vector2(w - 26, 176))
 	# vitrine com o armeiro atrás e o cofre
 	prop("p_vitrine", Vector2(cx, 120))
-	_block(Rect2(cx - 26, 70, 52, 52))
+	for sx in [cx - 25.0, cx + 25.0]:   # v3.7: laterais fechando o espaço do armeiro até a parede
+		prop("counterv_44", Vector2(sx, 110), false)
+	_block(Rect2(cx - 30, 64, 60, 58))
 	shop_owner("armeiro", "armeiro", "Otávio", Vector2(cx, 100), ["Espadas novas chegaram!", "Equipamento bom salva vidas.", "Só vendo o que presta."])
 	spot("Comprar equipamento", Vector2(cx, 134), func() -> void: HUD.open_window("loja"), 22.0)
 	prop("p_cofre", Vector2(cx + 40, 96))
@@ -1076,9 +1161,7 @@ func _build_jail() -> void:
 	study_spot("cela", Vector2(60, 148)).text = "Estudar na cela (cumprir a pena)"
 	# mesa do guarda
 	prop("i_desk_paper", Vector2(w / 2.0 + 30, 96))
-	prop("i_counter", Vector2(w / 2.0 + 6, 104))
-	prop("i_counter", Vector2(w / 2.0 + 54, 104))
-	_block(Rect2(w / 2.0 - 20, 80, 100, 30))
+	booth(w / 2.0 + 30, 104.0, 32.0, 2)
 	_jail_guard = npc("guarda", Vector2(w / 2.0 + 30, 86), ["Cumpra a pena e não volte aqui.", "Aqui, quem estuda sai mais rápido."], "static")
 	_jail_guard.use_look("guarda")
 	_jail_guard.add_to_group("speaker_guarda")
@@ -1320,6 +1403,394 @@ func _end_duel(won: bool) -> void:
 	HUD.open_window("arena_resultado")
 
 
+# ================================================================== Castelo da Academia (v3.7)
+## Salas atrás das portas do AcademyCastle. Cada uma tem quem faz sentido estar lá e uma função: falar com a
+## Reitora (matrícula/formatura), aula com o Mestre Lin, quadro de avisos, comida, descanso, estudo, alquimia.
+func _build_academy_room() -> void:
+	var w := cols * T
+	var cx := w / 2.0
+	match id:
+		"acad_reitoria":
+			_acad_reitoria(w, cx)
+		"acad_aula":
+			_acad_aula(w, cx)
+		"acad_secretaria":
+			_acad_secretaria(w, cx)
+		"acad_bibliotecario":
+			_acad_bibliotecario(w, cx)
+		"acad_refeitorio":
+			_acad_refeitorio(w, cx)
+		"acad_alojamento":
+			_acad_alojamento(w, cx)
+		"acad_quarto":
+			_acad_quarto(w, cx)
+		"acad_dormitorio":
+			_acad_dormitorio(w, cx)
+		"acad_comum":
+			_acad_comum(w, cx)
+		"acad_lab":
+			_acad_lab(w, cx)
+	var title := UI.label(str(ACAD_TITLES.get(id, "")), Color("fff1c9"))
+	title.size = Vector2(300, 14)
+	title.position = Vector2(cx - 150, 6)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.z_index = 50
+	add_child(title)
+
+
+func _rest_spot(pos: Vector2, text: String = "Descansar") -> void:
+	spot(text, pos, func() -> void:
+		GameState.full_heal()
+		Audio.sfx("sleep", -4.0)
+		HUD.show_toast("Você descansou. Vida cheia!", UI.C_GOOD), 20.0)
+
+
+func _acad_reitoria(w: float, cx: float) -> void:
+	for wx in [60.0, w - 60.0]:
+		wall("p_janela", wx, 28)
+		sunbeam(wx, 100.0, 20.0)
+	wall("p_estandarte_azul", cx - 40, 34)
+	wall("p_estandarte_azul", cx + 40, 34)
+	wall("i_painting", cx, 26)
+	prop("i_bookcase", Vector2(30, 62), false)
+	prop("i_bookcase", Vector2(62, 62), false)
+	prop("furn_trofeu", Vector2(w - 40, 62), false)
+	prop("p_cofre", Vector2(w - 70, 66))
+	_block(Rect2(14, 30, 64, 34))
+	prop("i_desk_paper", Vector2(cx, 104))
+	prop("p_livros", Vector2(cx - 12, 95), false)
+	prop("p_vela", Vector2(cx + 12, 94), false)
+	light(Vector2(cx + 12, 86), Color(1.0, 0.78, 0.45), 0.5, 0.5)
+	var r := npc("Woman", Vector2(cx, 86), ["Boas-vindas à Reitoria.", "Constância vence talento que não aparece."])
+	r.add_to_group("speaker_reitora")
+	StoryProp.talker(r, "reitora", "Reitora Aurora")
+	prop("cadeira", Vector2(cx - 22, 126), false)
+	prop("cadeira", Vector2(cx + 22, 126), false)
+	prop("p_tapete_azul", Vector2(cx, 150), false, true)
+	prop("furn_planta", Vector2(24, 170))
+	prop("furn_planta", Vector2(w - 24, 170))
+	light(Vector2(cx, 110), Color(1.0, 0.85, 0.6), 2.0, 0.3)
+
+
+func _acad_aula(w: float, cx: float) -> void:
+	wall("p_lab_quadro", cx, 30)
+	for wx in [48.0, w - 48.0]:
+		wall("p_janela", wx, 28)
+		sunbeam(wx, 120.0, 20.0)
+	prop("i_bookshelf_s", Vector2(90, 62), false)
+	prop("i_bookshelf_s", Vector2(w - 90, 62), false)
+	prop("furn_relogio", Vector2(w - 22, 64), true)
+	prop("i_desk_paper", Vector2(cx, 100))
+	prop("p_livros", Vector2(cx + 14, 91), false)
+	if Story.in_academy_act():
+		var lin := npc("Master", Vector2(cx, 84), ["Sente-se. A aula já vai começar.", "Pergunta boa vale mais que resposta pronta."])
+		StoryProp.talker(lin, "lin_a", "Mestre Lin (professor)")
+		lin.add_to_group("speaker_lin")
+	else:
+		npc("Monk2", Vector2(cx, 84), ["Hoje: como revisar sem reler. Pergunte-se, não releia.", "Explique em voz alta. Se travar, ali está a lacuna."])
+	# carteiras dos alunos: 3 colunas x 2 fileiras, alguns alunos e duas carteiras livres para estudar
+	var desks: Array = []
+	for j in 2:
+		for i in 3:
+			desks.append(Vector2(cx - 110 + i * 110, 146 + j * 44))
+	for k in desks.size():
+		var dp: Vector2 = desks[k]
+		prop("i_table", dp)
+		prop("i_stool", dp + Vector2(0, 12), false)
+		prop("p_livros", dp + Vector2(-4, -6), false)
+	sitter("Villager2", desks[0] + Vector2(0, 12), "up", ["Anotando tudo!", "O Mestre Lin fala rápido."])
+	sitter("Woman", desks[2] + Vector2(0, 12), "up", ["Se eu ensinar alguém, eu aprendo.", "Mapa mental é minha arma secreta."])
+	sitter("Boy", desks[4] + Vector2(0, 12), "up", ["Zzz... estou acordado!", "Que horas acaba?"])
+	study_spot("livraria", desks[1] + Vector2(0, 14))
+	study_spot("livraria", desks[3] + Vector2(0, 14))
+	light(Vector2(cx, 140), Color(1.0, 0.86, 0.6), 2.6, 0.28)
+
+
+func _acad_secretaria(w: float, cx: float) -> void:
+	wall("p_janela", 40, 28)
+	sunbeam(40.0, 90.0, 18.0)
+	prop("i_cabinet", Vector2(cx - 30, 62), false)
+	prop("i_dresser", Vector2(cx + 30, 62), false)
+	booth(cx, 104.0, 32.0, 2)
+	prop("i_desk_paper", Vector2(cx - 20, 96), false)
+	prop("p_vaso_flores", Vector2(cx + 24, 96), false)
+	var sec := npc("Villager4", Vector2(cx, 82), ["Matrícula, bolsa, horário? É aqui.", "A Reitoria fica no fim do corredor central.", "As aulas são na Sala de Aula, corredor do meio."])
+	sec.add_to_group("speaker_secretaria")
+	prop("quadro_missoes", Vector2(w - 34, 72), false)
+	spot("Ler o quadro de avisos", Vector2(w - 34, 86), func() -> void:
+		var lines: Array = [["narr", "QUADRO DE AVISOS: 'Missões do jardim abrem com horas de foco desde a matrícula. Formatura: 2 horas seguidas.'"]]
+		if Story.in_academy_act():
+			lines.append(["narr", "Recado para você: " + Story.objective_text()])
+		lines.append(["narr", "'Refeitório: sopa de abóbora. Dormitório: silêncio depois das dez.'"])
+		await Story.say(lines), 20.0)
+	prop("p_banco", Vector2(60, 150))
+	sitter("Child", Vector2(52, 156), "right", ["Vim ver minha nota.", "Espero não estar de recuperação..."])
+	prop("furn_planta", Vector2(w - 24, 150))
+	light(Vector2(cx, 100), Color(1.0, 0.85, 0.6), 1.8, 0.3)
+
+
+func _acad_bibliotecario(w: float, cx: float) -> void:
+	wall("p_janela", cx, 28)
+	sunbeam(cx, 80.0, 18.0)
+	prop("i_bookcase", Vector2(30, 62), false)
+	prop("i_bookcase", Vector2(w - 30, 62), false)
+	_block(Rect2(14, 30, 32, 34))
+	_block(Rect2(w - 46, 30, 32, 34))
+	for bp in [Vector2(60, 70), Vector2(76, 74), Vector2(w - 64, 72), Vector2(cx + 30, 128), Vector2(40, 120)]:
+		prop("p_livros", bp, false)
+	prop("i_armchair", Vector2(cx - 40, 110))
+	prop("lpc_abajur", Vector2(cx - 18, 108), false)
+	light(Vector2(cx - 18, 96), Color(1.0, 0.78, 0.45), 0.6, 0.55)
+	var ans := npc("OldMan2", Vector2(cx + 10, 100), [
+		"Seu Anselmo, guardião dos livros fora do horário.",
+		"Seu pai lia de pé, encostado naquela estante. Dizia que sentado dava sono.",
+		"Releia menos, pergunte mais: feche o livro e tente lembrar.",
+	])
+	ans.add_to_group("speaker_anselmo")
+	prop("i_desk_paper", Vector2(cx + 34, 140))
+	study_spot("livraria", Vector2(cx + 34, 152))
+	sleeping_pet("animals/CatBlack.png", Vector2(w - 40, 140), true)
+	light(Vector2(cx, 100), Color(1.0, 0.82, 0.55), 1.4, 0.3)
+
+
+func _acad_refeitorio(w: float, cx: float) -> void:
+	prop("p_fogao", Vector2(cx - 40, 62), false)
+	wall("p_panelas", cx - 40, 30)
+	wall("p_prateleira_potes", cx + 40, 30)
+	light(Vector2(cx - 40, 52), Color(1.0, 0.6, 0.3), 0.8, 0.7)
+	booth(cx, 96.0, 32.0, 3)
+	var cook := npc("OldWoman", Vector2(cx, 76), ["Sopa de abóbora pra quem estudou!", "Prato cheio, cabeça leve.", "Água também é comida, viu?"])
+	cook.add_to_group("speaker_cozinheira")
+	spot("Comprar comida", Vector2(cx, 110), func() -> void: HUD.open_window("restaurante"), 22.0)
+	for wx in [40.0, w - 40.0]:
+		wall("p_janela", wx, 28)
+	# mesas compridas com alunos comendo
+	var tables := [Vector2(cx - 120, 150), Vector2(cx, 150), Vector2(cx + 120, 150), Vector2(cx - 120, 200), Vector2(cx, 200), Vector2(cx + 120, 200)]
+	for t in tables:
+		table_set(t, false, "i_bowl1" if randi() % 2 == 0 else "i_mug", false)
+	sitter("Villager3", tables[0] + Vector2(-16, 6), "right", ["Hmm, sopa.", "Depois daqui, revisão!"])
+	sitter("Boy", tables[1] + Vector2(16, 6), "left", ["Ganhei repetição!", "Quem come bem estuda melhor."])
+	sitter("Woman", tables[4] + Vector2(-16, 6), "right", ["Sabia que o cérebro gasta muita energia?", "Hora do lanche sagrado."])
+	prop("i_barrel", Vector2(24, 230))
+	prop("i_sack", Vector2(w - 24, 230))
+	light(Vector2(cx, 160), Color(1.0, 0.82, 0.55), 2.6, 0.3)
+
+
+func _acad_alojamento(w: float, cx: float) -> void:
+	prop("furn_lareira", Vector2(cx, 60), true)
+	light(Vector2(cx, 50), Color(1.0, 0.55, 0.25), 0.9, 0.9)
+	prop("p_cama_simples", Vector2(30, 100))
+	prop("p_cama_simples", Vector2(w - 30, 100))
+	prop("i_bookshelf_s", Vector2(70, 62), false)
+	prop("i_shelf_s", Vector2(w - 70, 62), false)
+	prop("lpc_mesa_redonda", Vector2(cx, 128))
+	prop("p_cha", Vector2(cx - 4, 118), false)
+	sitter("OldMan", Vector2(cx - 22, 134), "right", ["Chá? É o que move os mestres.", "Dei aula para metade dos aventureiros de Focus Town."])
+	sitter("Monk", Vector2(cx + 22, 134), "left", ["Um bom mestre também tem dúvida.", "Shhh, a lareira está contando histórias."])
+	prop("furn_planta", Vector2(24, 150))
+	light(Vector2(cx, 110), Color(1.0, 0.8, 0.55), 1.8, 0.3)
+
+
+func _acad_quarto(w: float, cx: float) -> void:
+	wall("p_janela", cx + 30, 28)
+	sunbeam(cx + 30, 70.0, 18.0)
+	prop("furn_cama", Vector2(28, 92))
+	_rest_spot(Vector2(28, 104), "Dormir na sua cama")
+	prop("i_desk_paper", Vector2(cx + 34, 70))
+	prop("p_livros", Vector2(cx + 24, 61), false)
+	prop("p_vela", Vector2(cx + 46, 60), false)
+	study_spot("casa", Vector2(cx + 34, 84))
+	prop("i_chest", Vector2(w - 26, 112))
+	prop("p_espelho", Vector2(cx - 10, 66))
+	spot("Espelho (aparência)", Vector2(cx - 10, 78), func() -> void: HUD.open_window("aparencia"), 18.0)
+	prop("furn_tapete", Vector2(cx, 112), false, true)
+	prop("p_planta_pequena", Vector2(w - 24, 64), false)
+
+
+func _acad_dormitorio(w: float, cx: float) -> void:
+	for wx in [60.0, w - 60.0]:
+		wall("p_janela", wx, 28)
+	for i in 5:
+		prop("p_cama_simples", Vector2(40 + i * 64, 92))
+		prop("i_chest", Vector2(40 + i * 64, 122))
+	_rest_spot(Vector2(40 + 2 * 64, 104), "Descansar numa cama livre")
+	sitter("Villager2", Vector2(40 + 64, 104), "down", ["Revisão antes de dormir fixa melhor.", "Amanhã tem missão no jardim!"])
+	sitter("Woman", Vector2(40 + 4 * 64, 104), "down", ["Dormir bem é metade da prova.", "Shhh, o Tomé já dormiu."])
+	prop("p_tapete_grande", Vector2(cx, 160), false, true)
+	prop("furn_planta", Vector2(24, 170))
+	light(Vector2(cx, 120), Color(1.0, 0.82, 0.55), 2.2, 0.26)
+
+
+func _acad_comum(w: float, cx: float) -> void:
+	prop("furn_lareira", Vector2(cx, 60), true)
+	light(Vector2(cx, 50), Color(1.0, 0.55, 0.25), 0.9, 0.9)
+	wall("p_janela", 50, 28)
+	wall("p_janela", w - 50, 28)
+	prop("lpc_sofa", Vector2(cx, 118))
+	prop("lpc_poltrona", Vector2(cx - 50, 110))
+	prop("lpc_poltrona", Vector2(cx + 50, 110))
+	prop("lpc_mesa_centro", Vector2(cx, 100), false)
+	prop("p_tapete_azul", Vector2(cx, 110), false, true)
+	sitter("Boy", Vector2(cx - 50, 112), "right", ["Partida de perguntas: você topa?", "Quem errar paga o lanche."])
+	sitter("Villager4", Vector2(cx + 50, 112), "left", ["Estudar em grupo rende mais.", "Explica de novo aquela parte?"])
+	prop("i_bookcase", Vector2(30, 62), false)
+	prop("i_table", Vector2(w - 60, 160))
+	prop("i_stool", Vector2(w - 60, 172), false)
+	study_spot("livraria", Vector2(w - 60, 174))
+	prop("furn_planta", Vector2(24, 170))
+	light(Vector2(cx, 120), Color(1.0, 0.8, 0.55), 2.0, 0.3)
+
+
+func _acad_lab(w: float, cx: float) -> void:
+	wall("p_lab_quadro", cx, 30)
+	prop("p_lab_potes", Vector2(40, 62), false)
+	prop("p_lab_bancada", Vector2(cx - 50, 110))
+	prop("p_lab_caldeirao", Vector2(cx + 40, 110))
+	light(Vector2(cx + 40, 96), Color(0.5, 1.0, 0.6), 0.7, 0.6)
+	prop("p_prateleira_potes", Vector2(w - 50, 52), false, true)
+	npc("NinjaMageOrange", Vector2(cx, 86), ["Mestra Sálvia, alquimia básica.", "Misture devagar e anote tudo.", "Errar a fórmula também ensina."])
+	spot("Praticar a Fórmula Secreta (ofício)", Vector2(cx - 50, 124), func() -> void: HUD.open_window("mg_lab"), 20.0)
+	prop("furn_planta", Vector2(24, 150))
+	light(Vector2(cx, 110), Color(1.0, 0.85, 0.65), 1.6, 0.3)
+
+
+# ================================================================== Casas de morador das cidades (v3.7)
+func _morador_title(city: String, bid: String) -> String:
+	for b in (CityData.CITIES.get(city, {}) as Dictionary).get("buildings", []):
+		if str(b["id"]) == bid:
+			return str(b["title"])
+	return "Casa"
+
+
+## Casa simples montada pelo nome: armazém e estábulo viram depósito, alojamento ganha várias camas, farol tem
+## lampião, a casa do capitão tem mapas; as outras são casa de família com cama, mesa, estante e lareira/fogão.
+func _build_morador() -> void:
+	var parts := id.split("_")
+	var city := parts[1] if parts.size() > 1 else "porto"
+	var bid := "_".join(parts.slice(2)) if parts.size() > 2 else ""
+	var title_text := _morador_title(city, bid)
+	var w := cols * T
+	var cx := w / 2.0
+	var r := RandomNumberGenerator.new()
+	r.seed = absi(hash(id))
+	var low := title_text.to_lower()
+	var cold := city in ["pedralta", "vila_neve"]
+	wall("p_janela", 40, 28)
+	wall("p_janela", w - 40, 28)
+	sunbeam(40.0, 80.0, 18.0)
+	if low.contains("armazém") or low.contains("estábulo"):
+		for o in [["p_caixotes", Vector2(30, 70)], ["i_crate", Vector2(56, 74)], ["i_barrel", Vector2(w - 30, 70)], ["lpc_barris", Vector2(w - 60, 72)],
+				["i_sack", Vector2(30, 120)], ["i_sack", Vector2(46, 126)], ["i_crate", Vector2(w - 34, 124)], ["i_barrel2", Vector2(cx + 30, 70)]]:
+			prop(str(o[0]), o[1])
+		npc(MORADOR_SHEETS[r.randi() % MORADOR_SHEETS.size()], Vector2(cx, 100), ["Cuidado com as caixas, estão empilhadas até o teto.", "Aqui guardo o que as caravanas e os barcos trazem."])
+	elif low.contains("alojamento"):
+		for i in 4:
+			prop("p_cama_simples", Vector2(32 + i * 44, 92))
+		_rest_spot(Vector2(32 + 44, 104), "Descansar numa cama livre")
+		prop("i_chest", Vector2(w - 30, 120))
+		npc("Villager2", Vector2(cx + 20, 124), ["Turno da noite na forja. Durmo de dia.", "Fique à vontade, só não ronque."])
+	else:
+		prop("p_cama_simples" if r.randf() < 0.5 else "furn_cama", Vector2(30, 96))
+		prop("furn_lareira" if cold else "p_fogao", Vector2(cx, 60), true)
+		if cold:
+			light(Vector2(cx, 50), Color(1.0, 0.55, 0.25), 0.8, 0.8)
+		prop("i_bookshelf_s" if r.randf() < 0.5 else "i_shelf_s", Vector2(w - 34, 62), false)
+		table_set(Vector2(cx + 20, 120), r.randf() < 0.5, "i_bowl2", true)
+		prop("furn_tapete" if r.randf() < 0.5 else "p_tapete_azul", Vector2(cx - 30, 120), false, true)
+		prop("furn_planta", Vector2(w - 24, 130))
+		if low.contains("capitão"):
+			wall("i_painting", cx - 40, 26)
+			wall("p_estandarte_azul", cx + 44, 34)
+			prop("p_livros", Vector2(cx + 14, 112), false)
+		elif low.contains("farol"):
+			prop("lampiao", Vector2(w - 50, 70), false)
+			light(Vector2(w - 50, 52), Color(1.0, 0.85, 0.5), 1.2, 0.8)
+		elif low.contains("mineiro") or low.contains("forjador"):
+			wall("p_ferramentas", cx - 50, 30)
+			prop("p_lingotes", Vector2(60, 124), false)
+		elif low.contains("peleteira"):
+			prop("p_tecidos", Vector2(60, 64), false)
+		var lines: Array = (MORADOR_LINES.get(city, ["Olá! Entre."]) as Array).duplicate()
+		lines.shuffle()
+		var who: String = MORADOR_SHEETS[r.randi() % MORADOR_SHEETS.size()]
+		if low.contains("capitão") or low.contains("granito") or low.contains("ancião"):
+			# o dono famoso está lá fora, na história; aqui fica a família
+			lines = ["Ele saiu agora há pouco. Deve estar lá fora, na praça.", "Pode olhar, mas não mexa em nada, por favor."]
+		npc(who, Vector2(cx - 30, 104), lines.slice(0, 3), "wander", 30.0)
+	var title := UI.label(title_text, Color("fff1c9"))
+	title.size = Vector2(300, 14)
+	title.position = Vector2(cx - 150, 6)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.z_index = 50
+	add_child(title)
+	light(Vector2(cx, 100), Color(1.0, 0.82, 0.55), 1.6, 0.28)
+
+
+## Sala do trono de Rocuetos (Pedralta). PROVISÓRIO: o rei usa o sprite "Noble" do Ninja e o trono é o sofá
+## imperial do LPC, até chegar um pack com rei e sala do trono (ver PROVISORIOS.md).
+func _build_throne_room() -> void:
+	var w := cols * T
+	var cx := w / 2.0
+	for y in [210.0, 170.0, 130.0]:
+		prop("p_tapete_grande", Vector2(cx, y), false, true)
+	prop("lpc_sofa_imperial", Vector2(cx, 74))
+	_block(Rect2(cx - 24, 50, 48, 26))
+	for bx in [cx - 70.0, cx + 70.0, 40.0, w - 40.0]:
+		wall("p_estandarte", bx, 34)
+	for tx in [cx - 110.0, cx + 110.0]:
+		wall("p_tocha_parede", tx, 30)
+		light(Vector2(tx, 20), Color(1.0, 0.6, 0.3), 0.7, 0.8)
+	var army := Story.path() == "exercito"
+	var king_lines: Array = ["Rocuetos honra quem estuda e quem luta. Os dois sabem esperar.", "Um reino é um caderno: se ninguém escreve todo dia, ele apaga.", "A Comandante Brígida fala por mim no quartel."]
+	if army:
+		king_lines = ["%s! A notícia das suas vitórias chegou antes de você." % ArmyStory.patente_name(), "Rocuetos lembra de cada nome que serve com constância.", "Continue estudando: general que não lê perde a guerra."]
+	var king := npc("Noble", Vector2(cx, 66), king_lines)
+	king.add_to_group("speaker_rei_rocuetos")
+	for gx in [cx - 46.0, cx + 46.0]:
+		for gy in [120.0, 180.0]:
+			var g := NPC.new()
+			g.custom_look = Ally.look_of("soldado")
+			g.mode = "static"
+			g.position = Vector2(gx, gy)
+			g.lines = ["...", "Silêncio na sala do trono."]
+			world.add_child(g)
+	prop("furn_trofeu", Vector2(30, 62), false)
+	prop("p_armadura", Vector2(w - 30, 70))
+	var title := UI.label("Sala do Trono de Rocuetos", Color("fff1c9"))
+	title.size = Vector2(300, 14)
+	title.position = Vector2(cx - 150, 6)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.z_index = 50
+	add_child(title)
+	light(Vector2(cx, 120), Color(1.0, 0.85, 0.6), 2.8, 0.3)
+
+
+## Cabana do Pietro (floresta): cama, lareira, arcos na parede, mesa com mapa. Pietro passa o dia no acampamento.
+func _build_pietro_cabin() -> void:
+	var w := cols * T
+	var cx := w / 2.0
+	prop("furn_lareira", Vector2(cx, 60), true)
+	light(Vector2(cx, 50), Color(1.0, 0.55, 0.25), 0.9, 0.9)
+	wall("p_arcos_parede", 50, 30)
+	wall("p_ervas", w - 50, 26)
+	prop("p_cama_simples", Vector2(30, 100))
+	_rest_spot(Vector2(30, 112), "Descansar na cama do Pietro (ele deixou)")
+	prop("i_table", Vector2(cx + 30, 118))
+	prop("p_livros", Vector2(cx + 26, 110), false)
+	prop("i_stool", Vector2(cx + 30, 132), false)
+	prop("i_rack", Vector2(w - 34, 120), false)
+	prop("i_barrel", Vector2(w - 26, 70))
+	spot("Ler o bilhete na mesa", Vector2(cx + 30, 132), func() -> void:
+		await Story.say([["narr", "Bilhete do Pietro: 'Se estiver cansad{o}, a cama é sua. Lobos não entram; ervas, sim. Volte com cuidado.'"]]), 18.0)
+	var title := UI.label("Cabana do Pietro", Color("fff1c9"))
+	title.size = Vector2(300, 14)
+	title.position = Vector2(cx - 150, 6)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.z_index = 50
+	add_child(title)
+	light(Vector2(cx, 100), Color(1.0, 0.8, 0.55), 1.6, 0.28)
+
+
 # ================================================================== Casa de morador
 func _build_resident_house() -> void:
 	var idx := _house_index()
@@ -1362,7 +1833,7 @@ func _build_tailor(h: Dictionary, w: float) -> void:
 	prop("p_roca", Vector2(30, 118))
 	prop("p_novelos", Vector2(48, 128), false)
 	# balcão: abajur, livro-caixa e a Rosa atrás
-	prop("i_counter", Vector2(w - 50, 120))
+	booth(w - 62, 120.0, 64.0, 2)
 	prop("lpc_abajur", Vector2(w - 64, 112), false)
 	light(Vector2(w - 64, 100), Color(1.0, 0.8, 0.5), 0.5, 0.5)
 	prop("p_livros", Vector2(w - 38, 112), false)
@@ -1411,12 +1882,10 @@ func _build_inn(h: Dictionary, w: float) -> void:
 		_section_label(str(lb[0]), float(lb[1]), 116.0)
 	# salão: balcão no meio, lareira encostada na parede, mesas à direita, tapete na frente da porta
 	var cx := w / 2.0
-	prop("i_counter", Vector2(cx - 23, 182))
-	prop("i_counter", Vector2(cx + 22, 182))
+	booth(cx, 182.0, 146.0, 2)
 	prop("p_livros", Vector2(cx - 30, 174), false)
 	prop("p_vela", Vector2(cx + 14, 173), false)
 	prop("i_mug", Vector2(cx + 30, 174), false)
-	_block(Rect2(cx - 46, 150, 92, 34))
 	shop_owner("estalajadeiro", "estalajadeiro", "Bento", Vector2(cx, 166), h["lines"])
 	prop("lpc_barris", Vector2(cx + 66, 180))
 	prop("furn_lareira", Vector2(48, 162), true)

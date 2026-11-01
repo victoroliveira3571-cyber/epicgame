@@ -63,6 +63,7 @@ func _ready() -> void:
 	_build_buildings()
 	_build_fort()
 	_build_castle()
+	_build_enclosure()
 	_build_gardens()
 	_build_npcs()
 	_build_decor()
@@ -265,12 +266,13 @@ func _build_buildings() -> void:
 		var t: Array = d["tile"]
 		var pos := Vector2(int(t[0]) * T + 8, int(t[1]) * T)
 		var interior := str(d.get("interior", ""))
+		if bool(d.get("closed", false)) and interior == "":
+			# v3.7 (pedido do Victor): casa com nome não fica de enfeite; toda porta abre (Interior "morador_*")
+			interior = "morador_%s_%s" % [city_id, str(d["id"])]
 		var b := Building.create(world, str(d["id"]), str(d["title"]), str(d["prop"]), pos, 0.0, interior)
 		b.return_scene = "city"
 		if d.has("tint") and b.sprite != null:
 			b.sprite.modulate = CityData.tint_of(d["tint"])
-		if bool(d.get("closed", false)):
-			b.door.enabled = false
 		buildings[str(d["id"]) + ("_" + str(t[0]) if buildings.has(str(d["id"])) else "")] = b
 		if interior != "":
 			door_spawns[interior] = pos + Vector2(0, 24)
@@ -330,10 +332,32 @@ func _build_castle() -> void:
 	var t: Array = c["tile"]
 	var w := int(c.get("w", 15))
 	var pos := Vector2(int(t[0]) * T + 8, int(t[1]) * T)
-	var b := Building.create(world, "castelo", str(c["title"]), "k_castelo_%d" % w, pos, 0.0, "")
+	# camadas de trás (o castelo "sobe" em degraus, dando a ideia de um prédio grande)
+	for ly in c.get("layers", []):
+		var lw := int(ly[0])
+		var lp := Vector2(pos.x, int(ly[1]) * T)
+		var back := _add_prop("k_castelo_%d" % lw, lp)
+		back.z_index = -2
+		var bb := StaticBody2D.new()
+		bb.collision_layer = 1
+		add_child(bb)
+		_rect_collider(bb, Rect2(lp.x - lw * T / 2.0, lp.y - 6 * T, lw * T, 6 * T))
+	var c_int := str(c.get("interior", ""))
+	var b := Building.create(world, "castelo", str(c["title"]), "k_castelo_%d" % w, pos, 0.0, c_int)
 	b.return_scene = "city"
-	b.door.enabled = false
+	b.door.enabled = c_int != ""
 	buildings["castelo"] = b
+	if c_int != "":
+		door_spawns[c_int] = pos + Vector2(0, 24)
+	if bool(c.get("enter", false)):
+		# v3.7: o portão leva para dentro do castelo (AcademyCastle: corredores e salas)
+		var gate := Interior.Spot.new("Entrar no " + str(c["title"]), func() -> void:
+			Audio.novo("entrar_casa", -4.0, 0.0)
+			Game.go_to_castle("start"), 24.0)
+		gate.position = pos + Vector2(0, 8)
+		world.add_child(gate)
+		door_spawns["castelo"] = pos + Vector2(0, 26)
+		extra_landmarks.append(["castelo", str(c["title"]), pos + Vector2(0, 10)])
 	var x0 := pos.x - w * T / 2.0
 	for tx in [1.5, w - 1.5]:
 		_flag(Vector2(x0 + tx * T, pos.y - 6 * T + 4), str(c.get("flag", "FlagRed")))
@@ -363,6 +387,62 @@ func _build_gardens() -> void:
 		body.collision_layer = 1
 		add_child(body)
 		_rect_collider(body, Rect2(gx * T + 2, gy * T + 2, gw * T - 4, gh * T - 4))
+
+
+## Muralha em volta da cidade (pedido do Victor para a Academia): oeste, sul e leste (com portão na saída). Ao
+## norte quem fecha é o castelo e as muralhas que saem dos lados dele (`north_row` = linha de baixo delas).
+func _build_enclosure() -> void:
+	var e: Dictionary = city.get("enclosure", {})
+	if e.is_empty():
+		return
+	var body := StaticBody2D.new()
+	body.collision_layer = 1
+	add_child(body)
+	var top := int(e.get("north_row", 0))       # primeira linha da muralha de cima (3 tiles)
+	var g: Array = e.get("gate", [H / 2 - 1, H / 2 + 1])
+	# muralhas do norte, dos lados do castelo
+	for seg in e.get("north", []):
+		var x0 := int(seg[0])
+		var x1 := int(seg[1])
+		var wn := x1 - x0 + 1
+		var wall := _add_prop("k_muralha_%d" % wn, Vector2((x0 + wn / 2.0) * T, (top + 3) * T))
+		wall.z_index = -1
+		_rect_collider(body, Rect2(x0 * T, top * T, wn * T, 3 * T))
+	# oeste
+	var wv := _add_prop("k_muralhav_%d" % (H - top - 3), Vector2(T, H * T))
+	wv.z_index = -1
+	_rect_collider(body, Rect2(0, top * T, 2 * T, (H - top) * T))
+	# sul
+	var ws := _add_prop("k_muralha_%d" % (W - 4), Vector2(W * T / 2.0, H * T))
+	ws.z_index = -1
+	_rect_collider(body, Rect2(2 * T, (H - 3) * T, (W - 4) * T, 3 * T))
+	# leste, com o portão da estrada
+	var g0 := int(g[0])
+	var g1 := int(g[1])
+	var up_h := g0 - 1 - top
+	if up_h > 1:
+		_add_prop("k_muralhav_%d" % up_h, Vector2((W - 1) * T, (g0 - 1) * T)).z_index = -1
+		_rect_collider(body, Rect2((W - 2) * T, top * T, 2 * T, up_h * T))
+	var dn_h := H - (g1 + 2)
+	if dn_h > 1:
+		_add_prop("k_muralhav_%d" % dn_h, Vector2((W - 1) * T, H * T)).z_index = -1
+		_rect_collider(body, Rect2((W - 2) * T, (g1 + 2) * T, 2 * T, dn_h * T))
+	for ty in [g0 - 3, g1 + 1]:
+		_add_prop("k_torre", Vector2((W - 1.5) * T, (ty + 3) * T)).z_index = 1
+		_rect_collider(body, Rect2((W - 3) * T, ty * T, 3 * T, 3 * T))
+		_flag(Vector2((W - 1.5) * T, ty * T + 4), "FlagBlue")
+	for ct in [Vector2(0, top), Vector2(W - 3, H - 3), Vector2(0, H - 3)]:
+		_add_prop("k_torre", Vector2((ct.x + 1.5) * T, (ct.y + 3) * T)).z_index = 1
+	var lines: Array = e.get("guard_lines", ["Boas-vindas a Fontelúcida.", "O castelo é logo ali em frente."])
+	_guard(_tile_pos(W - 4, g0 - 1), lines)
+	_guard(_tile_pos(W - 4, g1 + 1), lines)
+
+
+## Alvo que está em outro mapa ligado a este: na Academia, as salas ficam dentro do castelo (seta no portão).
+func objective_fallback(_id: String) -> Variant:
+	if buildings.has("castelo") and door_spawns.has("castelo"):
+		return door_spawns["castelo"]
+	return null
 
 
 func _rect_collider(body: StaticBody2D, r: Rect2) -> void:

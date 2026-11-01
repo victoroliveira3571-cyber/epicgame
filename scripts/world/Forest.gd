@@ -587,7 +587,7 @@ func _build_houses() -> void:
 	var defs := [
 		{"id": "casa_familia", "title": "Casa da Família", "prop": "b_casa_creme", "tile": Vector2i(58, 30), "interior": "casa_familia"},
 		{"id": "casa_pai", "title": "Casa Abandonada", "prop": "b_casa_laranja2", "tile": Vector2i(71, 30), "interior": "casa_pai", "tint": Color(0.7, 0.66, 0.62)},
-		{"id": "cabana", "title": "Cabana do Pietro", "prop": "b_estalagem", "tile": Vector2i(70, 45), "interior": ""},
+		{"id": "cabana", "title": "Cabana do Pietro", "prop": "b_estalagem", "tile": Vector2i(70, 45), "interior": "cabana_pietro"},
 	]
 	for d in defs:
 		var t: Vector2i = d["tile"]

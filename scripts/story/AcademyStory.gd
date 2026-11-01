@@ -190,9 +190,7 @@ static func decorate(city: Node) -> void:
 		# chegou pela estrada sem passar pela carruagem: segue para a matrícula
 		Story.st()["step"] = "a_matricula"
 		Story._save()
-	var lin := NPC.create(city.world, "Master", city._tile_pos(42, 27), "static", "lin")
-	StoryProp.talker(lin, "lin_a", "Mestre Lin (professor)")
-	lin.add_to_group("speaker_lin")
+	# v3.7: o Mestre Lin dá aula dentro do castelo (Interior "acad_aula"); no pátio ficam Ivo e os colegas
 	if not (bool(d()["on"]) and mission().has("boss")):
 		var ivo := NPC.create(city.world, "Boy", city._tile_pos(36, 27), "static", "ivo")
 		StoryProp.talker(ivo, "ivo_a", "Ivo")

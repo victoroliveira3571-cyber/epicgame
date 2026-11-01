@@ -920,6 +920,9 @@ const DAILY_TEMPLATES := [
 # Móveis comprados ficam guardados até você colocá-los na casa (modo Decorar, tecla V). Os de bônus
 # valem desde a compra. icon: textura do móvel. flat: fica no chão (tapetes) e gira de 90 em 90 graus.
 # wall: móvel de parede (lareira, estante, troféus, relógio, cômoda): só desliza ao longo da parede de cima.
+## v3.7 (pedido do Victor): a casa de Focus Town só abre depois de comprada.
+const HOUSE_PRICE := 1000
+
 const FURNITURE := {
 	"cama": {"name": "Cama Confortável", "price": 60, "desc": "+15 de vida máxima.", "stat": {"hp": 15.0}, "icon": "furn_cama"},
 	"mesa": {"name": "Mesa de Jantar", "price": 100, "desc": "A fome diminui 60% mais devagar.", "stat": {"hunger_mult": 0.4}, "icon": "furn_mesa"},

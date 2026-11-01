@@ -211,6 +211,9 @@ func objective_world_pos(scene: Node) -> Variant:
 		for l2 in scene.map_landmarks():
 			if str(l2[0]) == alt:
 				return l2[2]
+	# v3.7: alvo em outro mapa ligado a este (sala do castelo vista do pátio, jardim visto de dentro do castelo)
+	if scene.has_method("objective_fallback"):
+		return scene.objective_fallback(id)
 	return null
 
 
@@ -241,6 +244,12 @@ func chapter_short() -> String:
 	if path() == "exercito":
 		return "Exército"
 	return String((StoryData.CHAPTERS.get(chapter(), {}) as Dictionary).get("title", ""))
+
+
+## v3.7: a casa de Focus Town é comprada (Data.HOUSE_PRICE). Saves antigos que já tinham móveis ou coisas no
+## baú contam como donos, para ninguém perder o que guardou.
+func owns_house() -> bool:
+	return bool(flag("casa_comprada", false)) or not GameState.furniture.is_empty() or not GameState.stash.is_empty()
 
 
 func start_chapter(n: int) -> void:

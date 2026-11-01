@@ -12,11 +12,13 @@ const DUNGEON_SCENE := "res://scenes/Dungeon.tscn"
 const INTERIOR_SCENE := "res://scenes/Interior.tscn"
 const FOREST_SCENE := "res://scenes/Forest.tscn"
 const CITY_SCENE := "res://scenes/City.tscn"
+const CASTLE_SCENE := "res://scenes/AcademyCastle.tscn"
 
 var current_floor: int = 0
 var run: Dictionary = {}
 var city_id: String = ""            # v3.2: cidade atual ("porto" | "pedralta" | "academia")
 var city_spawn: String = "start"
+var castle_spawn: String = "start"   # v3.7: castelo da Academia ("start" | "door:<id do interior>")
 var road_dest: String = ""          # v3.7: destino da viagem quando a carruagem sofre emboscada na estrada
 var town_spawn: String = "start"      # "start" | "gate" | "forest" | "door:<id do interior>"
 var forest_spawn: String = "town"     # "town" | "door:<id do interior>"
@@ -255,12 +257,28 @@ func enter_interior(id: String, from: String = "town") -> void:
 
 
 func leave_interior() -> void:
-	if interior_return == "city":
+	if interior_return == "castle":
+		go_to_castle("door:" + interior_id)
+	elif interior_return == "city":
 		go_to_city(city_id, "door:" + interior_id)
 	elif interior_return == "forest":
 		go_to_forest("door:" + interior_id)
 	else:
 		go_to_town("door:" + interior_id)
+
+
+## v3.7: castelo da Academia (corredores com portas para as salas). `spawn` = "start" (entrada) ou "door:<id>".
+func go_to_castle(spawn: String = "start") -> void:
+	if Law.is_jailed():
+		HUD.show_toast("Você está preso: cumpra a pena estudando.", UI.C_BAD)
+		return
+	city_id = "academia"
+	castle_spawn = spawn
+	GameState.in_dungeon = false
+	if spawn.begins_with("door:"):
+		change_scene(CASTLE_SCENE)
+	else:
+		change_scene(CASTLE_SCENE, 0.5, "Castelo de Fontelúcida", "Corredores, salas e perguntas")
 
 
 # ============================================================ Cidades (v3.2)

@@ -208,7 +208,9 @@ func _build_buildings() -> void:
 		var t: Vector2i = d["tile"]
 		var pos := Vector2(t.x * T + 8, t.y * T)
 		var interior: String = d["id"] if d["id"] in ["casa", "restaurante", "guilda", "biblioteca", "forja", "loja", "arena", "laboratorio"] else ""
-		var b := Building.create(world, d["id"], d["name"], d["prop"], pos, d["door_dx"], interior)
+		var for_sale: bool = d["id"] == "casa" and not Story.owns_house()
+		var title: String = ("Casa à venda (%d ouro)" % Data.HOUSE_PRICE) if for_sale else str(d["name"])
+		var b := Building.create(world, d["id"], title, d["prop"], pos, d["door_dx"], interior)
 		if d.has("tint") and b.sprite != null:
 			b.sprite.modulate = d["tint"]
 		buildings[d["id"]] = b
@@ -216,6 +218,13 @@ func _build_buildings() -> void:
 			door_spawns[interior] = pos + Vector2(d["door_dx"], 24)
 		var npc := NPC.create(world, d["npc"], pos + Vector2(d["npc_dx"], 10), "static")
 		npc.lines = d["lines"]
+		if for_sale:
+			# v3.7: a casa só é sua depois de comprada; a porta vira a oferta de compra
+			b.door.enabled = false
+			var offer := Interior.Spot.new("Comprar a casa (%d ouro)" % Data.HOUSE_PRICE, func() -> void: _offer_house(), 22.0)
+			offer.position = pos + Vector2(d["door_dx"], 8)
+			world.add_child(offer)
+			npc.lines = ["Essa casa está à venda. O dono pede %d ouro." % Data.HOUSE_PRICE, "Junte ouro na masmorra e nas missões, depois volte aqui.", "Uma casa sua: móveis, baú e mesa de estudo."]
 	for i in HOUSE_DEFS.size():
 		var d: Dictionary = HOUSE_DEFS[i]
 		var t: Vector2i = d["tile"]
@@ -268,10 +277,24 @@ func _build_gardens() -> void:
 		body.add_child(c)
 
 
+func _offer_house() -> void:
+	var price := int(Data.HOUSE_PRICE)
+	HUD.confirm("Comprar a casa por %d ouro? Ela vem vazia: os móveis você compra no catálogo." % price, func() -> void:
+		if not GameState.spend_gold(price):
+			HUD.show_toast("Faltam %d de ouro para comprar a casa." % (price - GameState.gold), UI.C_BAD)
+			Audio.sfx("ui_error")
+			return
+		Story.set_flag("casa_comprada")
+		Audio.jingle("success2", -4.0)
+		HUD.show_toast("A casa é sua! Entre para decorar e estudar.", UI.C_GOLD)
+		Game.enter_interior("casa", "town"))
+
+
 func _build_gate() -> void:
 	var pos := Vector2(SPINE_X * T + 8, GATE_Y * T)
 	_rect_fill(reserved, SPINE_X - 7, GATE_Y - 4, SPINE_X + 7, H - 1)
-	_add_prop("stairs_down_0", pos + Vector2(0, -6), 0.0).scale = Vector2(1.6, 1.6)
+	# escada descendo para o escuro, vista de cima (a "stairs_down" do pack é de perfil e ficava torta no arco)
+	_add_prop("descstairs_20_30", pos + Vector2(0, -1), 0.0)
 	_add_prop("tile_TilesetHouse_29_20_3_3", pos, 0.0)
 	# pernas do arco com colisão (deixa o vão central livre)
 	var body := StaticBody2D.new()
@@ -351,11 +374,16 @@ func _build_station() -> void:
 ## Saída oeste da avenida: Osvaldo cobra o pedágio (1 crédito por dia) e leva à floresta.
 func _build_forest_gate() -> void:
 	var pos := Vector2(4 * T, AVENUE_Y * T + 8)
-	for dy in [-34.0, 30.0]:
-		_add_prop("h_cerca_ferro", pos + Vector2(2, dy), 4.0)
-	_add_prop("i_board", pos + Vector2(26, -26), 4.0)
-	_add_prop("i_barrel", pos + Vector2(30, 30), 5.0)
-	var osv := NPC.create(world, "OldMan", pos + Vector2(14, -14), "static")
+	# v3.7 (pedido do Victor): passagem natural, sem as grades de ferro. Duas árvores grandes fazem o "portal",
+	# arbustos e flores acompanham a trilha, a placa e o banquinho do Osvaldo ficam na beira.
+	_add_prop("n_arvore_grande", pos + Vector2(-6, -40), 9.0)
+	_add_prop("n_arvore_grande", pos + Vector2(-6, 50), 9.0)
+	for o in [["n_arbusto2", Vector2(20, -36)], ["n_arbusto4", Vector2(24, 40)], ["n_flor_margarida", Vector2(36, -30)],
+			["n_flor_trevo", Vector2(38, 34)], ["n_toco1", Vector2(44, -24)], ["n_pedra_cinza_p2", Vector2(46, 36)]]:
+		_add_prop(str(o[0]), pos + (o[1] as Vector2), 3.0)
+	_add_prop("k_placa", pos + Vector2(30, -22), 3.0)
+	_add_prop("i_stool", pos + Vector2(16, -24), 0.0)
+	var osv := NPC.create(world, "OldMan", pos + Vector2(16, -16), "static")
 	osv.lines = ["Pedágio da floresta: 1 crédito.", "Estudou hoje?", "Cuidado com os lobos."]
 	StoryProp.talker(osv, "osvaldo", "Osvaldo (Trilha da Floresta)")
 	var l := Label.new()

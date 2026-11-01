@@ -4,7 +4,9 @@ extends Node
 ## Uso: --scenario=interiores_shot [-- --only=biblioteca,loja]
 var OUT: String = ProjectSettings.globalize_path("res://_shots/")
 const IDS := ["casa", "casa_familia", "casa_pai", "biblioteca", "loja", "forja", "restaurante", "guilda", "laboratorio",
-	"delegacia", "casa_npc_0", "casa_npc_1", "casa_npc_2", "casa_npc_3"]
+	"delegacia", "casa_npc_0", "casa_npc_1", "casa_npc_2", "casa_npc_3",
+	"acad_reitoria", "acad_aula", "acad_secretaria", "acad_bibliotecario", "acad_refeitorio", "acad_alojamento",
+	"acad_quarto", "acad_dormitorio", "acad_comum", "acad_lab"]
 
 
 func run(dev: Node) -> void:
