@@ -44,6 +44,8 @@ const BUILDING_DEFS := [
 	{"id": "laboratorio", "name": "Laboratório do Dr. Faísca", "prop": "b_casa_empena", "tile": Vector2i(54, 17), "door_dx": 0.0, "tint": Color(0.72, 1.0, 0.82),
 		"npc": "tonico", "npc_dx": -32.0, "lines": ["Cuidado: o laboratório explode às terças.", "Traga gosma! Muita gosma!", "O doutor é um gênio. Às vezes."]},
 ]
+## v3.7: hortas cercadas do outro lado da rua das casas: [x, y, largura, altura, muda] em tiles.
+const GARDENS := [[9, 41, 4, 3, "n_frutas_bush3"], [16, 41, 3, 3, "n_frutas_bush1"], [44, 41, 4, 3, "n_frutas_bush5"], [51, 41, 3, 3, "n_frutas_bush2"]]
 const HOUSE_DEFS := [
 	{"prop": "b_casa_creme", "tile": Vector2i(14, 37)}, {"prop": "b_estalagem", "tile": Vector2i(22, 37)},
 	{"prop": "b_casa_laranja2", "tile": Vector2i(43, 37)}, {"prop": "b_salao_vermelho", "tile": Vector2i(52, 37)},
@@ -78,6 +80,7 @@ func _ready() -> void:
 	_build_water_colliders()
 	_build_buildings()
 	_build_gate()
+	_build_gardens()
 	_build_forest_gate()
 	_build_station()
 	_build_decor()
@@ -92,7 +95,7 @@ func _ready() -> void:
 	HUD.on_scene_ready("town")
 	GameState.check_daily_reset()
 	# o jogo foi fechado no prólogo: volta para a casa da família
-	if Story.started() and Story.step() == "c1_casa":
+	if Story.started() and Story.step() in ["c1_casa", "p_prologo", "a_casa"]:
 		Game.enter_interior.call_deferred("casa_familia")
 
 
@@ -130,8 +133,17 @@ func _build_masks() -> void:
 	_rect_fill(dirt, 43, 18, 45, AVENUE_Y - 1)   # caminho até a arena
 	_rect_fill(dirt, 53, 18, 55, AVENUE_Y - 1)   # caminho até o laboratório
 	# lago esquerdo e lagoa direita
-	_rect_fill(water, 8, 30, 16, 35)
-	_rect_fill(water, 47, 31, 52, 35)
+	# v3.7 (análise): lagos arredondados (antes eram retângulos perfeitos)
+	# (e sem invadir as casas de baixo, que antes ficavam desenhadas por cima da água)
+	_rect_fill(water, 9, 29, 15, 29)
+	_rect_fill(water, 8, 30, 16, 32)
+	_rect_fill(water, 8, 33, 11, 33)
+	_rect_fill(water, 48, 30, 51, 30)
+	_rect_fill(water, 47, 31, 52, 32)
+	_rect_fill(water, 46, 33, 49, 33)
+	# hortas das casas de baixo (referência das vilas do Victor)
+	for g in GARDENS:
+		_rect_fill(reserved, g[0] - 1, g[1] - 1, g[0] + g[2], g[1] + g[3])
 	# reservas: caminhos (com folga), lagos, prédios
 	for y in H:
 		for x in W:
@@ -231,6 +243,31 @@ func map_landmarks() -> Array:
 
 ## v3.7 (referências do Victor, entrada de masmorra): arco de pedra com a escada descendo, clareira aberta na
 ## mata, tochas, caixotes e barris dos aventureiros de um lado e entulho de pedra do outro, estátuas guardando.
+## Hortas: canteiro de terra arada do pack com mudas em fileiras e cerca na frente.
+func _build_gardens() -> void:
+	var body := StaticBody2D.new()
+	body.collision_layer = 1
+	body.collision_mask = 0
+	world.add_child(body)
+	for g in GARDENS:
+		var gx := int(g[0])
+		var gy := int(g[1])
+		var gw := int(g[2])
+		var gh := int(g[3])
+		var plot := _add_prop("plot_%d_%d" % [gw, gh], Vector2((gx + gw / 2.0) * T, (gy + gh) * T))
+		plot.get_parent().z_index = -1
+		for yy in range(gy, gy + gh - 1):
+			for xx in range(gx, gx + gw, 2):
+				_add_prop(str(g[4]), Vector2(xx * T + 8, yy * T + 14))
+		_add_prop("k_cerca_%d" % (gw + 1), Vector2((gx + gw / 2.0) * T, (gy + gh + 1) * T))
+		var c := CollisionShape2D.new()
+		var s := RectangleShape2D.new()
+		s.size = Vector2(gw * T - 4, (gh + 1) * T - 4)
+		c.shape = s
+		c.position = Vector2((gx + gw / 2.0) * T, (gy + (gh + 1) / 2.0) * T)
+		body.add_child(c)
+
+
 func _build_gate() -> void:
 	var pos := Vector2(SPINE_X * T + 8, GATE_Y * T)
 	_rect_fill(reserved, SPINE_X - 7, GATE_Y - 4, SPINE_X + 7, H - 1)

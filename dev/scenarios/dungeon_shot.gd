@@ -8,6 +8,9 @@ func run(dev: Node) -> void:
 	Story.dev_start()
 	GameState.choose_class("cavaleiro")
 	GameState.level = 8
+	GameState.best_floor = 40          # libera as Profundezas para os prints
+	for cid in CityData.ORDER:
+		Story.set_flag("frag_" + cid)
 	GameState.energy = 5
 	GameState.add_item("pocao_vida", 3, true)
 	GameState.add_item("pao", 2, true)
