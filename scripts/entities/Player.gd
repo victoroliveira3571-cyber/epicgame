@@ -127,6 +127,58 @@ func _refresh_equipment_visual() -> void:
 		var lk := Looks.hero()
 		if LpcW.look_key(lk, "full") != LpcW.look_key(sprite.look, "full"):
 			sprite.refresh(lk)
+	_refresh_aura()
+
+
+# ====================================================================== Aura dos materiais altos (v3.7)
+## Referência do Victor (armas e armaduras com brilho elemental): do tier Obsidiana em diante o herói ganha
+## uma aura de partículas e uma luz suave na cor do material. Efeito do motor (partículas e luz), sem arte nova.
+const AURA := {5: Color(0.72, 0.42, 1.0), 6: Color(0.3, 1.0, 0.85), 7: Color(1.0, 0.85, 0.35)}
+var _aura: CPUParticles2D = null
+var _aura_light: PointLight2D = null
+var _aura_tier: int = -1
+
+
+func _refresh_aura() -> void:
+	var t := -1
+	for slot in ["weapon", "armor"]:
+		var id: String = GameState.equipped.get(slot, "")
+		if id != "":
+			t = maxi(t, int(Data.get_item(id).get("tier", 0)))
+	if t == _aura_tier:
+		return
+	_aura_tier = t
+	if _aura != null:
+		_aura.queue_free()
+		_aura = null
+	if _aura_light != null:
+		_aura_light.queue_free()
+		_aura_light = null
+	if not AURA.has(mini(t, 7)) or t < 5:
+		return
+	var col: Color = AURA[mini(t, 7)]
+	_aura = CPUParticles2D.new()
+	_aura.amount = 8 + (t - 5) * 6
+	_aura.lifetime = 1.3
+	_aura.position = Vector2(0, -12)
+	_aura.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	_aura.emission_sphere_radius = 9.0
+	_aura.direction = Vector2(0, -1)
+	_aura.spread = 25.0
+	_aura.gravity = Vector2(0, -14)
+	_aura.initial_velocity_min = 2.0
+	_aura.initial_velocity_max = 8.0
+	_aura.scale_amount_min = 1.0
+	_aura.scale_amount_max = 2.0 if t < 7 else 2.5
+	var grad := Gradient.new()
+	grad.set_color(0, Color(col, 0.0))
+	grad.add_point(0.25, Color(col, 0.9))
+	grad.set_color(grad.get_point_count() - 1, Color(col.lightened(0.4), 0.0))
+	_aura.color_ramp = grad
+	_aura.z_index = 2
+	_aura.local_coords = false
+	add_child(_aura)
+	_aura_light = Fx.make_light(self, Vector2(0, -12), col, 0.5 if t < 7 else 0.7, 0.45 if t < 7 else 0.6)
 
 
 # ====================================================================== Loop
