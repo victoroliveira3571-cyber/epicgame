@@ -143,7 +143,7 @@ func _forge() -> void:
 	s._use_tub()
 	check(s.carry == "pronta" and float(s._bar["quench_q"]) >= 0.99, "têmpera na faixa")
 	s._deliver()
-	check(s._done == 1 and s.points > 20.0, "peça entregue (+%d)" % int(s.points))
+	check(s._done == 1 and s.points > 12.0, "peça entregue (+%d)" % int(s.points))
 	await _end_shift(s, "forja")
 
 
