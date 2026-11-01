@@ -13,9 +13,9 @@ const DOOR_W := 2          # largura do vão da porta (tiles)
 
 # Moradores das casas de cenário (índice = ordem de HOUSE_DEFS na cidade)
 const HOUSES := [
-	{"title": "Ateliê da Costureira", "npc": "costureira", "floor": "floor_wood", "wall": "wall_cream", "size": Vector2i(14, 10),
+	{"title": "Ateliê da Costureira", "npc": "costureira", "floor": "floor_wood", "wall": "wall_cream", "size": Vector2i(16, 12),
 		"lines": ["Entre! Cuidado com os alfinetes.", "Capa nova? Volte quando juntar fichas de estilo.", "A Dona Marta manda lembranças."]},
-	{"title": "Estalagem do Viajante", "npc": "estalajadeiro", "floor": "floor_wood_dark", "wall": "wall_red", "size": Vector2i(24, 14),
+	{"title": "Estalagem do Viajante", "npc": "estalajadeiro", "floor": "floor_wood_dark", "wall": "wall_red", "size": Vector2i(26, 17),
 		"lines": ["Os quartos estão cheios hoje!", "Quem sobe a masmorra dorme melhor.", "Já ouvi histórias do chefe do andar 5."]},
 	{"title": "Casa do Mestre Lin", "npc": "Master", "floor": "floor_stone", "wall": "wall_stone", "size": Vector2i(16, 10),
 		"lines": ["Respire fundo. Um pomodoro por vez.", "A mente calma corta mais fundo.", "Hoje meditei por 25 minutos."]},
@@ -26,9 +26,9 @@ const HOUSES := [
 ## Tamanho de cada sala (tiles) e pisos.
 const ROOMS := {
 	"casa": [24, 14, "floor_wood", "wall_cream"], "restaurante": [28, 16, "floor_wood_dark", "wall_red"],
-	"guilda": [32, 18, "floor_stone", "wall_stone"], "biblioteca": [26, 15, "floor_wood_dark", "wall_cream"],
+	"guilda": [32, 18, "floor_stone", "wall_stone"], "biblioteca": [30, 17, "floor_wood_dark", "wall_cream"],
 	"casa_familia": [20, 12, "floor_wood", "wall_cream"], "casa_pai": [16, 10, "floor_wood_dark", "wall_stone"],
-	"forja": [18, 11, "floor_stone", "wall_stone"], "loja": [16, 10, "floor_wood", "wall_red"],
+	"forja": [18, 11, "floor_stone", "wall_stone"], "loja": [20, 13, "floor_wood", "wall_red"],
 	"arena": [30, 18, "floor_sand", "wall_stone"], "delegacia": [22, 13, "floor_stone", "wall_stone"],
 	"laboratorio": [24, 14, "floor_stone", "wall_cream"],
 	# v3.7: salas dos turnos de ofício (WorkShift)
@@ -48,6 +48,13 @@ var housing: HousingEditor = null    # sua casa: modo Decorar (V)
 var _blockers: Array = []            # peças fixas da casa (o editor não deixa pôr móvel em cima)
 var _ending: bool = false
 var owner_id: String = ""          # dono do lugar (apresentação na primeira visita, ShopTalk)
+## v3.7 (referência do Victor, casa com vários cômodos): paredes internas por sala, em tiles.
+## {"h": [x0, x1, y]} = parede de frente (2 tiles de altura, com o friso em cima); {"v": [x, y0, y1]} = parede fina.
+const PARTITIONS := {
+	"casa_npc_1": [{"h": [1, 3, 7]}, {"h": [6, 11, 7]}, {"h": [14, 19, 7]}, {"h": [22, 24, 7]},
+		{"v": [8, 2, 6]}, {"v": [16, 2, 6]}],
+}
+var partitions: Array = []
 var owner_npc: NPC = null
 
 
@@ -177,6 +184,7 @@ func _ready() -> void:
 
 
 func _configure() -> void:
+	partitions = PARTITIONS.get(id, [])
 	if ROOMS.has(id):
 		var r: Array = ROOMS[id]
 		cols = r[0]
@@ -229,10 +237,50 @@ func _compose_room() -> Image:
 			for k in T:
 				var px := Vector2i(x * T + k, WALL_H * T + i)
 				img.set_pixelv(px, img.get_pixelv(px).darkened(a))
+	_draw_partitions(img, wall_img, edge, lip)
 	# tapete de entrada na porta
 	img.fill_rect(Rect2i(door_x0 + 2, (rows - 1) * T - 5, DOOR_W * T - 4, 5), Color("7a3a34"))
 	img.fill_rect(Rect2i(door_x0 + 2, (rows - 1) * T - 5, DOOR_W * T - 4, 1), Color("b25a4a"))
 	return img
+
+
+## Paredes internas: a de frente repete a textura da parede de cima (2 tiles) com um friso escuro por cima e
+## sombra no piso; a fina é uma viga escura vista de cima com friso claro dos dois lados.
+func _draw_partitions(img: Image, wall_img: Image, edge: Color, lip: Color) -> void:
+	for p in partitions:
+		if (p as Dictionary).has("h"):
+			var a: Array = p["h"]
+			var x0 := int(a[0]) * T
+			var x1 := (int(a[1]) + 1) * T
+			var y := int(a[2]) * T
+			for x in range(int(a[0]), int(a[1]) + 1):
+				img.blit_rect(wall_img, Rect2i(0, 0, T, T * WALL_H), Vector2i(x * T, y))
+			img.fill_rect(Rect2i(x0, y - 4, x1 - x0, 4), edge)
+			img.fill_rect(Rect2i(x0, y - 1, x1 - x0, 1), lip)
+			for i in 5:
+				var dk := 0.28 - float(i) * 0.05
+				for px in range(x0, x1):
+					var pv := Vector2i(px, y + WALL_H * T + i)
+					if pv.y < img.get_height():
+						img.set_pixelv(pv, img.get_pixelv(pv).darkened(dk))
+		else:
+			var v: Array = p["v"]
+			var vx := int(v[0]) * T + 4
+			var vy0 := int(v[1]) * T - 4
+			var vh := (int(v[2]) - int(v[1]) + 1) * T + 4
+			img.fill_rect(Rect2i(vx, vy0, 8, vh), edge)
+			img.fill_rect(Rect2i(vx, vy0, 1, vh), lip)
+			img.fill_rect(Rect2i(vx + 7, vy0, 1, vh), lip)
+
+
+func _block_partitions() -> void:
+	for p in partitions:
+		if (p as Dictionary).has("h"):
+			var a: Array = p["h"]
+			_block(Rect2(int(a[0]) * T, int(a[2]) * T - 4, (int(a[1]) - int(a[0]) + 1) * T, WALL_H * T + 2))
+		else:
+			var v: Array = p["v"]
+			_block(Rect2(int(v[0]) * T + 4, int(v[1]) * T - 4, 8, (int(v[2]) - int(v[1]) + 1) * T + 4))
 
 
 func room_px() -> Vector2:
@@ -253,6 +301,7 @@ func _build_walls() -> void:
 	_block(Rect2(-8, h - T + 2, door_x0 + 8, T + 8))
 	_block(Rect2(door_x0 + DOOR_W * T, h - T + 2, w - door_x0 - DOOR_W * T + 8, T + 8))
 	_block(Rect2(door_x0, h + 4, DOOR_W * T, 12))                            # fecha o vão: a saída é pela porta
+	_block_partitions()
 
 
 func _block(r: Rect2) -> void:
@@ -446,45 +495,144 @@ func table_set(t: Vector2, round_table: bool = false, deco: String = "i_bowl2", 
 		light(t + Vector2(5, -14), Color(1.0, 0.75, 0.45), 0.5, 0.45)
 
 
+## v3.7: raio de sol (ou de lua, à noite) entrando pela janela: luz aditiva inclinada com poeira no ar.
+func sunbeam(x: float, length: float = 110.0, width: float = 22.0) -> void:
+	var hour := float(Time.get_time_dict_from_system()["hour"])
+	var day := hour >= 7.0 and hour < 18.0
+	var col := Color(1.0, 0.9, 0.62) if day else Color(0.62, 0.72, 1.0)
+	var a := 0.16 if day else 0.07
+	var top := 36.0
+	var slant := length * 0.32
+	var poly := Polygon2D.new()
+	poly.polygon = PackedVector2Array([Vector2(x - width / 2.0, top), Vector2(x + width / 2.0, top),
+		Vector2(x + width / 2.0 + slant + 8.0, top + length), Vector2(x - width / 2.0 + slant - 8.0, top + length)])
+	poly.vertex_colors = PackedColorArray([Color(col, a), Color(col, a), Color(col, a * 0.2), Color(col, a * 0.2)])
+	var mat := CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	poly.material = mat
+	poly.z_index = 20
+	add_child(poly)
+	if not day:
+		return
+	var dust := CPUParticles2D.new()
+	dust.position = Vector2(x + slant * 0.5, top + length * 0.5)
+	dust.z_index = 21
+	dust.amount = 7
+	dust.lifetime = 5.0
+	dust.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	dust.emission_rect_extents = Vector2(width * 0.5, length * 0.4)
+	dust.direction = Vector2(0.3, 1)
+	dust.spread = 40.0
+	dust.initial_velocity_min = 1.0
+	dust.initial_velocity_max = 4.0
+	dust.gravity = Vector2.ZERO
+	dust.color = Color(1.0, 0.95, 0.8, 0.55)
+	add_child(dust)
+
+
+## Plaquinha com o nome da seção/cômodo (texto pequeno no friso da parede).
+func _section_label(text: String, x: float, y: float = 20.0) -> void:
+	var l := UI.label(text, Color("ffe7b0"), 0)
+	l.size = Vector2(90, 10)
+	l.position = Vector2(x - 45, y - 8)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.add_theme_font_size_override("font_size", 8)
+	l.add_theme_color_override("font_outline_color", Color("2a1a14"))
+	l.add_theme_constant_override("outline_size", 3)
+	l.z_index = 50
+	add_child(l)
+
+
+## Bicho dormindo (gato da loja, pets que ficaram em casa): primeiro quadro do sprite do pack, respiração
+## lenta e "z" subindo. `sheet_rel` = folha do pack (animals/*.png com 2 quadros ou folha de ator 4 direções).
+func sleeping_pet(sheet_rel: String, pos: Vector2, cushion: bool = true, tint: Color = Color.WHITE) -> Node2D:
+	if cushion:
+		prop("lpc_pufe", pos + Vector2(0, 4), false, true)   # no chão (sob o bicho)
+	var holder := Node2D.new()
+	holder.position = pos
+	world.add_child(holder)
+	var tex := Pix.tex(sheet_rel)
+	var spr := Sprite2D.new()
+	if tex != null and tex.get_height() <= 20:
+		var at := AtlasTexture.new()
+		at.atlas = tex
+		at.region = Rect2(0, 0, tex.get_height(), tex.get_height())
+		spr.texture = at
+	else:
+		spr.texture = Pix.atlas(sheet_rel, Rect2(0, 0, 16, 16))
+	spr.offset = Vector2(0, -7)
+	spr.modulate = tint
+	holder.add_child(spr)
+	var tw := holder.create_tween().set_loops()
+	tw.tween_property(spr, "scale", Vector2(1.04, 0.94), 1.4).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(spr, "scale", Vector2.ONE, 1.4).set_trans(Tween.TRANS_SINE)
+	var t := Timer.new()
+	t.wait_time = 2.2
+	t.autostart = true
+	holder.add_child(t)
+	t.timeout.connect(func() -> void:
+		var z := UI.label("z", Color(1, 1, 1, 0.9), 0)
+		z.add_theme_font_size_override("font_size", 8)
+		z.position = Vector2(4, -22)
+		z.z_index = 30
+		holder.add_child(z)
+		var zt := z.create_tween()
+		zt.tween_property(z, "position", Vector2(10, -38), 1.8)
+		zt.parallel().tween_property(z, "modulate:a", 0.0, 1.8)
+		zt.tween_callback(z.queue_free))
+	return holder
+
+
 # ================================================================== Biblioteca
 func _build_library() -> void:
+	# v3.7 (referências do Victor): estantes cobrindo a parede de cima, janelas com raio de sol e o relógio no
+	# meio, fileiras de estantes à esquerda, sala de leitura com tapete à direita, balcão da bibliotecária ao centro.
 	var w := cols * T
 	var cx := w / 2.0
-	for x in [36.0, 72.0, 108.0, w - 108.0, w - 72.0, w - 36.0]:
+	for x in [32.0, 64.0, 96.0, 128.0, w - 128.0, w - 96.0, w - 64.0, w - 32.0]:
 		prop("i_bookcase", Vector2(x, 62), false)
-	wall("i_painting", cx, 26)
-	wall("p_janela", cx - 46, 28)
-	wall("p_janela", cx + 46, 28)
-	prop("furn_relogio", Vector2(w - 20, 66), false)
-	Audio.emitter(world, Vector2(w - 20, 56), "amb_relogio", -14.0, true, 0.0, 180.0)
+	_block(Rect2(16, 30, 128, 34))
+	_block(Rect2(w - 144, 30, 128, 34))
+	for wx in [cx - 52.0, cx + 52.0]:
+		wall("p_janela", wx, 28)
+		sunbeam(wx, 120.0)
+	prop("furn_relogio", Vector2(cx, 64), true)
+	Audio.emitter(world, Vector2(cx, 50), "amb_relogio", -14.0, true, 0.0, 180.0)
+	prop("p_vaso_flores", Vector2(cx - 84, 62), false)
+	prop("p_vaso_flores", Vector2(cx + 84, 62), false)
 	# balcão da bibliotecária
-	for dx in [-24.0, 24.0]:
-		prop("i_counter", Vector2(cx + dx, 100))
-	_block(Rect2(cx - 50, 44, 100, 36))
-	shop_owner("bibliotecaria", "bibliotecaria", "Dona Celeste", Vector2(cx, 82),
+	for dx in [-23.0, 22.0]:
+		prop("i_counter", Vector2(cx + dx, 112))
+	_block(Rect2(cx - 50, 70, 100, 44))
+	shop_owner("bibliotecaria", "bibliotecaria", "Dona Celeste", Vector2(cx, 94),
 		["Bem-vindo à biblioteca.", "As mesas de estudo estão livres.", "Um pomodoro por vez, sem pressa."])
-	prop("i_desk_paper", Vector2(cx + 30, 92), false)
-	prop("p_livros", Vector2(cx - 34, 92), false)
-	prop("p_vela", Vector2(cx - 18, 91), false)
-	# estantes no meio da sala
-	for x in [48.0, w - 48.0]:
-		prop("i_bookshelf_s", Vector2(x, 140))
-		prop("i_bookshelf_s", Vector2(x, 186))
-	prop("p_livros", Vector2(70, 196), false)
-	# mesas de estudo (com vela) e quem estuda nelas
-	var tables := [Vector2(cx - 62, 160), Vector2(cx + 62, 160), Vector2(cx - 62, 206), Vector2(cx + 62, 206)]
+	prop("p_livros", Vector2(cx - 32, 104), false)
+	prop("lpc_abajur", Vector2(cx + 34, 104), false)
+	light(Vector2(cx + 34, 92), Color(1.0, 0.8, 0.5), 0.6, 0.5)
+	prop("i_desk_paper", Vector2(cx + 8, 104), false)
+	# fileiras de estantes (corredores) à esquerda, com a placa da seção
+	for ry in [150.0, 198.0]:
+		for rx in [40.0, 72.0, 104.0, 136.0]:
+			prop("i_bookcase", Vector2(rx, ry))
+	prop("p_livros", Vector2(160, 212), false)
+	prop("i_basket", Vector2(24, 232), false)
+	prop("furn_planta", Vector2(24, 250))
+	npc("Child", Vector2(88, 170), ["Shhh! Estou lendo.", "Achei um livro sobre a masmorra!"], "wander", 34.0)
+	# sala de leitura: tapete, quatro mesas de estudo com vela e quem estuda nelas
+	prop("p_tapete_azul", Vector2(w - 116, 196), false, true)
+	prop("p_tapete_azul", Vector2(w - 116, 236), false, true)
+	var tables := [Vector2(w - 156, 168), Vector2(w - 76, 168), Vector2(w - 156, 218), Vector2(w - 76, 218)]
 	for t in tables:
 		table_set(t, false, "p_livros", true)
 		study_spot("livraria", t + Vector2(0, 14))
-	prop("p_tapete_azul", Vector2(cx, 200), false, true)
 	sitter("aventureira_maga", tables[1] + Vector2(16, 6), "left", ["Shhh! Estou revisando.", "Ler também é treinar."])
 	sitter("Villager", tables[2] + Vector2(-16, 6), "right", ["Mais uma página...", "Esse livro tem dragões!"])
-	# canto de leitura
-	prop("i_armchair", Vector2(w - 44, 220))
-	prop("p_planta_pequena", Vector2(w - 22, 222), false)
-	prop("furn_planta", Vector2(24, 222))
-	npc("Child", Vector2(cx, 226), ["Shhh! Estou lendo.", "Achei um livro sobre a masmorra!"], "wander", 40.0)
-	light(Vector2(cx, 80), Color(1.0, 0.86, 0.6), 2.4, 0.3)
+	prop("lampiao", Vector2(w - 24, 250), false)
+	light(Vector2(w - 24, 232), Color(1.0, 0.78, 0.45), 0.7, 0.5)
+	prop("i_armchair", Vector2(cx - 60, 238))
+	prop("lpc_mesa_centro", Vector2(cx - 36, 240), false)
+	prop("p_planta_pequena", Vector2(cx + 40, 250), false)
+	light(Vector2(cx, 150), Color(1.0, 0.86, 0.6), 2.8, 0.28)
 
 
 # ================================================================== Casa do jogador
@@ -514,6 +662,22 @@ func _build_home() -> void:
 	housing = HousingEditor.new()
 	housing.setup(self, _blockers)
 	deco.add_child(housing)
+	# v3.7 (referência do quarto do Victor): sol entrando pelas janelas e os companheiros que não estão com você
+	# dormindo em almofadas no canto da casa
+	sunbeam(70.0, 100.0)
+	sunbeam(330.0, 100.0)
+	var spots := [Vector2(64, 176), Vector2(92, 182), Vector2(w - 64, 176), Vector2(w - 92, 182)]
+	var k := 0
+	for pid in Story.pets():
+		if pid == Story.active_pet() or not Data.PETS.has(pid) or k >= spots.size():
+			continue
+		var pd: Dictionary = Data.PETS[pid]
+		var rel := ("animals/%s.png" if str(pd.get("kind", "")) == "animal" else "monsters/%s.png") % str(pd["sheet"])
+		var pet_node := sleeping_pet(rel, spots[k], true, pd.get("tint", Color.WHITE))
+		var talk := Spot.new("Fazer carinho em " + str(pd["name"]), func() -> void:
+			HUD.show_toast("%s abre um olho, se espreguiça e volta a dormir." % str(pd["name"]), UI.C_GOOD), 18.0)
+		pet_node.add_child(talk)
+		k += 1
 	light(Vector2(192, 120), Color(1.0, 0.85, 0.6), 1.8, 0.3)
 	light(Vector2(152, 190), Color(1.0, 0.75, 0.45), 0.6, 0.4)
 	HUD.set_hint("V  Decorar a casa")
@@ -648,6 +812,8 @@ func _build_family_home() -> void:
 	var w := cols * T
 	wall("p_janela", 50, 28)
 	wall("p_janela", w - 50, 28)
+	sunbeam(50.0, 80.0, 18.0)
+	sunbeam(w - 50.0, 80.0, 18.0)
 	wall("p_ervas", 110, 26)
 	wall("i_painting", 210, 26)
 	prop("furn_lareira", Vector2(w / 2.0, 58), true)
@@ -758,27 +924,41 @@ func _hammer_loop(smith: NPC) -> void:
 
 # ================================================================== Loja de armas
 func _build_weapon_shop() -> void:
+	# v3.7 (referência de organização do Victor): cada parede tem uma seção (espadas, escudos e arcos, lanças),
+	# armaduras alinhadas na lateral, vitrine com o armeiro atrás, cofre e o gato da loja dormindo na almofada.
 	var w := cols * T
 	var cx := w / 2.0
-	wall("p_escudos_parede", 48, 28)
-	wall("p_arcos_parede", w - 48, 28)
 	wall("p_tocha_parede", cx, 30)
 	light(Vector2(cx, 20), Color(1.0, 0.6, 0.3), 0.6, 0.8)
-	prop("p_rack_espadas", Vector2(cx - 50, 64), false)
-	prop("p_rack_espadas", Vector2(cx + 50, 64), false)
-	prop("p_armadura", Vector2(24, 82))
-	prop("p_armadura", Vector2(w - 24, 82))
-	prop("p_lancas", Vector2(24, 126))
-	prop("p_barril_espadas", Vector2(w - 24, 128))
-	prop("p_cofre", Vector2(cx + 34, 76))
-	# vitrine com o armeiro atrás
-	prop("p_vitrine", Vector2(cx, 102))
-	_block(Rect2(cx - 24, 50, 48, 46))
-	shop_owner("armeiro", "armeiro", "Otávio", Vector2(cx, 84), ["Espadas novas chegaram!", "Equipamento bom salva vidas.", "Só vendo o que presta."])
-	spot("Comprar equipamento", Vector2(cx, 116), func() -> void: HUD.open_window("loja"), 22.0)
-	prop("p_tapete_grande", Vector2(cx, 130), false, true)
-	prop("p_planta_pequena", Vector2(w - 40, 150), false)
-	light(Vector2(cx, 100), Color(1.0, 0.82, 0.55), 1.6, 0.3)
+	# seção das espadas (esquerda) e dos arcos (direita) na parede de cima
+	prop("p_rack_espadas", Vector2(52, 64), false)
+	prop("p_rack_espadas", Vector2(104, 64), false)
+	wall("p_escudos_parede", cx, 26)
+	prop("p_lancas", Vector2(w - 104, 66), false)
+	wall("p_arcos_parede", w - 52, 28)
+	prop("p_barril_espadas", Vector2(w - 52, 66), false)
+	_block(Rect2(16, 30, w - 32, 36))
+	_section_label("Espadas", 78)
+	_section_label("Escudos", cx)
+	_section_label("Arcos e lanças", w - 78)
+	# armaduras em fila na lateral esquerda; caixotes de reposição na direita
+	for ay in [104.0, 140.0, 176.0]:
+		prop("p_armadura", Vector2(26, ay))
+	prop("p_caixotes", Vector2(w - 30, 112))
+	prop("i_crate", Vector2(w - 26, 150))
+	prop("i_barrel", Vector2(w - 26, 176))
+	# vitrine com o armeiro atrás e o cofre
+	prop("p_vitrine", Vector2(cx, 120))
+	_block(Rect2(cx - 26, 70, 52, 52))
+	shop_owner("armeiro", "armeiro", "Otávio", Vector2(cx, 100), ["Espadas novas chegaram!", "Equipamento bom salva vidas.", "Só vendo o que presta."])
+	spot("Comprar equipamento", Vector2(cx, 134), func() -> void: HUD.open_window("loja"), 22.0)
+	prop("p_cofre", Vector2(cx + 40, 96))
+	prop("p_livros", Vector2(cx - 36, 112), false)
+	prop("p_tapete_grande", Vector2(cx, 156), false, true)
+	sleeping_pet("animals/CatOrange.png", Vector2(cx + 74, 150), true)
+	prop("p_planta_pequena", Vector2(w - 50, 182), false)
+	prop("furn_planta", Vector2(52, 182))
+	light(Vector2(cx, 110), Color(1.0, 0.82, 0.55), 1.8, 0.3)
 
 
 # ================================================================== Laboratório
@@ -1131,48 +1311,94 @@ func _build_resident_house() -> void:
 
 
 func _build_tailor(h: Dictionary, w: float) -> void:
-	# ateliê pequeno e cheio: manequins, roca, tecidos e a mesa de costura
+	# v3.7 (referência do Victor): prateleiras de tecido dobrado na parede, cômoda e manequins em fila,
+	# balcão com abajur e livro-caixa, gato dormindo e tapete na frente da mesa de costura.
 	wall("p_janela", 40, 28)
-	prop("p_tecidos", Vector2(w / 2.0, 62), false)
-	prop("p_manequim", Vector2(w - 30, 70))
-	prop("p_manequim", Vector2(w - 52, 74))
-	prop("p_espelho", Vector2(26, 66))
-	prop("p_mesa_costura", Vector2(w / 2.0 - 10, 104))
-	prop("i_stool", Vector2(w / 2.0 - 10, 118))
-	prop("p_roca", Vector2(30, 110))
-	prop("p_novelos", Vector2(w - 30, 112), false)
-	prop("i_rack", Vector2(w / 2.0 + 30, 132), false)
-	prop("p_vaso_flores", Vector2(w / 2.0 + 6, 96), false)
-	shop_owner("costureira", "costureira", "Rosa", Vector2(w / 2.0 + 20, 92), h["lines"])
-	spot("Guarda-roupa da Rosa", Vector2(w - 40, 86), func() -> void: HUD.open_window("guarda_roupa"), 18.0)
+	sunbeam(40.0, 90.0)
+	prop("p_tecidos", Vector2(w / 2.0 - 18, 62), false)
+	prop("p_tecidos", Vector2(w / 2.0 + 14, 62), false)
+	prop("i_dresser_wide", Vector2(w / 2.0 + 52, 62), false)
+	prop("p_novelos", Vector2(w / 2.0 + 52, 46), false)
+	_block(Rect2(w / 2.0 - 34, 30, 102, 34))
+	prop("furn_relogio", Vector2(w - 22, 64), true)
+	for mx in [76.0, 100.0]:
+		prop("p_manequim", Vector2(mx, 70))
+	prop("p_espelho", Vector2(26, 70))
+	prop("p_mesa_costura", Vector2(w / 2.0 - 10, 112))
+	prop("i_stool", Vector2(w / 2.0 - 10, 126))
+	prop("furn_tapete", Vector2(w / 2.0 - 10, 140), false, true)
+	prop("p_roca", Vector2(30, 118))
+	prop("p_novelos", Vector2(48, 128), false)
+	# balcão: abajur, livro-caixa e a Rosa atrás
+	prop("i_counter", Vector2(w - 50, 120))
+	prop("lpc_abajur", Vector2(w - 64, 112), false)
+	light(Vector2(w - 64, 100), Color(1.0, 0.8, 0.5), 0.5, 0.5)
+	prop("p_livros", Vector2(w - 38, 112), false)
+	shop_owner("costureira", "costureira", "Rosa", Vector2(w - 50, 100), h["lines"])
+	prop("i_rack", Vector2(w / 2.0 + 30, 156), false)
+	sleeping_pet("animals/Cat.png", Vector2(40, 156), true)
+	prop("p_vaso_flores", Vector2(w - 22, 160), false)
+	spot("Guarda-roupa da Rosa", Vector2(88, 84), func() -> void: HUD.open_window("guarda_roupa"), 18.0)
 	# v3.7: ofício de Costureiro (mini-jogo de memória e precisão)
-	spot("Costurar para a Rosa (ofício)", Vector2(w / 2.0 - 10, 126), func() -> void: HUD.open_window("mg_costura"), 18.0)
-	light(Vector2(w / 2.0, 90), Color(1.0, 0.8, 0.55), 1.4, 0.3)
+	spot("Costurar para a Rosa (ofício)", Vector2(w / 2.0 - 10, 134), func() -> void: HUD.open_window("mg_costura"), 18.0)
+	light(Vector2(w / 2.0, 100), Color(1.0, 0.8, 0.55), 1.6, 0.3)
 
 
 func _build_inn(h: Dictionary, w: float) -> void:
-	wall("p_janela", 60, 28)
-	wall("p_janela", w - 60, 28)
-	wall("i_painting", w / 2.0 - 90, 26)
-	prop("furn_lareira", Vector2(w / 2.0, 58), true)
-	light(Vector2(w / 2.0, 50), Color(1.0, 0.55, 0.25), 0.9, 0.9)
-	# quartos: camas separadas por estantes
-	for x in [26.0, 62.0, w - 62.0, w - 26.0]:
-		prop("p_cama_simples", Vector2(x, 104))
-	prop("i_shelf_s", Vector2(44, 128), false)
-	prop("i_shelf_s", Vector2(w - 44, 128), false)
-	# recepção
-	prop("i_counter", Vector2(w / 2.0 - 20, 128))
-	prop("i_counter", Vector2(w / 2.0 + 25, 128))
-	prop("p_vela", Vector2(w / 2.0 - 10, 120), false)
-	shop_owner("estalajadeiro", "estalajadeiro", "Bento", Vector2(w / 2.0, 108), h["lines"])
-	table_set(Vector2(w / 2.0 - 60, 176), true, "i_mug", true)
-	table_set(Vector2(w / 2.0 + 60, 176), false, "i_bowl1", false)
-	sitter("aventureiro_samurai", Vector2(w / 2.0 + 76, 182), "left", ["Amanhã sigo para a Mata.", "Ouvi luzes no Pântano."])
-	prop("p_banco", Vector2(w / 2.0, 206))
-	prop("i_barrel", Vector2(24, 200))
-	prop("i_barrel2", Vector2(w - 24, 200))
-	light(Vector2(w / 2.0, 150), Color(1.0, 0.8, 0.55), 2.0, 0.28)
+	# v3.7 (referência do Victor, casa com vários cômodos): dois quartos e a cozinha no fundo, separados por
+	# paredes com vão de porta (PARTITIONS["casa_npc_1"]); salão com balcão, lareira, mesas e tapete na frente.
+	# quarto 1 (tiles 1..7)
+	wall("p_janela", 72, 28)
+	sunbeam(72.0, 70.0, 18.0)
+	prop("p_cama_simples", Vector2(32, 100))
+	prop("p_cama_simples", Vector2(110, 100))
+	prop("lpc_comoda", Vector2(30, 62), false)
+	prop("furn_tapete", Vector2(72, 100), false, true)
+	prop("i_chest", Vector2(110, 62))
+	# quarto 2 (tiles 9..15)
+	wall("p_janela", 208, 28)
+	sunbeam(208.0, 70.0, 18.0)
+	prop("p_cama_simples", Vector2(164, 100))
+	prop("p_cama_simples", Vector2(240, 100))
+	prop("lpc_armario", Vector2(166, 62), false)
+	prop("p_planta_pequena", Vector2(240, 60), false)
+	prop("i_rug_big", Vector2(204, 108), false, true)
+	# cozinha (tiles 17..24)
+	prop("p_fogao", Vector2(298, 66), false)
+	wall("p_panelas", 298, 30)
+	light(Vector2(298, 52), Color(1.0, 0.55, 0.25), 0.6, 0.7)
+	prop("lpc_louceiro", Vector2(332, 62), false)
+	wall("p_prateleira_potes", 368, 30)
+	prop("i_table", Vector2(360, 100))
+	prop("p_cha", Vector2(356, 92), false)
+	prop("i_sack", Vector2(386, 70))
+	prop("lpc_barris", Vector2(388, 104))
+	_block(Rect2(272, 30, 128, 34))
+	npc("Woman", Vector2(316, 88), ["Sopa de cogumelo no fogo!", "Quem estuda come melhor, eu garanto.", "Não mexe na panela, viu?"])
+	for lb in [["Quarto 1", 72.0], ["Quarto 2", 208.0], ["Cozinha", 336.0]]:
+		_section_label(str(lb[0]), float(lb[1]), 116.0)
+	# salão: balcão no meio, lareira encostada na parede, mesas à direita, tapete na frente da porta
+	var cx := w / 2.0
+	prop("i_counter", Vector2(cx - 23, 182))
+	prop("i_counter", Vector2(cx + 22, 182))
+	prop("p_livros", Vector2(cx - 30, 174), false)
+	prop("p_vela", Vector2(cx + 14, 173), false)
+	prop("i_mug", Vector2(cx + 30, 174), false)
+	_block(Rect2(cx - 46, 150, 92, 34))
+	shop_owner("estalajadeiro", "estalajadeiro", "Bento", Vector2(cx, 166), h["lines"])
+	prop("lpc_barris", Vector2(cx + 66, 180))
+	prop("furn_lareira", Vector2(48, 162), true)
+	light(Vector2(48, 150), Color(1.0, 0.55, 0.25), 0.9, 0.9)
+	prop("p_banco", Vector2(48, 200))
+	prop("p_tapete_grande", Vector2(cx, 222), false, true)
+	table_set(Vector2(w - 92, 186), true, "i_mug", true)
+	table_set(Vector2(w - 60, 232), false, "i_bowl1", false)
+	sitter("aventureiro_samurai", Vector2(w - 76, 192), "left", ["Amanhã sigo para a Mata.", "Ouvi luzes no Pântano."])
+	prop("furn_planta", Vector2(cx - 44, 258))
+	prop("furn_planta", Vector2(cx + 44, 258))
+	prop("i_barrel", Vector2(24, 254))
+	prop("i_barrel2", Vector2(w - 24, 254))
+	light(Vector2(cx, 200), Color(1.0, 0.8, 0.55), 2.2, 0.28)
 
 
 func _build_lin(h: Dictionary, w: float) -> void:
