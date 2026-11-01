@@ -52,8 +52,15 @@ const CITIES := {
 		"name": "Pedralta", "subtitle": "Onde o martelo conta o tempo",
 		"W": 56, "H": 46, "base_row": 19, "tint": Color(0.93, 0.97, 1.06), "path_origin": Vector2i(0, 7), "path_set": "stone",
 		"music": "town", "ambience": "",
-		"exit": "south", "spawn": Vector2i(28, 41),
-		"paths": [[27, 27, 29, 45], [10, 26, 46, 28], [27, 12, 29, 26]],
+		"exit": "south", "spawn": Vector2i(28, 37),
+		"paths": [[27, 27, 29, 45], [10, 26, 46, 28], [27, 11, 29, 26], [24, 12, 32, 13]],
+		# v3.7 (referências do Victor): Pedralta é a capital de Rocuetos. Muralha com portão, fosso e ponte no sul;
+		# castelo do rei no fim da avenida norte, com estátuas; hortas ao lado das casas.
+		"fort": {"wall_y": 40, "gate_x": 27, "moat": true, "flag": "FlagRed",
+			"guard_lines": ["Bem-vindo a Pedralta, capital de Rocuetos.", "Arma na bainha dentro dos muros.", "O portão fecha quando o sino da forja para."]},
+		"castle": {"tile": [28, 11], "w": 15, "title": "Castelo de Rocuetos", "flag": "FlagRed", "statues": [[23, 14], [33, 14]],
+			"guard_lines": ["O rei só recebe com audiência marcada.", "Promoções saem da Comandante Brígida, não daqui.", "Nem pense em subir nas ameias."]},
+		"gardens": [[12, 33, 4, 3, "n_frutas_bush3"], [36, 35, 4, 3, "n_frutas_bush1"]],
 		"water": [],
 		"piers": [],
 		"buildings": [
@@ -74,12 +81,12 @@ const CITIES := {
 		],
 		"decor": [
 			["n_pinheiros_trio", [6, 20], [0.85, 0.95, 1.0]], ["n_pinheiros_trio", [48, 20], [0.85, 0.95, 1.0]], ["n_arvore_pinheiro", [5, 32], [0.85, 0.95, 1.0]],
-			["n_arvore_pinheiro", [50, 36], [0.85, 0.95, 1.0]], ["n_pedra_cinza_g", [10, 8]], ["n_pedra_cinza_g", [18, 6]], ["n_pedra_cinza_g", [38, 7]],
-			["n_pedra_cinza_alta", [24, 9]], ["n_pedra_cinza_alta", [33, 9]], ["n_pedra_cinza_g", [46, 10]], ["n_pedra_cinza_g", [4, 12]],
+			["n_arvore_pinheiro", [50, 36], [0.85, 0.95, 1.0]], ["n_pedra_cinza_g", [10, 8]], ["n_pedra_cinza_g", [17, 6]], ["n_pedra_cinza_g", [40, 7]],
+			["n_pedra_cinza_alta", [18, 10]], ["n_pedra_cinza_alta", [39, 10]], ["n_pedra_cinza_g", [46, 10]], ["n_pedra_cinza_g", [4, 12]],
 			["i_barrel", [12, 27]], ["i_crate", [35, 27]], ["i_board", [22, 27]], ["k_cerca_4", [30, 24]], ["k_placa", [31, 27]],
 		],
 		"ore": [["barra_mithril", "Mithril", [20, 13]], ["barra_mithril", "Mithril", [36, 14]], ["barra_obsidiana", "Obsidiana", [14, 17]],
-			["barra_obsidiana", "Obsidiana", [42, 17]], ["barra_adamantium", "Adamantium", [28, 8]]],
+			["barra_obsidiana", "Obsidiana", [42, 17]], ["barra_adamantium", "Adamantium", [44, 5]]],
 		"anim": [
 			{"sheet": "pc_furnace_iron3.png", "fw": 48, "fh": 64, "cols": 2, "from": 0, "n": 4, "fps": 5.0, "tile": [11, 29]},
 			{"sheet": "pc_anvil1.png", "fw": 64, "fh": 80, "cols": 8, "from": 0, "n": 14, "fps": 7.0, "tile": [19, 30]},

@@ -25,6 +25,7 @@ var _daylight_timer: float = 0.0
 var _leaving: bool = false
 var _ore_nodes: Array = []
 var extra_landmarks: Array = []    # v3.7: pontos da história no mapa (jardim, centro de treinamento, caverna)
+var no_collide := PackedByteArray()  # v3.7: água sob pontes (desenhada, mas dá para andar por cima)
 
 
 func _ready() -> void:
@@ -44,6 +45,7 @@ func _ready() -> void:
 		layers.append({"mask": water, "set": "water", "origin": Vector2i(0, 6)})
 	layers.append({"mask": path_mask, "set": str(city["path_set"]), "origin": city["path_origin"]})
 	var img := TileComposer.compose_city(W, H, int(city["base_row"]), layers, rng, city["tint"])
+	_stamp_fort_bridge(img)
 	var small := img.duplicate() as Image
 	small.resize(W * 2, H * 2, Image.INTERPOLATE_BILINEAR)
 	minimap_tex = ImageTexture.create_from_image(small)
@@ -59,6 +61,9 @@ func _ready() -> void:
 	_build_water_colliders()
 	_build_piers()
 	_build_buildings()
+	_build_fort()
+	_build_castle()
+	_build_gardens()
 	_build_npcs()
 	_build_decor()
 	_build_ore()
@@ -117,7 +122,7 @@ func _fill(mask: PackedByteArray, r: Array, v: int = 1) -> void:
 
 
 func _build_masks() -> void:
-	for m in [water, path_mask, piers]:
+	for m in [water, path_mask, piers, no_collide]:
 		m.resize(W * H)
 		m.fill(0)
 	for r in city["paths"]:
@@ -128,6 +133,14 @@ func _build_masks() -> void:
 		_fill(piers, r)
 		_fill(water, r, 0)     # a doca fica sobre a água: tira da máscara para dar para andar
 		_fill(path_mask, r, 0)
+	# v3.7: fosso na frente da muralha (a ponte de pedra cruza no portão)
+	var f: Dictionary = city.get("fort", {})
+	if not f.is_empty() and bool(f.get("moat", false)):
+		var my := int(f["wall_y"]) + 3
+		_fill(water, [0, my, W - 1, my + 1])
+		_fill(path_mask, [0, my, W - 1, my + 1], 0)
+		var gx := int(f["gate_x"])
+		_fill(no_collide, [gx, my, gx + 1, my + 1])
 
 
 func _tile_pos(tx: float, ty: float) -> Vector2:
@@ -167,9 +180,9 @@ func _build_water_colliders() -> void:
 	for y in H:
 		var x := 0
 		while x < W:
-			if water[_idx(x, y)] != 0:
+			if water[_idx(x, y)] != 0 and no_collide[_idx(x, y)] == 0:
 				var x0 := x
-				while x < W and water[_idx(x, y)] != 0:
+				while x < W and water[_idx(x, y)] != 0 and no_collide[_idx(x, y)] == 0:
 					x += 1
 				var c := CollisionShape2D.new()
 				var s := RectangleShape2D.new()
@@ -261,6 +274,135 @@ func _build_buildings() -> void:
 		buildings[str(d["id"]) + ("_" + str(t[0]) if buildings.has(str(d["id"])) else "")] = b
 		if interior != "":
 			door_spawns[interior] = pos + Vector2(0, 24)
+
+
+# ================================================================== Muralha, castelo e hortas (v3.7)
+## Entrada de reino (referência do Victor): muralha com ameias de ponta a ponta na linha `wall_y` (3 tiles), portão
+## com grade entre duas torres no vão `gate_x`..`gate_x + 1`, fosso com ponte de pedra do lado de fora, guardas,
+## estandartes, tochas e bandeiras nas torres. Peças do Kenney Tiny Town (PROVISÓRIO, ver PROVISORIOS.md).
+func _build_fort() -> void:
+	var f: Dictionary = city.get("fort", {})
+	if f.is_empty():
+		return
+	var wy := int(f["wall_y"])
+	var gx := int(f["gate_x"])
+	var g0 := gx - 3
+	var body := StaticBody2D.new()
+	body.collision_layer = 1
+	add_child(body)
+	var base_y := (wy + 3) * T
+	if g0 > 0:
+		_add_prop("k_muralha_%d" % g0, Vector2(g0 * T / 2.0, base_y))
+		_rect_collider(body, Rect2(0, wy * T, g0 * T, 3 * T))
+	var r0 := g0 + 8
+	if r0 < W:
+		_add_prop("k_muralha_%d" % (W - r0), Vector2((r0 + (W - r0) / 2.0) * T, base_y))
+		_rect_collider(body, Rect2(r0 * T, wy * T, (W - r0) * T, 3 * T))
+	_add_prop("k_portao", Vector2((g0 + 4) * T, base_y))
+	_rect_collider(body, Rect2(g0 * T, (wy - 2) * T, 3 * T, 5 * T))
+	_rect_collider(body, Rect2((g0 + 5) * T, (wy - 2) * T, 3 * T, 5 * T))
+	for tx in [g0 + 1.5, g0 + 6.5]:
+		_flag(Vector2(tx * T, (wy - 2) * T + 4), str(f.get("flag", "FlagRed")))
+	for bx in [g0 - 2, g0 + 10]:
+		_add_prop("p_estandarte", Vector2(bx * T, base_y + 1))
+	for tx2 in [gx * T - 6, (gx + 2) * T + 6]:
+		var torch := DungeonObjects.Torch.new()
+		torch.position = Vector2(tx2, base_y + 6)
+		world.add_child(torch)
+	var lines: Array = f.get("guard_lines", ["Bem-vindo. Mantenha a arma na bainha.", "Portão aberto do nascer ao pôr do sol."])
+	for gxx in [g0 + 1, g0 + 6]:
+		_guard(_tile_pos(gxx, wy - 3), lines)
+
+
+func _stamp_fort_bridge(img: Image) -> void:
+	var f: Dictionary = city.get("fort", {})
+	if f.is_empty() or not bool(f.get("moat", false)):
+		return
+	var br := TileComposer.bridge_image(true, 2, false)
+	img.blend_rect(br, Rect2i(Vector2i.ZERO, br.get_size()), Vector2i((int(f["gate_x"]) - 1) * T, (int(f["wall_y"]) + 3) * T))
+
+
+## Castelo do rei (referência do Victor): prédio fechado com torres, bandeiras e dois guardas no portão.
+func _build_castle() -> void:
+	var c: Dictionary = city.get("castle", {})
+	if c.is_empty():
+		return
+	var t: Array = c["tile"]
+	var w := int(c.get("w", 15))
+	var pos := Vector2(int(t[0]) * T + 8, int(t[1]) * T)
+	var b := Building.create(world, "castelo", str(c["title"]), "k_castelo_%d" % w, pos, 0.0, "")
+	b.return_scene = "city"
+	b.door.enabled = false
+	buildings["castelo"] = b
+	var x0 := pos.x - w * T / 2.0
+	for tx in [1.5, w - 1.5]:
+		_flag(Vector2(x0 + tx * T, pos.y - 6 * T + 4), str(c.get("flag", "FlagRed")))
+	_flag(Vector2(pos.x, pos.y - 6 * T + 2), str(c.get("flag", "FlagRed")))
+	for dx in [-2.5, 2.5]:
+		_guard(pos + Vector2(dx * T, 14), c.get("guard_lines", ["O rei recebe só com audiência marcada.", "Nem pense em subir nas ameias."]))
+	for st in c.get("statues", []):
+		_add_prop("h_estatua_pequena", _tile_pos(int(st[0]), int(st[1])), 6.0, Color(0.85, 0.88, 0.95))
+
+
+## Hortas (referência das vilas): canteiro de terra arada do pack com mudas em fileiras e cerca opcional.
+## [x, y, w, h, muda] em tiles (canto de cima à esquerda).
+func _build_gardens() -> void:
+	for g in city.get("gardens", []):
+		var gx := int(g[0])
+		var gy := int(g[1])
+		var gw := int(g[2])
+		var gh := int(g[3])
+		var crop := str(g[4]) if g.size() > 4 else "n_frutas_bush1"
+		var plot := _add_prop("plot_%d_%d" % [gw, gh], Vector2((gx + gw / 2.0) * T, (gy + gh) * T))
+		plot.z_index = -1
+		for yy in range(gy, gy + gh - 1):
+			for xx in range(gx, gx + gw):
+				if (xx - gx) % 2 == 0:
+					_add_prop(crop, Vector2(xx * T + 8, yy * T + 14))
+		var body := StaticBody2D.new()
+		body.collision_layer = 1
+		add_child(body)
+		_rect_collider(body, Rect2(gx * T + 2, gy * T + 2, gw * T - 4, gh * T - 4))
+
+
+func _rect_collider(body: StaticBody2D, r: Rect2) -> void:
+	var c := CollisionShape2D.new()
+	var s := RectangleShape2D.new()
+	s.size = r.size
+	c.shape = s
+	c.position = r.position + r.size / 2.0
+	body.add_child(c)
+
+
+## Bandeira tremulando (FlagRed/FlagBlue... do Ninja, 4 quadros de 16 px).
+func _flag(pos: Vector2, sheet: String) -> void:
+	var sf := SpriteFrames.new()
+	sf.add_animation("wave")
+	sf.set_animation_speed("wave", 6.0)
+	var tex: Texture2D = load("res://assets/ninja/tiles/%s.png" % sheet)
+	if tex == null:
+		return
+	for i in 4:
+		var at := AtlasTexture.new()
+		at.atlas = tex
+		at.region = Rect2(i * 16, 0, 16, 16)
+		sf.add_frame("wave", at)
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = sf
+	spr.position = pos
+	spr.z_index = 55
+	add_child(spr)
+	spr.play("wave")
+	spr.frame = rng.randi() % 4
+
+
+func _guard(pos: Vector2, lines: Array) -> void:
+	var g := NPC.new()
+	g.custom_look = Ally.look_of("soldado")
+	g.mode = "static"
+	g.position = pos
+	g.lines = lines
+	world.add_child(g)
 
 
 func _build_npcs() -> void:

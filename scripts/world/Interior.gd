@@ -62,10 +62,42 @@ var owner_npc: NPC = null
 static func prop_tex(name: String) -> Texture2D:
 	if BuildingFactory.is_factory_name(name):
 		return BuildingFactory.texture(name)
+	if name.begins_with("tile_") or name.begins_with("plot_"):
+		return _tileset_prop(name)
 	var custom := "res://assets/custom/props/%s.png" % name
 	if ResourceLoader.exists(custom):
 		return load(custom)
 	return Pix.tex("props/%s.png" % name)
+
+
+static var _tileset_cache: Dictionary = {}
+
+
+## v3.7: peças recortadas direto dos tilesets do Ninja Adventure.
+##   "tile_<Tileset>_<x>_<y>_<w>_<h>" = região do tileset (em tiles), ex. "tile_TilesetHouse_29_20_3_3" (arco de pedra);
+##   "plot_<w>_<h>" = canteiro de horta (terra arada do TilesetField em 9 partes, com a borda da frente).
+static func _tileset_prop(name: String) -> Texture2D:
+	if _tileset_cache.has(name):
+		return _tileset_cache[name]
+	var p := name.split("_")
+	var img: Image = null
+	if p[0] == "tile" and p.size() >= 6:
+		var src := TileComposer.tileset(p[1])
+		if src != null:
+			img = src.get_region(Rect2i(int(p[2]) * T, int(p[3]) * T, int(p[4]) * T, int(p[5]) * T))
+	elif p[0] == "plot" and p.size() >= 3:
+		var wt := maxi(int(p[1]), 2)
+		var ht := maxi(int(p[2]), 2)
+		var field := TileComposer.tileset("TilesetField")
+		img = Image.create(wt * T, ht * T, false, Image.FORMAT_RGBA8)
+		for y in ht:
+			for x in wt:
+				var sx := 0 if x == 0 else (2 if x == wt - 1 else 1)
+				var sy := 0 if y == 0 else (2 if y == ht - 1 else 1)
+				img.blit_rect(field, Rect2i(sx * T, sy * T, T, T), Vector2i(x * T, y * T))
+	var tex: Texture2D = ImageTexture.create_from_image(img) if img != null else null
+	_tileset_cache[name] = tex
+	return tex
 
 
 static func house_title(index: int) -> String:

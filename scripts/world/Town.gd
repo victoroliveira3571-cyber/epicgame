@@ -229,23 +229,35 @@ func map_landmarks() -> Array:
 	return out
 
 
+## v3.7 (referências do Victor, entrada de masmorra): arco de pedra com a escada descendo, clareira aberta na
+## mata, tochas, caixotes e barris dos aventureiros de um lado e entulho de pedra do outro, estátuas guardando.
 func _build_gate() -> void:
 	var pos := Vector2(SPINE_X * T + 8, GATE_Y * T)
-	_add_prop("h_torii", pos, 0.0)
-	# colunas de colisão do portal (deixa o vão central livre)
+	_rect_fill(reserved, SPINE_X - 7, GATE_Y - 4, SPINE_X + 7, H - 1)
+	_add_prop("stairs_down_0", pos + Vector2(0, -6), 0.0).scale = Vector2(1.6, 1.6)
+	_add_prop("tile_TilesetHouse_29_20_3_3", pos, 0.0)
+	# pernas do arco com colisão (deixa o vão central livre)
 	var body := StaticBody2D.new()
 	body.collision_layer = 1
 	body.collision_mask = 0
 	world.add_child(body)
-	for dx in [-13.0, 13.0]:
+	for dx in [-17.0, 17.0]:
 		var c := CollisionShape2D.new()
 		var s := RectangleShape2D.new()
-		s.size = Vector2(5, 8)
+		s.size = Vector2(12, 10)
 		c.shape = s
 		c.position = pos + Vector2(dx, -5)
 		body.add_child(c)
-	_add_prop("h_estatua_pequena", pos + Vector2(-34, 4), 6.0)
-	_add_prop("h_estatua_pequena", pos + Vector2(34, 4), 6.0)
+	_add_prop("h_estatua_pequena", pos + Vector2(-50, 4), 6.0)
+	_add_prop("h_estatua_pequena", pos + Vector2(50, 4), 6.0)
+	for tdx in [-30.0, 30.0]:
+		var torch := DungeonObjects.Torch.new()
+		torch.position = pos + Vector2(tdx, 6)
+		world.add_child(torch)
+	for o in [["p_caixotes", Vector2(-84, -2)], ["i_crate", Vector2(-70, 12)], ["i_barrel", Vector2(-98, 12)], ["i_sack", Vector2(-62, -6)],
+			["n_pedra_cinza_p1", Vector2(70, 10)], ["n_pedra_cinza_p2", Vector2(84, -2)], ["n_pedra_cinza_p3", Vector2(96, 12)], ["n_toco1", Vector2(64, -8)]]:
+		_add_prop(str(o[0]), pos + (o[1] as Vector2), 5.0)
+	_add_prop("i_board", pos + Vector2(-40, -18), 4.0)
 	var trigger := GateTrigger.new()
 	trigger.position = pos + Vector2(0, 4)
 	trigger.interact_range = 22.0
@@ -333,7 +345,7 @@ func _build_forest_gate() -> void:
 
 # ==================================================================== Decor
 func _add_prop(prop: String, pos: Vector2, collide_radius: float = 0.0) -> Sprite2D:
-	var tex := Pix.tex("props/%s.png" % prop)
+	var tex := Interior.prop_tex(prop)
 	var holder := Node2D.new()
 	holder.position = pos.round()
 	world.add_child(holder)
@@ -393,7 +405,8 @@ func _build_decor() -> void:
 	var x := -10.0
 	while x < W * T + 10:
 		_add_prop(BORDER_TREES[rng.randi() % BORDER_TREES.size()], Vector2(x + rng.randf_range(-4, 4), rng.randf_range(26, 52)))
-		_add_prop(BORDER_TREES[rng.randi() % BORDER_TREES.size()], Vector2(x + rng.randf_range(-4, 4), H * T - rng.randf_range(4, 30)))
+		if absf(x - SPINE_X * T) > 8 * T:   # v3.7: clareira na frente da entrada da masmorra
+			_add_prop(BORDER_TREES[rng.randi() % BORDER_TREES.size()], Vector2(x + rng.randf_range(-4, 4), H * T - rng.randf_range(4, 30)))
 		x += rng.randf_range(24, 34)
 	var y := 60.0
 	while y < H * T - 40:

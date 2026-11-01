@@ -5,6 +5,10 @@ extends RefCounted
 ## O nome do prop define a casa: "k_<parede>_<telhado>_<largura em tiles>", por exemplo "k_pedra_cinza_5"
 ## (parede de pedra, telhado cinza, 5 tiles de largura) ou "k_tijolo_vermelho_6". Também: "k_cerca_<n>" (cerca),
 ## "k_cercav_<n>" (cerca em pé, de cima para baixo; v3.7) e "k_placa".
+## v3.7 (referências do Victor, entrada de reinos e castelo do rei): "k_muralha_<n>" (muralha com ameias, 3 tiles
+## de altura), "k_portao" (portão com grade entre duas torres, 8x5 tiles) e "k_castelo_<n>" (castelo com torres
+## nos cantos, telhado cinza, janelas e portão; 6 tiles de altura). PROVISÓRIO: peças do Tiny Town até chegar
+## um pack de castelo (ver PROVISORIOS.md).
 
 const SHEET := "res://assets/custom/city/kenney_tiny_town.png"
 const COLS := 12
@@ -65,6 +69,12 @@ static func _build(name: String) -> Image:
 		for y in nv:
 			_put(fv, 47 if y == 0 else (71 if y == nv - 1 else 59), 0, y)
 		return fv
+	if parts[1] == "muralha":
+		return _wall(clampi(int(parts[2]) if parts.size() > 2 else 6, 2, 64))
+	if parts[1] == "portao":
+		return _gatehouse()
+	if parts[1] == "castelo":
+		return _castle(clampi(int(parts[2]) if parts.size() > 2 else 13, 11, 25))
 	if parts[1] == "placa":
 		var s := Image.create(T, T, false, Image.FORMAT_RGBA8)
 		_put(s, 83, 0, 0)
@@ -90,4 +100,65 @@ static func _build(name: String) -> Image:
 			_put(img, int(wall["window"]), x, 3)
 			if w >= 7 and x == 1:
 				_put(img, int(wall["window"]), 1, 2)
+	return img
+
+
+# ================================================================== Fortificações (v3.7)
+const TOWER := [[96, 97, 98], [108, 109, 110], [120, 121, 122]]   # topo de torre com ameias (3x3)
+const BATTLE := [99, 100, 101]                                    # passarela com ameias (pontas + meio)
+const GATE := [[111, 112], [123, 124]]                            # arco com grade levadiça (2x2, vão aberto)
+const BRICK := 126
+const SLIT := 125                                                 # janelinha / seteira
+
+
+static func _tower(img: Image, x0: int, y0: int) -> void:
+	for r in 3:
+		for c in 3:
+			_put(img, int(TOWER[r][c]), x0 + c, y0 + r)
+
+
+static func _wall(w: int) -> Image:
+	var img := Image.create(w * T, 3 * T, false, Image.FORMAT_RGBA8)
+	_row(img, BATTLE, w, 0)
+	for x in w:
+		_put(img, SLIT if x % 4 == 2 else BRICK, x, 1)
+		_put(img, BRICK, x, 2)
+	return img
+
+
+static func _gatehouse() -> Image:
+	var img := Image.create(8 * T, 5 * T, false, Image.FORMAT_RGBA8)
+	_tower(img, 0, 0)
+	_tower(img, 5, 0)
+	_put(img, BATTLE[1], 3, 2)
+	_put(img, BATTLE[1], 4, 2)
+	for x in [0, 1, 2, 5, 6, 7]:
+		_put(img, SLIT if x == 1 or x == 6 else BRICK, x, 3)
+		_put(img, BRICK, x, 4)
+	for r in 2:
+		for c in 2:
+			_put(img, int(GATE[r][c]), 3 + c, 3 + r)
+	return img
+
+
+static func _castle(w: int) -> Image:
+	if w % 2 == 0:
+		w += 1
+	var img := Image.create(w * T, 6 * T, false, Image.FORMAT_RGBA8)
+	var roof: Dictionary = ROOF["cinza"]
+	for x in range(3, w - 3):
+		var k := 0 if x == 3 else (2 if x == w - 4 else 1)
+		_put(img, int(roof["a"][k]), x, 0)
+		_put(img, int(roof["b"][k]), x, 1)
+		_put(img, BATTLE[k], x, 2)
+	_tower(img, 0, 0)
+	_tower(img, w - 3, 0)
+	var cx := w / 2
+	for x in w:
+		_put(img, SLIT if (x == 1 or x == w - 2 or (x > 3 and x < w - 4 and x % 2 == 0)) else BRICK, x, 3)
+		_put(img, BRICK, x, 4)
+		_put(img, BRICK, x, 5)
+	for r in 2:
+		for c in 2:
+			_put(img, int(GATE[r][c]), cx - 1 + c, 4 + r)
 	return img
