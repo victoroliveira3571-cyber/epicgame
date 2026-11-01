@@ -17,6 +17,15 @@ var target: Node2D = null          # inimigo ou moeda que o pet está buscando
 var mode: String = "follow"        # follow | strike | fetch
 var _t: float = randf() * 10.0
 var _scan: float = 0.0
+var _greet_t: float = 0.0           # v3.0: > 0 enquanto o pet atende ao chamado (tecla B)
+
+## Falas do pet ao ser chamado (gesto + frase curta, no tom de cada um).
+const LINES := {
+	"corvin": ["Craaa! Páginas à vista, chefe!", "Estudou hoje? Eu vi tudo, craa!", "Tem brilho no chão? Eu acho.", "Craa! Mais um bloco e eu ganho biscoito.", "Cuidado com as sombras. Craa."],
+	"brisa": ["Auuu! Estou de olho em tudo.", "*abana o rabo* Vamos caçar?", "Grrr... farejei algo ali.", "Auu! Hoje você foi bem, eu senti.", "*deita aos seus pés e boceja*"],
+	"lumen": ["Hu-hu. A coruja que revisa, aprende duas vezes.", "Hu! Já descansou os olhos hoje?", "Hu-hu. Pergunte-se: o que eu sei explicar?", "*gira a cabeça* Hu... interessante.", "Hu. O sono guarda o que o estudo plantou."],
+	"airevis": ["... bzzz... a névoa lembra de você.", "*flutua em círculos* ...", "Frio? Eu te esquento. Um pouquinho.", "...o silêncio também estuda.", "*pisca devagar, luminoso*"],
+}
 
 
 ## Troca o pet que acompanha o jogador (remove o antigo).
@@ -54,11 +63,31 @@ func _ready() -> void:
 		Fx.make_light(self, Vector2(0, -10), Color(0.7, 0.85, 1.0), 0.45, 0.6)
 
 
+## Tecla B: o pet vem até o herói, dá um pulinho e fala.
+func _unhandled_key_input(ev: InputEvent) -> void:
+	if not (ev is InputEventKey and ev.pressed and not ev.echo and ev.keycode == KEY_B):
+		return
+	if Game.input_locked or HUD.is_window_open() or HUD.is_dialogue_open() or _greet_t > 0.0:
+		return
+	_greet_t = 1.8
+	var pool: Array = LINES.get(pet_id, ["..."])
+	Fx.float_text(get_parent(), str(pool[randi() % pool.size()]), global_position + Vector2(0, -26), Color("ffe9a8"), 1, 10.0, 2.6)
+	Audio.sfx("bird" if pet_id == "corvin" else "growl", -12.0, 0.2)
+
+
 func _physics_process(delta: float) -> void:
 	if player == null or not is_instance_valid(player):
 		queue_free()
 		return
 	_t += delta
+	if _greet_t > 0.0:
+		_greet_t -= delta
+		var front := player.global_position + (player.facing.normalized() if player.facing.length() > 0.1 else Vector2.DOWN) * 14.0
+		var vg := front - global_position
+		global_position += vg.limit_length(110.0 * delta) if vg.length() > 2.0 else Vector2.ZERO
+		sprite.position.y = -8.0 - absf(sin(_t * 9.0)) * 6.0      # pulinhos de alegria
+		_animate(vg)
+		return
 	attack_cd -= delta
 	_scan -= delta
 	if _scan <= 0.0:

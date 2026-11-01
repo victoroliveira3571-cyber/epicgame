@@ -96,4 +96,13 @@ func run(dev: Node) -> void:
 				var b1 := GameState.count_item("barra_cobre") + GameState.count_item("barra_ferro") + GameState.count_item("barra_prata") + GameState.count_item("barra_ouro") + GameState.count_item("barra_mithril")
 				check(b1 > b0 and not (n as StoryProp).enabled, "minerar dá barra e esgota o veio")
 	check(veins >= 8, "veios de minério na floresta (%d)" % veins)
+	# v3.0: pílulas e falas de pets
+	var areas := {}
+	for pill in Street.PILLS:
+		areas[pill[0]] = true
+	check(Street.PILLS.size() >= 25 and areas.size() >= 5, "pílulas de conhecimento em %d áreas" % areas.size())
+	var pets_ok := true
+	for pid in Data.PET_ORDER:
+		pets_ok = pets_ok and Pet.LINES.has(pid) and Pet.LINES[pid].size() >= 5
+	check(pets_ok, "cada pet tem 5+ falas")
 	print("[v26] ", "TUDO OK" if fails == 0 else "%d falhas" % fails)

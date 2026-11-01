@@ -15,6 +15,41 @@ const MOTTOS_REPEAT := [
 	"O que você escreve com as próprias palavras, você não esquece.",
 ]
 
+## v3.0: pílulas de conhecimento. Quem você já conhece conta um fato curto em vez de repetir a frase de sempre.
+## [área, fato]
+const PILLS := [
+	["Física", "A luz do Sol leva uns 8 minutos para chegar aqui. Quando você a vê, ela já saiu de lá faz tempo."],
+	["Física", "Um objeto em queda livre acelera do mesmo jeito, pesado ou leve, quando não há ar atrapalhando. Galileu mostrou isso."],
+	["Física", "O som precisa de algo para viajar: no vácuo, ninguém ouve você gritar."],
+	["Física", "Calor é energia passando de um corpo quente para um frio. Frio não é uma coisa: é falta de calor."],
+	["Física", "Newton: toda ação tem uma reação igual e contrária. É por isso que o remo empurra o barco."],
+	["Química", "A água é feita de dois hidrogênios e um oxigênio: H2O. Separados, ambos pegam fogo; juntos, apagam o fogo."],
+	["Química", "O ferro enferruja porque reage com o oxigênio e a umidade. A ferrugem é o ferro voltando ao que era na pedra."],
+	["Química", "Os átomos se organizam na tabela periódica por número de prótons. Mendeleiev deixou lacunas para elementos que ainda não existiam."],
+	["Química", "Ácidos têm pH menor que 7 e bases, maior. A água pura fica no meio, em 7."],
+	["Química", "Quando o pão cresce, leveduras comem açúcar e soltam gás carbônico. As bolhinhas são esse gás preso."],
+	["Neurociência", "Dormir ajuda a fixar o que você estudou: o cérebro repete as lembranças do dia durante o sono."],
+	["Neurociência", "Testar-se vale mais do que reler. Lembrar com esforço fortalece o caminho da memória."],
+	["Neurociência", "O cérebro gasta cerca de 20% da energia do corpo, mesmo pesando uns 2% dele."],
+	["Neurociência", "Estudar em blocos curtos com pausas funciona porque a atenção cansa. Pausa não é preguiça."],
+	["Neurociência", "Neurônios que disparam juntos se ligam juntos. É assim que o hábito vira caminho largo na cabeça."],
+	["Política", "Na Atenas antiga, os cidadãos votavam leis diretamente na assembleia. Daí vem a palavra democracia: poder do povo."],
+	["Política", "Separar os poderes em executivo, legislativo e judiciário ajuda a ninguém mandar sozinho. Montesquieu defendeu isso."],
+	["Política", "Uma constituição é a lei mais alta de um país: nenhuma outra lei pode contrariá-la."],
+	["Política", "Voto secreto existe para ninguém ser pressionado pela escolha que faz."],
+	["Política", "Impostos pagam o que é de todos: estradas, escolas, guardas. Por isso a multa é cobrada em tempo de estudo aqui."],
+	["Filosofia", "Sócrates dizia 'só sei que nada sei'. Saber o limite do que se sabe é o começo de aprender."],
+	["Filosofia", "Descartes duvidou de tudo e achou uma certeza: 'penso, logo existo'."],
+	["Filosofia", "Para Aristóteles, virtude é um hábito. Vira coragem quem pratica ser corajoso, aos poucos."],
+	["Filosofia", "O mito da caverna, de Platão: tomamos sombras pela realidade até alguém nos puxar para fora para ver a luz."],
+	["Filosofia", "Os estoicos separavam o que depende de nós do que não depende. Gastar energia só com o primeiro rende mais."],
+	["Matemática", "Zero demorou séculos para ser aceito como número. Hoje não existe conta sem ele."],
+	["Matemática", "Dobrar uma folha de papel 42 vezes dá uma espessura que alcança a Lua, em teoria."],
+	["Biologia", "As plantas respiram de dia e de noite, mas na luz fazem fotossíntese: tiram gás carbônico e soltam oxigênio."],
+	["História", "A escrita surgiu para contar o que se devia: grãos, ovelhas, dívidas. As histórias vieram depois."],
+	["Astronomia", "Uma estrela que vemos à noite pode já ter se apagado: a luz dela ainda viaja até nós."],
+]
+
 ## [nome, ofício, [história em 2 a 3 falas], frase motivacional]
 const PERSONAS := [
 	["Edric", "entregador", ["Eu era o mais lento da vila. Perdia toda corrida de entrega.", "Aí passei a anotar o caminho de volta de cabeça, sem olhar o mapa. Em um mês virei o mais rápido."], "Quem treina de memória não precisa de mapa."],
@@ -111,7 +146,9 @@ static func talk(npc: Node2D) -> void:
 		lines.append(["tip:" + who, str(p[3])])
 	else:
 		lines.append([who + "@happy", ["De novo por aqui? Gosto de gente que volta.", "Olha só quem apareceu!", "Já ia me esquecer de você. Brincadeira."][randi() % 3]])
-		lines.append(["tip:" + who, str(MOTTOS_REPEAT[randi() % MOTTOS_REPEAT.size()])])
+		var pill: Array = PILLS[randi() % PILLS.size()]
+		lines.append([who, "Aprendi uma coisa de %s outro dia:" % str(pill[0]).to_lower()])
+		lines.append(["tip:" + who, str(pill[1])])
 	Story._busy = true
 	await Story.say(lines)
 	Story._busy = false

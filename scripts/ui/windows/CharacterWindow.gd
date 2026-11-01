@@ -211,10 +211,7 @@ func _pets() -> void:
 		right.add_child(card)
 		var h := UI.hbox(6)
 		card.add_child(h)
-		var vis := Looks.speaker_visual(pid)
-		var ic := UI.icon(vis.get("face") if has else null, 30)
-		ic.modulate = vis.get("tint", Color.WHITE)
-		h.add_child(ic)
+		h.add_child(_pet_icon(pid, has))
 		var v := UI.vbox(0)
 		v.custom_minimum_size.x = 196
 		h.add_child(v)
@@ -225,3 +222,26 @@ func _pets() -> void:
 			h.add_child(UI.button("Guardar" if active else "Levar", func() -> void:
 				Story.set_pet("" if active else pid)
 				rebuild(), 56))
+
+
+## v3.0: ícone do pet com a animação do próprio sprite (antes era uma foto estática do rosto).
+func _pet_icon(pid: String, has: bool) -> Control:
+	var box := Control.new()
+	box.custom_minimum_size = Vector2(34, 34)
+	if not has:
+		return box
+	var pd: Dictionary = Data.PETS[pid]
+	var spr := AnimatedSprite2D.new()
+	if pd["kind"] == "animal":
+		spr.sprite_frames = Pix.animal_frames(pd["sheet"])
+		spr.play("walk")
+		spr.speed_scale = 0.7
+	else:
+		spr.sprite_frames = Pix.actor_frames("monsters/%s.png" % pd["sheet"])
+		spr.play("walk_down")
+		spr.speed_scale = 0.7
+	spr.modulate = pd.get("tint", Color.WHITE)
+	spr.scale = Vector2(1.9, 1.9)
+	spr.position = Vector2(17, 17)
+	box.add_child(spr)
+	return box

@@ -83,7 +83,7 @@ func build() -> void:
 	var keys := [
 		["WASD / setas", "Mover"], ["Espaço / J", "Atacar"], ["Shift / K", "Rolar"], ["Q / L", "Habilidade da classe"],
 		["E", "Interagir / falar"], ["H", "Poção"], ["F", "Comer"], ["I", "Inventário"], ["C", "Personagem e pets"],
-		["N", "Caderno"], ["T", "Hábitos"], ["G", "Missões"], ["P", "Pomodoro"], ["Esc", "Pausa"],
+		["N", "Caderno"], ["T", "Hábitos"], ["G", "Missões"], ["P", "Pomodoro"], ["B", "Chamar o pet"], ["Esc", "Pausa"],
 	]
 	var grid := GridContainer.new()
 	grid.columns = 4
